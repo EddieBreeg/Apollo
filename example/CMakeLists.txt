@@ -1,0 +1,4 @@
+AddExecutable(${PROJECT_NAME}Example SOURCES
+	main.cpp
+LINK PRIVATE ${PROJECT_NAME}::${PROJECT_NAME}
+)

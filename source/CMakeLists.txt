@@ -1,0 +1,21 @@
+AddLibrary(${PROJECT_NAME}Runtime
+TYPE SHARED
+PROPERTIES ${COMMON_PROPERTIES}
+OPTIONS PRIVATE ${COMPILER_ARGS}
+DEFINITIONS PUBLIC $<$<NOT:$<CONFIG:Release>>:BRK_DEV=1>
+INCLUDES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+target_precompile_headers(${PROJECT_NAME}Runtime PRIVATE PCH.hpp)
+
+add_subdirectory(core)
+add_subdirectory(entry)
+
+add_library(${PROJECT_NAME} INTERFACE)
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+target_link_libraries(${PROJECT_NAME} INTERFACE ${PROJECT_NAME}Runtime ${PROJECT_NAME}Entry)
+
+
+add_library(${PROJECT_NAME}::Runtime ALIAS ${PROJECT_NAME}Runtime)
+add_library(${PROJECT_NAME}::Entry ALIAS ${PROJECT_NAME}Entry)
+add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

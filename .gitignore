@@ -1,0 +1,10 @@
+build/
+lib/
+bin/
+.cache
+.vscode/
+*.exe
+*.so
+*.a
+*.lib
+*.pdb

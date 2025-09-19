@@ -1,0 +1,60 @@
+{
+	"version": 8,
+	"configurePresets": [
+		{
+			"name": "_base",
+			"hidden": true,
+			"binaryDir": "${sourceDir}/build/${presetName}",
+			"cacheVariables": {
+				"SDL_SHARED": "OFF",
+				"SDL_STATIC": "ON"
+			}
+		},
+		{
+			"name": "MSVC",
+			"inherits": "_base",
+			"generator": "Visual Studio 17 2022"
+		},
+		{
+			"name": "Ninja",
+			"generator": "Ninja Multi-Config",
+			"inherits": "_base",
+			"hidden": false,
+			"cacheVariables": {
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "msvc_debug",
+			"configuration": "Debug",
+			"configurePreset": "MSVC"
+		},
+		{
+			"name": "msvc_debugOpt",
+			"configuration": "RelWithDebInfo",
+			"configurePreset": "MSVC"
+		},
+		{
+			"name": "msvc_release",
+			"configuration": "Release",
+			"configurePreset": "MSVC"
+		},
+		{
+			"name": "ninja_debug",
+			"configuration": "Debug",
+			"configurePreset": "Ninja"
+		},
+		{
+			"name": "ninja_debugOpt",
+			"configuration": "RelWithDebInfo",
+			"configurePreset": "Ninja"
+		},
+		{
+			"name": "ninja_release",
+			"configuration": "Release",
+			"configurePreset": "Ninja"
+		}
+	]
+}

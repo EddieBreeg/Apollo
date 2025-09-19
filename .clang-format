@@ -1,0 +1,55 @@
+---
+AlignConsecutiveMacros: 
+  Enabled: true
+# AllowBreakBeforeNoexceptSpecifier: Never
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine : Never
+AllowShortLambdasOnASingleLine: Empty
+AlwaysBreakTemplateDeclarations: true
+BasedOnStyle: LLVM
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  BeforeLambdaBody: true
+  BeforeWhile: true
+  BeforeElse: true
+  BeforeCatch: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+BreakAfterAttributes: Never
+BreakBeforeBraces: Custom
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: 100
+Cpp11BracedListStyle: false
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+Language: Cpp
+LineEnding: LF
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: All
+PackConstructorInitializers: Never
+PenaltyBreakAssignment: 1000
+PenaltyBreakBeforeMemberAccess: 2000
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 2000
+PointerAlignment: Left
+RequiresClausePosition: OwnLine
+SortIncludes: CaseSensitive
+Standard: c++17
+TabWidth: 4
+UseTab: Always
