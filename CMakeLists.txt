@@ -41,7 +41,3 @@ if(${${PROJECT_NAME}_BUILD_TESTS})
 endif(${${PROJECT_NAME}_BUILD_TESTS})
 
 set(CMAKE_FOLDER ${PROJECT_NAME})
-
-set(TGTS "")
-ListTargets(source TGTS)
-message("${TGTS}")

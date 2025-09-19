@@ -17,6 +17,7 @@ function(AddLibrary NAME)
 	if(target_EXPORT_MACRO)
 		include(GenerateExportHeader)
 		generate_export_header(${NAME}
+			EXPORT_FILE_NAME "${NAME}Export.h"
 			EXPORT_MACRO_NAME ${target_EXPORT_MACRO}
 		)
 		target_include_directories(${NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
