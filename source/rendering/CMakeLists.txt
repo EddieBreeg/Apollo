@@ -1,0 +1,17 @@
+file(GLOB RENDERING_HEADERS *.h *.hpp)
+
+target_sources(${PROJECT_NAME}Runtime PRIVATE
+	Device.cpp
+	Renderer.cpp
+	${RENDERING_HEADERS}
+)
+
+if(${PROJECT_NAME}_BACKEND STREQUAL "D3D12")
+	set(BACKEND_MACRO_NAME BRK_D3D12)
+elseif(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
+	set(BACKEND_MACRO_NAME BRK_VULKAN)
+else()
+	message(FATAL_ERROR "Unsupported rendering backend")
+endif(${PROJECT_NAME}_BACKEND STREQUAL "D3D12")
+
+target_compile_definitions(${PROJECT_NAME}Runtime PUBLIC ${BACKEND_MACRO_NAME}=1)

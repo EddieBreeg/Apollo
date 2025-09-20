@@ -4,12 +4,14 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <entry/Entry.hpp>
+#include <rendering/Renderer.hpp>
 
 namespace {
 	brk::EAppResult ProcessEvents(SDL_Window* mainWindow)
 	{
 		SDL_Event evt;
-		while (SDL_PollEvent(&evt)) {
+		while (SDL_PollEvent(&evt))
+		{
 			switch (evt.type)
 			{
 			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
@@ -17,7 +19,7 @@ namespace {
 					return brk::EAppResult::Continue;
 				[[fallthrough]];
 			case SDL_EVENT_QUIT: return brk::EAppResult::Success;
-			default: continue;;
+			default: continue; ;
 			}
 		}
 
@@ -55,6 +57,12 @@ namespace brk {
 			return;
 		}
 
+#ifdef BRK_DEV
+		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, true);
+#else
+		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, false);
+#endif
+
 		BRK_LOG_INFO(
 			"Starting Breakout version {}.{}.{}",
 			BRK_VERSION_MAJOR,
@@ -70,11 +78,13 @@ namespace brk {
 
 	EAppResult App::Run()
 	{
-		for(;;)
+		for (;;)
 		{
 			m_Result = ProcessEvents(m_Window.GetHandle());
 			if (m_Result != EAppResult::Continue)
 				return m_Result;
+
+			m_Renderer->Update();
 		}
 		return m_Result;
 	}
@@ -82,6 +92,7 @@ namespace brk {
 	App::~App()
 	{
 		BRK_LOG_INFO("Shutting down...");
+		rdr::Renderer::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}
 } // namespace brk

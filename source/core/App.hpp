@@ -5,8 +5,11 @@
 #include "Singleton.hpp"
 #include "Window.hpp"
 
-
 namespace brk {
+	namespace rdr {
+		class Renderer;
+	}
+
 	enum class EAppResult : int8;
 
 	struct EntryPoint;
@@ -26,6 +29,7 @@ namespace brk {
 
 		const EntryPoint& m_EntryPoint;
 		Window m_Window;
+		rdr::Renderer* m_Renderer = nullptr;
 		EAppResult m_Result;
 	};
 } // namespace brk

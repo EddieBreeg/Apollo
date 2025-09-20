@@ -14,13 +14,17 @@ namespace brk {
 			int32 m_Line = -1;
 		};
 
-		template <class... T>
-		void AssertImpl(const bool cond, spdlog::source_loc loc, T&&... args)
+		template <class... A>
+		void AssertImpl(
+			const bool cond,
+			spdlog::source_loc loc,
+			spdlog::format_string_t<A...> fmt,
+			A&&... args)
 		{
 			if (cond) [[likely]]
 				return;
 
-			spdlog::log(loc, spdlog::level::critical, std::forward<T>(args)...);
+			spdlog::log(loc, spdlog::level::critical, fmt, std::forward<A>(args)...);
 			throw _internal::BreakException{ loc.filename, loc.funcname, loc.line };
 		}
 	} // namespace _internal
@@ -29,7 +33,7 @@ namespace brk {
 #define BRK_ASSERT(expr, ...)                                                                      \
 	brk::_internal::AssertImpl(                                                                    \
 		!!(expr),                                                                                  \
-		spdlog::source_loc{ __FILE__, __func__, __LINE__ },                                        \
+		spdlog::source_loc{ __FILE__, __LINE__, __func__ },                                        \
 		__VA_ARGS__)
 
 #define DEBUG_BREAK()                                                                              \
