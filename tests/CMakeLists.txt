@@ -1,1 +1,6 @@
 set(CMAKE_FOLDER "tests")
+
+AddTest(TypeInfoTests SOURCES TypeInfoTests.cpp
+	DEPENDENCIES Breakout::Runtime
+	PROPERTIES CXX_STANDARD 20 COMPILE_WARNING_AS_ERROR ON
+)

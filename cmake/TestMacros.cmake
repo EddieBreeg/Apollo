@@ -14,7 +14,7 @@ function(AddTest NAME)
 	endif(test_PROPERTIES)
 
 	if(test_DEPENDENCIES)
-		target_link_libraries(${NAME} PRIVATE ${test_DEPENDENCIES})
+		target_link_libraries(${NAME} PRIVATE ${test_DEPENDENCIES} Catch2::Catch2WithMain)
 	endif(test_DEPENDENCIES)
 	
 	if(test_COMPILER_OPTIONS)
