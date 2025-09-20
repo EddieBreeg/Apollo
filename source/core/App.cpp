@@ -3,16 +3,49 @@
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdlgpu3.h>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
+#include <imgui.h>
 #include <rendering/Renderer.hpp>
 
 namespace {
+	ImGuiContext* InitImGui(SDL_Window* window, SDL_GPUDevice* device)
+	{
+		auto* const ctx = ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		(void)io;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;	  // Enable Docking
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;	  // Enable Multi-Viewport / Platform
+															  // Windows
+
+		ImGui_ImplSDL3_InitForSDLGPU(window);
+		ImGui_ImplSDLGPU3_InitInfo init_info = {};
+		init_info.Device = device;
+		init_info.ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(device, window);
+		init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
+		init_info.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
+		init_info.PresentMode = SDL_GPU_PRESENTMODE_VSYNC;
+		ImGui_ImplSDLGPU3_Init(&init_info);
+		return ctx;
+	}
+
+	void ShutdownImGui()
+	{
+		ImGui_ImplSDL3_Shutdown();
+		ImGui_ImplSDLGPU3_Shutdown();
+		ImGui::DestroyContext();
+	}
+
 	brk::EAppResult ProcessEvents(SDL_Window* mainWindow)
 	{
 		SDL_Event evt;
 		while (SDL_PollEvent(&evt))
 		{
+			ImGui_ImplSDL3_ProcessEvent(&evt);
 			switch (evt.type)
 			{
 			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
@@ -20,7 +53,7 @@ namespace {
 					return brk::EAppResult::Continue;
 				[[fallthrough]];
 			case SDL_EVENT_QUIT: return brk::EAppResult::Success;
-			default: continue; ;
+			default: continue;
 			}
 		}
 
@@ -65,6 +98,8 @@ namespace brk {
 #else
 		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, false);
 #endif
+		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_Renderer->GetDevice().GetHandle());
+
 		m_ECSManager = &ecs::Manager::Init();
 		RegisterCoreSystems(*m_ECSManager);
 
@@ -85,18 +120,44 @@ namespace brk {
 	{
 		for (;;)
 		{
-			m_Result = ProcessEvents(m_Window.GetHandle());
+			m_Result = Update();
 			if (m_Result != EAppResult::Continue)
-				return m_Result;
-
-			m_ECSManager->Update();
+				break;
 		}
 		return m_Result;
+	}
+
+	EAppResult App::Update()
+	{
+		ImGui_ImplSDLGPU3_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
+		ImGui::NewFrame();
+
+		if (const auto res = ProcessEvents(m_Window.GetHandle()); res != EAppResult::Continue)
+			return res;
+
+		m_Renderer->BeginFrame();
+
+		m_ECSManager->Update();
+		m_Renderer->ImGuiRenderPass();
+
+		ImGui::EndFrame();
+
+		m_Renderer->EndFrame();
+
+		// Update and Render additional Platform Windows
+		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
+		return EAppResult::Continue;
 	}
 
 	App::~App()
 	{
 		BRK_LOG_INFO("Shutting down...");
+		ShutdownImGui();
 		ecs::Manager::Shutdown();
 		rdr::Renderer::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);

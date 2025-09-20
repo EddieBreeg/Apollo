@@ -5,6 +5,8 @@
 #include "Singleton.hpp"
 #include "Window.hpp"
 
+struct ImGuiContext;
+
 namespace brk {
 	namespace ecs {
 		class Manager;
@@ -24,10 +26,13 @@ namespace brk {
 		~App();
 		[[nodiscard]] EAppResult GetResultCode() const noexcept { return m_Result; }
 		[[nodiscard]] Window& GetMainWindow() noexcept { return m_Window; }
+		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 
 		EAppResult Run();
 
 	private:
+		EAppResult Update();
+
 		App(const EntryPoint& entry);
 		friend class Singleton<App>;
 
@@ -37,6 +42,7 @@ namespace brk {
 		Window m_Window;
 		rdr::Renderer* m_Renderer = nullptr;
 		ecs::Manager* m_ECSManager = nullptr;
+		ImGuiContext* m_ImGuiContext = nullptr;
 
 		EAppResult m_Result;
 	};
