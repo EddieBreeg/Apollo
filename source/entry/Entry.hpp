@@ -4,6 +4,8 @@
 #include <span>
 
 namespace brk {
+	class App;
+
 	enum class EAppResult: int8
 	{
 		Continue,
@@ -19,7 +21,7 @@ namespace brk {
 
 		std::span<const char*> m_Args;
 
-		EAppResult (*m_OnInit)(const EntryPoint&);
+		EAppResult (*m_OnInit)(const EntryPoint&, App&);
 	};
 
 	extern void GetEntryPoint(EntryPoint& out_entry);

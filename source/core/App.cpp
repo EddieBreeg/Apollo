@@ -3,6 +3,7 @@
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <rendering/Renderer.hpp>
 
@@ -29,6 +30,8 @@ namespace {
 
 namespace brk {
 	std::unique_ptr<App> App::s_Instance;
+
+	void RegisterCoreSystems(ecs::Manager& manager);
 
 	App::App(const EntryPoint& entry)
 		: m_EntryPoint(entry)
@@ -62,6 +65,8 @@ namespace brk {
 #else
 		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, false);
 #endif
+		m_ECSManager = &ecs::Manager::Init();
+		RegisterCoreSystems(*m_ECSManager);
 
 		BRK_LOG_INFO(
 			"Starting Breakout version {}.{}.{}",
@@ -70,7 +75,7 @@ namespace brk {
 			BRK_VERSION_PATCH);
 
 		if (m_EntryPoint.m_OnInit)
-			m_Result = m_EntryPoint.m_OnInit(m_EntryPoint);
+			m_Result = m_EntryPoint.m_OnInit(m_EntryPoint, *this);
 
 		if (m_Result != EAppResult::Continue)
 			return;
@@ -84,7 +89,7 @@ namespace brk {
 			if (m_Result != EAppResult::Continue)
 				return m_Result;
 
-			m_Renderer->Update();
+			m_ECSManager->Update();
 		}
 		return m_Result;
 	}
@@ -92,6 +97,7 @@ namespace brk {
 	App::~App()
 	{
 		BRK_LOG_INFO("Shutting down...");
+		ecs::Manager::Shutdown();
 		rdr::Renderer::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}

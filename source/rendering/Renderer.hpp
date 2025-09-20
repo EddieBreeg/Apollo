@@ -17,8 +17,7 @@ namespace brk::rdr {
 	public:
 		~Renderer() = default;
 
-		// temporary: will be removed
-		void Update();
+		GPUDevice& GetDevice() noexcept { return m_Device; }
 
 	private:
 		Renderer(EBackend backend, Window& window, bool gpuDebug = false);
@@ -27,6 +26,6 @@ namespace brk::rdr {
 		static std::unique_ptr<Renderer> s_Instance;
 
 		GPUDevice m_Device;
-		SDL_Window* m_WinHandle = nullptr;
+		Window& m_Window;
 	};
 } // namespace brk::rdr
