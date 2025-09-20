@@ -1,7 +1,8 @@
 set(CMAKE_FOLDER "tests")
 
 AddTest(${PROJECT_NAME}Tests
-SOURCES 
+SOURCES
+	EnumTests.cpp
 	TypeInfoTests.cpp
 	SystemTests.cpp
 DEPENDENCIES Breakout::Runtime

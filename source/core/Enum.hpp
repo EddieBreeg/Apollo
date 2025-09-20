@@ -37,31 +37,49 @@ namespace brk {
 		template <class E>
 		[[nodiscard]] constexpr E operator|(E a, E b) noexcept requires std::is_enum_v<E>
 		{
-			return ToUnderlying(a) | ToUnderlying(b);
+			return static_cast<E>(ToUnderlying(a) | ToUnderlying(b));
 		}
 
 		template <class E>
 		[[nodiscard]] constexpr E operator&(E a, E b) noexcept requires std::is_enum_v<E>
 		{
-			return ToUnderlying(a) & ToUnderlying(b);
+			return static_cast<E>(ToUnderlying(a) & ToUnderlying(b));
 		}
 
 		template <class E>
 		[[nodiscard]] constexpr E operator^(E a, E b) noexcept requires std::is_enum_v<E>
 		{
-			return ToUnderlying(a) ^ ToUnderlying(b);
+			return static_cast<E>(ToUnderlying(a) ^ ToUnderlying(b));
 		}
 
 		template <class E>
 		[[nodiscard]] constexpr E operator~(E x) noexcept requires std::is_enum_v<E>
 		{
-			return ~ToUnderlying(x);
+			return static_cast<E>(~ToUnderlying(x));
 		}
 
 		template <class E>
 		[[nodiscard]] constexpr bool operator!(E x) noexcept requires std::is_enum_v<E>
 		{
 			return !ToUnderlying(x);
+		}
+
+		template <class E>
+		constexpr E& operator^=(E& a, E b) noexcept requires std::is_enum_v<E>
+		{
+			return a = a ^ b;
+		}
+
+		template <class E>
+		constexpr E& operator|=(E& a, E b) noexcept requires std::is_enum_v<E>
+		{
+			return a = a | b;
+		}
+
+		template <class E>
+		constexpr E& operator&=(E& a, E b) noexcept requires std::is_enum_v<E>
+		{
+			return a = a & b;
 		}
 	} // namespace enum_operators
 
