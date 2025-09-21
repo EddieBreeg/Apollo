@@ -3,6 +3,7 @@ set(CMAKE_FOLDER "tests")
 AddTest(${PROJECT_NAME}Tests
 SOURCES
 	EnumTests.cpp
+	RetainPtrTests.cpp
 	TypeInfoTests.cpp
 	SystemTests.cpp
 DEPENDENCIES Breakout::Runtime
