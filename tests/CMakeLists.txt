@@ -1,15 +1,17 @@
 set(CMAKE_FOLDER "tests")
 
-AddTest(${PROJECT_NAME}Tests
+AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	EnumTests.cpp
 	RetainPtrTests.cpp
 	TypeInfoTests.cpp
 	SystemTests.cpp
-DEPENDENCIES Breakout::Runtime
-PROPERTIES CXX_STANDARD 20 COMPILE_WARNING_AS_ERROR ON
+LINK PRIVATE Breakout::Runtime Catch2::Catch2WithMain
+PROPERTIES ${COMMON_PROPERTIES}
+OPTIONS PRIVATE ${COMPILER_ARGS}
 )
 
-add_custom_target(RunECSTests COMMAND
-	$<TARGET_FILE:${PROJECT_NAME}Tests> "[ecs]"
-)
+AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
+AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
+AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
+AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")

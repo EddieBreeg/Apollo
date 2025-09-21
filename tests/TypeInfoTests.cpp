@@ -15,7 +15,7 @@ namespace {
 	using TypeIndexT = brk::TypeIndex<T, Gen>;
 } // namespace
 
-TEST_CASE("Sequential index")
+TEST_CASE("Sequential index", "[rtti]")
 {
 	const uint32 i0 = brk::TypeIndex<int>{};
 	const uint32 i1 = brk::TypeIndex<unsigned int>{};
@@ -25,13 +25,13 @@ TEST_CASE("Sequential index")
 	g_IntIndex = i0;
 }
 
-TEST_CASE("Index using new generator")
+TEST_CASE("Index using new generator", "[rtti]")
 {
 	const uint32 i = TypeIndexT<int>{};
 	CHECK(i == g_IntIndex);
 }
 
-TEST_CASE("Type info test")
+TEST_CASE("Type info test", "[rtti]")
 {
 	const brk::TypeInfo& info = brk::TypeInfo::Get<int>();
 	CHECK(info.m_Index == g_IntIndex);
@@ -41,7 +41,7 @@ TEST_CASE("Type info test")
 	g_IntInfo = &info;
 }
 
-TEST_CASE("Type info consistency")
+TEST_CASE("Type info consistency", "[rtti]")
 {
 	const brk::TypeInfo& info = brk::TypeInfo::Get<int>();
 	CHECK(info == *g_IntInfo);
