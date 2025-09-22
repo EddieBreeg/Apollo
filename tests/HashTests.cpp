@@ -1,5 +1,6 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <core/Hash.hpp>
+#include <core/StringHash.hpp>
 
 namespace brk::hash::ut {
 	static_assert(brk::Hasher<brk::Hash<int>, int>);
