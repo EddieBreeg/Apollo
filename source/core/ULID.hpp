@@ -1,6 +1,9 @@
 #pragma once
 
 #include <PCH.hpp>
+
+#include "Hash.hpp"
+
 #include <string_view>
 
 namespace brk {
@@ -57,7 +60,17 @@ namespace brk {
 		[[nodiscard]] constexpr bool operator!=(const ULID other) const noexcept;
 
 	private:
+		friend struct Hash<ULID>;
 		uint64 m_Left = 0, m_Right = 0;
+	};
+
+	template <>
+	struct Hash<ULID>
+	{
+		[[nodiscard]] constexpr uint64 operator()(const ULID& id) const noexcept
+		{
+			return HashCombine(0, id.m_Left, id.m_Right);
+		}
 	};
 
 	inline constexpr brk::ULID::ULID(
