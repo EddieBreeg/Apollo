@@ -4,8 +4,9 @@ AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	EnumTests.cpp
 	RetainPtrTests.cpp
-	TypeInfoTests.cpp
 	SystemTests.cpp
+	TypeInfoTests.cpp
+	ULIDTests.cpp
 LINK PRIVATE Breakout::Runtime Catch2::Catch2WithMain
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
@@ -15,3 +16,4 @@ AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
 AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
 AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
+AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
