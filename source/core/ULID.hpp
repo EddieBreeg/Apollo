@@ -69,7 +69,7 @@ namespace brk {
 	{
 		[[nodiscard]] constexpr uint64 operator()(const ULID& id) const noexcept
 		{
-			return HashCombine(0, id.m_Left, id.m_Right);
+			return HashCombine(id.m_Left, id.m_Right);
 		}
 	};
 
