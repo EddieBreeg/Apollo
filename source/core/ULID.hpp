@@ -165,4 +165,12 @@ namespace brk {
 	{
 		return m_Left != other.m_Left || m_Right != other.m_Right;
 	}
+
+	namespace ulid_literal {
+		consteval ULID operator""_ulid(const char* str, size_t len)
+		{
+			return ULID::FromString({ str, len });
+		}
+	} // namespace ulid_literal
+	using namespace ulid_literal;
 } // namespace brk

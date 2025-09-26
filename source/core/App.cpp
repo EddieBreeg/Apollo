@@ -3,6 +3,7 @@
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <asset/AssetManager.hpp>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlgpu3.h>
 #include <ecs/Manager.hpp>
@@ -77,6 +78,11 @@ namespace brk {
 		}
 
 		spdlog::set_level(spdlog::level::trace);
+		BRK_LOG_INFO(
+			"Starting Breakout version {}.{}.{}",
+			BRK_VERSION_MAJOR,
+			BRK_VERSION_MINOR,
+			BRK_VERSION_PATCH);
 
 		WindowSettings winSettings{
 			.m_Title = entry.m_AppName,
@@ -98,16 +104,12 @@ namespace brk {
 #else
 		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, false);
 #endif
+		m_AssetManager = &AssetManager::Init(entry.m_AssetManagerSettings, m_Renderer->GetDevice());
+
 		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_Renderer->GetDevice().GetHandle());
 
 		m_ECSManager = &ecs::Manager::Init();
 		RegisterCoreSystems(*m_ECSManager);
-
-		BRK_LOG_INFO(
-			"Starting Breakout version {}.{}.{}",
-			BRK_VERSION_MAJOR,
-			BRK_VERSION_MINOR,
-			BRK_VERSION_PATCH);
 
 		if (m_EntryPoint.m_OnInit)
 			m_Result = m_EntryPoint.m_OnInit(m_EntryPoint, *this);
@@ -137,6 +139,7 @@ namespace brk {
 			return res;
 
 		m_Renderer->BeginFrame();
+		m_AssetManager->Update();
 
 		m_ECSManager->Update();
 		m_Renderer->ImGuiRenderPass();
@@ -159,6 +162,7 @@ namespace brk {
 		BRK_LOG_INFO("Shutting down...");
 		ShutdownImGui();
 		ecs::Manager::Shutdown();
+		AssetManager::Shutdown();
 		rdr::Renderer::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}

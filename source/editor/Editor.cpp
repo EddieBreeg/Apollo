@@ -1,12 +1,21 @@
 #include "Editor.hpp"
+
+#include <asset/AssetManager.hpp>
 #include <core/Log.hpp>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 
 namespace brk::editor {
-	Editor::Editor(std::span<const char*>)
+	Editor::Editor(std::span<const char*> args)
 	{
 		BRK_LOG_INFO("Initializing editor");
+		if (args.size() < 2)
+			return;
+
+		m_ProjectPath = args[1];
+		auto* assetManager = AssetManager::GetInstance();
+		BRK_ASSERT(assetManager, "Asset manager isn't initialized");
+		assetManager->ImportMetadataBank();
 	}
 
 	EAppResult Editor::Init(const EntryPoint& entry, App&)

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <PCH.hpp>
+
 #include <span>
+#include <filesystem>
 
 namespace brk {
 	enum class EAppResult : int8;
@@ -23,5 +25,6 @@ namespace brk::editor {
 		void Update();
 
 	private:
+		std::filesystem::path m_ProjectPath;
 	};
 } // namespace brk::editor

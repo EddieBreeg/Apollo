@@ -39,3 +39,7 @@ extern "C" void* alloca(size_t);
 #else
 #define DEBUG_CHECK(expr) (void)(expr)
 #endif
+
+#ifndef BIT
+#define BIT(n) (1ull << (n))
+#endif

@@ -8,6 +8,8 @@
 struct ImGuiContext;
 
 namespace brk {
+	class AssetManager;
+
 	namespace ecs {
 		class Manager;
 	}
@@ -42,6 +44,7 @@ namespace brk {
 		Window m_Window;
 		rdr::Renderer* m_Renderer = nullptr;
 		ecs::Manager* m_ECSManager = nullptr;
+		AssetManager* m_AssetManager = nullptr;
 		ImGuiContext* m_ImGuiContext = nullptr;
 
 		EAppResult m_Result;

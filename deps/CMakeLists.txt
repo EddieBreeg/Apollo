@@ -1,10 +1,10 @@
 set(CMAKE_FOLDER "deps")
 
-
 add_subdirectory(Catch2)
 add_subdirectory(glm)
 add_subdirectory(SDL)
 add_subdirectory(spdlog)
+add_subdirectory(stb)
 
 file(GLOB IMGUI_HEADERS "imgui/*.h")
 

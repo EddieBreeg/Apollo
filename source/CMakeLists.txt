@@ -17,12 +17,14 @@ target_precompile_headers(${PROJECT_NAME}Runtime PRIVATE PCH.hpp)
 
 add_subdirectory(core)
 add_subdirectory(rendering)
+add_subdirectory(asset)
 add_subdirectory(ecs)
 add_subdirectory(systems)
 
 add_subdirectory(editor)
-
 add_subdirectory(entry)
+
+add_subdirectory(tools)
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
