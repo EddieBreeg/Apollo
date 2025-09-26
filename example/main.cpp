@@ -37,8 +37,6 @@ namespace {
 					"01K61BK2C2QZS0A18PWHGARASK"_ulid);
 			}
 
-			brk::rdr::GPUDevice& device = m_Renderer.GetDevice();
-
 			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
 
 			if (!swapchainTexture)

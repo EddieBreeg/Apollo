@@ -53,7 +53,8 @@ namespace brk {
 		while (m_Requests.GetSize())
 		{
 			AssetLoadRequest request = m_Requests.PopAndGetFront();
-			if (!request.m_Asset) [[unlikely]]
+			if (!request.m_Asset || request.m_Asset->GetState() != EAssetState::Loading)
+				[[unlikely]]
 				continue;
 			BRK_LOG_TRACE(
 				"Loading asset {}({})",

@@ -22,6 +22,7 @@ namespace brk {
 		Invalid = 0,
 		Loading = BIT(0),
 		Loaded = BIT(1),
+		Unloading = BIT(2),
 	};
 
 	class IAsset
@@ -35,6 +36,7 @@ namespace brk {
 
 		[[nodiscard]] brk::ULID GetId() const noexcept { return m_Id; }
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
+		void SetState(EAssetState state) noexcept { m_State = state; }
 
 		[[nodiscard]] virtual EAssetType GetType() const noexcept = 0;
 

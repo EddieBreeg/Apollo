@@ -48,7 +48,7 @@ namespace brk {
 	class BRK_API AssetManager : public Singleton<AssetManager>
 	{
 	public:
-		~AssetManager() = default;
+		~AssetManager();
 		bool ImportMetadataBank();
 
 		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type)
@@ -70,14 +70,19 @@ namespace brk {
 	private:
 		AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
 		friend class Singleton<AssetManager>;
+		friend struct AssetRetainTraits;
 
 		IAsset* GetAssetImpl(const ULID& id, EAssetType type);
+		void RequestUnload(IAsset* res);
 
 		ULIDMap<AssetMetadata> m_MetadataBank;
 		AssetBankImportFunc* m_ImportBank = nullptr;
 		AssetTypeInfo m_TypeInfo[int32(EAssetType::NTypes)];
+		ULIDMap<IAsset*> m_Cache;
+
 		std::filesystem::path m_AssetsPath;
 		AssetLoader m_Loader;
+		Queue<IAsset*> m_UnloadQueue;
 
 		static std::unique_ptr<AssetManager> s_Instance;
 		friend class Singleton<AssetManager>;
