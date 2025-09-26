@@ -14,17 +14,20 @@ namespace {
 namespace brk {
 	bool AssetLoadRequest::operator()()
 	{
-		DEBUG_CHECK(m_Asset && m_Import)
+		DEBUG_CHECK(m_Asset && m_Import && m_Metadata)
 		{
 			return false;
 		}
 
-		return m_Import(*m_Asset);
+		return m_Import(*m_Asset, *m_Metadata);
 	}
 
-	void AssetLoader::AddRequest(std::shared_ptr<IAsset> asset, AssetImportFunc* loadFunc)
+	void AssetLoader::AddRequest(
+		std::shared_ptr<IAsset> asset,
+		AssetImportFunc* loadFunc,
+		const AssetMetadata& metadata)
 	{
-		m_Requests.AddEmplace(asset, loadFunc);
+		m_Requests.AddEmplace(asset, loadFunc, &metadata);
 	}
 
 	SDL_GPUCommandBuffer* AssetLoader::GetCurrentCommandBuffer() noexcept
@@ -52,20 +55,26 @@ namespace brk {
 			AssetLoadRequest request = m_Requests.PopAndGetFront();
 			if (!request.m_Asset) [[unlikely]]
 				continue;
-#ifdef BRK_DEV
-			const auto& metadata = request.m_Asset->GetMetadata();
-			BRK_LOG_TRACE("Loading asset {}({})", metadata.m_Name, metadata.m_Id);
-#endif
+			BRK_LOG_TRACE(
+				"Loading asset {}({})",
+				request.m_Metadata->m_Name,
+				request.m_Metadata->m_Id);
 			[[maybe_unused]] const bool result = request();
 
 #ifdef BRK_DEV
 			if (result)
 			{
-				BRK_LOG_TRACE("Asset {}({}) loaded successfully!", metadata.m_Name, metadata.m_Id);
+				BRK_LOG_TRACE(
+					"Asset {}({}) loaded successfully!",
+					request.m_Metadata->m_Name,
+					request.m_Metadata->m_Id);
 			}
 			else
 			{
-				BRK_LOG_ERROR("Asset {}({}) failed to load", metadata.m_Name, metadata.m_Id);
+				BRK_LOG_ERROR(
+					"Asset {}({}) failed to load",
+					request.m_Metadata->m_Name,
+					request.m_Metadata->m_Id);
 			}
 #endif
 		}

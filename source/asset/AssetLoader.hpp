@@ -20,6 +20,7 @@ namespace brk {
 	{
 		std::shared_ptr<IAsset> m_Asset;
 		AssetImportFunc* m_Import = nullptr;
+		const AssetMetadata* m_Metadata = nullptr;
 
 		bool operator()();
 	};
@@ -31,7 +32,7 @@ namespace brk {
 			: m_Device(device)
 		{}
 
-		void AddRequest(std::shared_ptr<IAsset> asset, AssetImportFunc* importFunc);
+		void AddRequest(std::shared_ptr<IAsset> asset, AssetImportFunc* importFunc, const AssetMetadata& metadata);
 
 		void ProcessRequests();
 

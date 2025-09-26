@@ -158,9 +158,9 @@ namespace brk::editor {
 		return true;
 	}
 
-	bool ImportTexture2d(IAsset& out_texture)
+	bool ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
 	{
-		const auto pathStr = out_texture.GetMetadata().m_FilePath.string();
+		const auto pathStr = metadata.m_FilePath.string();
 		int32 width = 0, height = 0;
 		int32 numChannels = 0;
 		const uint8* data = stbi_load(pathStr.c_str(), &width, &height, &numChannels, 4);
@@ -186,7 +186,7 @@ namespace brk::editor {
 		{
 			BRK_LOG_ERROR(
 				"Failed to create create texture {}: {}",
-				out_texture.GetMetadata().m_Id,
+				out_texture.GetId(),
 				SDL_GetError());
 			return false;
 		}

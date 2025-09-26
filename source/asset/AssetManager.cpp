@@ -56,8 +56,8 @@ namespace brk {
 			BRK_LOG_ERROR("No asset found for id {}", id);
 			return nullptr;
 		}
-		auto ptr = info.m_Create(it->second);
-		m_Loader.AddRequest(ptr, info.m_Import);
+		auto ptr = info.m_Create(it->second.m_Id);
+		m_Loader.AddRequest(ptr, info.m_Import, it->second);
 		return ptr;
 	}
 
