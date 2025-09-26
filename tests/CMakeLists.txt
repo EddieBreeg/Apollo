@@ -5,6 +5,8 @@ SOURCES
 	EnumTests.cpp
 	HashTests.cpp
 	RetainPtrTests.cpp
+	QueueTests.cpp
+	TypeInfoTests.cpp
 	SystemTests.cpp
 	TypeInfoTests.cpp
 	ULIDTests.cpp
@@ -15,6 +17,7 @@ OPTIONS PRIVATE ${COMPILER_ARGS}
 
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("Hash Tests" "${PROJECT_NAME}Tests" FILTERS "[hash]")
+AddTest("Container Tests" "${PROJECT_NAME}Tests" FILTERS "[containers]")
 AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
 AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
 AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
