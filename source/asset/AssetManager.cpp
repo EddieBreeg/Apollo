@@ -37,14 +37,14 @@ namespace brk {
 		return true;
 	}
 
-	std::shared_ptr<IAsset> AssetManager::GetAsset(const ULID& id, EAssetType type)
+	IAsset* AssetManager::GetAssetImpl(const ULID& id, EAssetType type)
 	{
 		BRK_ASSERT(
 			type < EAssetType::NTypes && type > EAssetType::Invalid,
 			"Invalid asset type {}",
 			int32(type));
 		const AssetTypeInfo& info = m_TypeInfo[int32(type)];
-
+	
 		DEBUG_CHECK(info)
 		{
 			BRK_LOG_CRITICAL("Asset type {} is not implemented!", int32(type));
@@ -57,8 +57,9 @@ namespace brk {
 			return nullptr;
 		}
 		auto ptr = info.m_Create(it->second.m_Id);
-		m_Loader.AddRequest(ptr, info.m_Import, it->second);
+		m_Loader.AddRequest(AssetRef<IAsset>{ptr}, info.m_Import, it->second);
 		return ptr;
+
 	}
 
 	void AssetManager::Update()

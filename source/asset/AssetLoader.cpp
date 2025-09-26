@@ -23,11 +23,11 @@ namespace brk {
 	}
 
 	void AssetLoader::AddRequest(
-		std::shared_ptr<IAsset> asset,
+		AssetRef<IAsset> asset,
 		AssetImportFunc* loadFunc,
 		const AssetMetadata& metadata)
 	{
-		m_Requests.AddEmplace(asset, loadFunc, &metadata);
+		m_Requests.AddEmplace(std::move(asset), loadFunc, &metadata);
 	}
 
 	SDL_GPUCommandBuffer* AssetLoader::GetCurrentCommandBuffer() noexcept

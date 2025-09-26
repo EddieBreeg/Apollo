@@ -4,6 +4,7 @@
 
 #include "Asset.hpp"
 #include "AssetLoader.hpp"
+#include "AssetRef.hpp"
 #include "Importer.hpp"
 #include <core/Singleton.hpp>
 #include <core/ULID.hpp>
@@ -17,8 +18,6 @@ namespace brk::rdr {
 }
 
 namespace brk {
-	enum class EAssetType : int8;
-
 	struct AssetTypeInfo
 	{
 		AssetConstructor* m_Create = nullptr;
@@ -52,14 +51,18 @@ namespace brk {
 		~AssetManager() = default;
 		bool ImportMetadataBank();
 
-		std::shared_ptr<IAsset> GetAsset(const ULID& id, EAssetType type);
+		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type)
+		{
+			return AssetRef<IAsset>{ GetAssetImpl(id, type) };
+		}
 
 		template <class A>
-		std::shared_ptr<A> GetAsset(const ULID& id) requires(
+		AssetRef<A> GetAsset(const ULID& id) requires(
 			std::is_base_of_v<IAsset, A>&& A::AssetType > EAssetType::Invalid &&
 			A::AssetType < EAssetType::NTypes)
 		{
-			return std::static_pointer_cast<A>(GetAsset(id, A::AssetType));
+			IAsset* const ptr = GetAssetImpl(id, A::AssetType);
+			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 
 		void Update();
@@ -67,6 +70,8 @@ namespace brk {
 	private:
 		AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
 		friend class Singleton<AssetManager>;
+
+		IAsset* GetAssetImpl(const ULID& id, EAssetType type);
 
 		ULIDMap<AssetMetadata> m_MetadataBank;
 		AssetBankImportFunc* m_ImportBank = nullptr;

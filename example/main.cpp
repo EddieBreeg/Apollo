@@ -19,7 +19,7 @@ namespace {
 	{
 		brk::Window& m_Window;
 		brk::rdr::Renderer& m_Renderer;
-		std::shared_ptr<brk::rdr::Texture2D> m_Texture;
+		brk::AssetRef<brk::rdr::Texture2D> m_Texture;
 
 		void Update()
 		{

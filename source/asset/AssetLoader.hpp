@@ -3,8 +3,8 @@
 #include <PCH.hpp>
 
 #include "Importer.hpp"
+#include "AssetRef.hpp"
 #include <core/Queue.hpp>
-#include <memory>
 
 struct SDL_GPUCommandBuffer;
 struct SDL_GPUCopyPass;
@@ -18,7 +18,7 @@ namespace brk {
 
 	struct AssetLoadRequest
 	{
-		std::shared_ptr<IAsset> m_Asset;
+		AssetRef<IAsset> m_Asset;
 		AssetImportFunc* m_Import = nullptr;
 		const AssetMetadata* m_Metadata = nullptr;
 
@@ -32,7 +32,7 @@ namespace brk {
 			: m_Device(device)
 		{}
 
-		void AddRequest(std::shared_ptr<IAsset> asset, AssetImportFunc* importFunc, const AssetMetadata& metadata);
+		void AddRequest(AssetRef<IAsset> asset, AssetImportFunc* importFunc, const AssetMetadata& metadata);
 
 		void ProcessRequests();
 

@@ -2,10 +2,12 @@
 
 #include <PCH.hpp>
 
+#include <atomic>
+#include <core/RetainPtr.hpp>
 #include <core/ULID.hpp>
-#include <memory>
 
 namespace brk {
+
 	struct AssetMetadata;
 
 	enum class EAssetType : int8
@@ -29,21 +31,32 @@ namespace brk {
 		IAsset(const ULID& id)
 			: m_Id{ id }
 		{}
+		virtual ~IAsset() = default;
 
 		[[nodiscard]] brk::ULID GetId() const noexcept { return m_Id; }
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
 
+		[[nodiscard]] virtual EAssetType GetType() const noexcept = 0;
+
 	protected:
 		brk::ULID m_Id;
-		EAssetState m_State = EAssetState::Invalid;
+		std::atomic<EAssetState> m_State = EAssetState::Invalid;
+		std::atomic_uint32_t m_RefCount = 0;
+
+		friend struct AssetRetainTraits;
 
 	private:
 	};
 
+#define GET_ASSET_TYPE_IMPL()                                                                      \
+	[[nodiscard]] EAssetType GetType() const noexcept override                                     \
+	{                                                                                              \
+		return AssetType;                                                                          \
+	}
+
 	template <class A>
-	std::shared_ptr<IAsset> ConstructAsset(const ULID& id)
-		requires(std::is_base_of_v<IAsset, A>)
+	IAsset* ConstructAsset(const ULID& id) requires(std::is_base_of_v<IAsset, A>)
 	{
-		return std::static_pointer_cast<IAsset>(std::make_shared<A>(id));
+		return static_cast<IAsset*>(new A{ id });
 	};
 } // namespace brk
