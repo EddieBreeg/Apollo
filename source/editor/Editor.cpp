@@ -25,5 +25,5 @@ namespace brk::editor {
 		return EAppResult::Continue;
 	}
 
-	void Editor::Update() {}
+	void Editor::Update(entt::registry&) {}
 } // namespace brk::editor

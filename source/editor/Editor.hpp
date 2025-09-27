@@ -4,6 +4,7 @@
 
 #include <span>
 #include <filesystem>
+#include <entt/entity/registry.hpp>
 
 namespace brk {
 	enum class EAppResult : int8;
@@ -22,7 +23,7 @@ namespace brk::editor {
 
 		static EAppResult Init(const EntryPoint&, App&);
 
-		void Update();
+		void Update(entt::registry&);
 
 	private:
 		std::filesystem::path m_ProjectPath;

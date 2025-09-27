@@ -3,17 +3,17 @@
 namespace brk::ecs {
 	SystemInstance::SystemInstance(
 		void* ptr,
-		void (*updateFunc)(void*),
+		void (*updateFunc)(void*, entt::registry&),
 		void (*deleteFunc)(void*))
 		: m_Ptr(ptr)
 		, m_Update(updateFunc)
 		, m_Delete(deleteFunc)
 	{}
 
-	void SystemInstance::Update()
+	void SystemInstance::Update(entt::registry& world)
 	{
 		if (m_Ptr) [[likely]]
-			m_Update(m_Ptr);
+			m_Update(m_Ptr, world);
 	}
 
 	SystemInstance::~SystemInstance()

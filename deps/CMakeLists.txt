@@ -5,6 +5,7 @@ add_subdirectory(glm)
 add_subdirectory(SDL)
 add_subdirectory(spdlog)
 add_subdirectory(stb)
+add_subdirectory(entt)
 
 if(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
 	add_subdirectory(SPIRV-Reflect)

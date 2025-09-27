@@ -1,5 +1,8 @@
 #pragma once
 
+#include <PCH.hpp>
+#include <entt/entity/fwd.hpp>
+
 namespace brk::inputs {
 	class BRK_API System
 	{
@@ -7,7 +10,7 @@ namespace brk::inputs {
 		System() = default;
 		~System() = default;
 
-		void Update();
+		void Update(entt::registry&);
 	
 	private:
 	};

@@ -7,6 +7,7 @@
 #include <core/Assert.hpp>
 #include <core/Singleton.hpp>
 #include <core/TypeInfo.hpp>
+#include <entt/entity/registry.hpp>
 #include <vector>
 
 namespace brk::ecs {
@@ -47,5 +48,6 @@ namespace brk::ecs {
 		static std::unique_ptr<Manager> s_Instance;
 
 		std::vector<SystemInstance> m_Systems;
+		entt::registry m_World;
 	};
 } // namespace brk::ecs

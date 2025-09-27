@@ -5,6 +5,7 @@
 #include <core/Window.hpp>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
+#include <entt/entity/registry.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 #include <imgui.h>
@@ -148,7 +149,7 @@ namespace {
 			BRK_ASSERT(m_Pipeline, "Failed to create graphics pipeline");
 		}
 
-		void Update()
+		void Update(entt::registry&)
 		{
 			if (!m_Window) [[unlikely]]
 				return;

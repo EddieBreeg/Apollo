@@ -1,19 +1,20 @@
 #include <catch2/catch_test_macros.hpp>
 #include <ecs/System.hpp>
+#include <entt/entity/registry.hpp>
 
 namespace {
 	struct S1
 	{
 		int32 value = 0;
 
-		void Update() { ++value; }
+		void Update(entt::registry&) { ++value; }
 	};
 
 	struct S2
 	{
 		uint32& m_OnDelete;
 		~S2() { ++m_OnDelete; }
-		void Update() {}
+		void Update(entt::registry&) {}
 	};
 } // namespace
 
@@ -28,8 +29,9 @@ namespace brk::ecs::ut {
 	{
 		SystemInstance system = SystemInstance::Create<S1>();
 		REQUIRE(system.GetAs<const S1>()->value == 0);
-
-		system.Update();
+		
+		entt::registry world;
+		system.Update(world);
 		CHECK(system.GetAs<const S1>()->value == 1);
 	}
 

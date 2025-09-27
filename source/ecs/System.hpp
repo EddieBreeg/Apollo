@@ -2,24 +2,26 @@
 
 #include <PCH.hpp>
 #include <core/TypeInfo.hpp>
+#include <entt/entity/fwd.hpp>
 
 namespace brk::ecs {
 	template <class S>
-	concept System = requires(S & instance)
+	concept System = requires(S & instance, entt::registry& world)
 	{
-		{ instance.Update() };
+		{ instance.Update(world) };
 	};
 
 	class BRK_API SystemInstance
 	{
+		using UpdateFunc = void(void*, entt::registry&);
 	public:
 		template <System S, class... Args>
 		static SystemInstance Create(Args&&... args) requires(std::is_constructible_v<S, Args...>)
 		{
 			S* ptr = new S{ std::forward<Args>(args)... };
-			auto update = [](void* system)
+			auto update = [](void* system, entt::registry& world)
 			{
-				static_cast<S*>(system)->Update();
+				static_cast<S*>(system)->Update(world);
 			};
 			auto deleteFunc = [](void* system)
 			{
@@ -42,7 +44,7 @@ namespace brk::ecs {
 
 		void Swap(SystemInstance& other) noexcept;
 
-		void Update();
+		void Update(entt::registry& world);
 
 		void Shutdown();
 
@@ -65,10 +67,10 @@ namespace brk::ecs {
 		}
 
 	private:
-		SystemInstance(void* ptr, void (*updateFunc)(void*), void (*deleteFunc)(void*));
+		SystemInstance(void* ptr, UpdateFunc* updateFunc, void (*deleteFunc)(void*));
 
 		void* m_Ptr = nullptr;
-		void (*m_Update)(void*) = nullptr;
+		UpdateFunc* m_Update = nullptr;
 		void (*m_Delete)(void*) = nullptr;
 	};
 } // namespace brk::ecs

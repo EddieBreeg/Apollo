@@ -16,7 +16,7 @@ namespace brk::ecs {
 	{
 		for (SystemInstance& s : m_Systems)
 		{
-			s.Update();
+			s.Update(m_World);
 		}
 	}
 } // namespace brk::ecs

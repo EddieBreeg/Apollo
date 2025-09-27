@@ -16,3 +16,6 @@
 [submodule "deps/SPIRV-Reflect"]
 	path = deps/SPIRV-Reflect
 	url = git@github.com:KhronosGroup/SPIRV-Reflect.git
+[submodule "deps/entt"]
+	path = deps/entt
+	url = git@github.com:skypjack/entt.git
