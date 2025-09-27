@@ -23,8 +23,7 @@ namespace brk::rdr {
 
 		~Texture2D();
 
-		static constexpr EAssetType AssetType = EAssetType::Texture2D;
-		GET_ASSET_TYPE_IMPL();
+		GET_ASSET_TYPE_IMPL(EAssetType::Texture2D);
 
 	private:
 		friend bool brk::editor::ImportTexture2d(IAsset&, const AssetMetadata&);

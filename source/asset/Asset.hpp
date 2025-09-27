@@ -14,6 +14,7 @@ namespace brk {
 	{
 		Invalid = -1,
 		Texture2D,
+		Shader,
 		NTypes
 	};
 
@@ -50,7 +51,8 @@ namespace brk {
 	private:
 	};
 
-#define GET_ASSET_TYPE_IMPL()                                                                      \
+#define GET_ASSET_TYPE_IMPL(type)                                                                  \
+	static constexpr EAssetType AssetType = (type);                                                \
 	[[nodiscard]] EAssetType GetType() const noexcept override                                     \
 	{                                                                                              \
 		return AssetType;                                                                          \

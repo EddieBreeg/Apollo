@@ -21,6 +21,7 @@
 namespace {
 	const brk::StringHashMap<brk::EAssetType> g_AssetTypeMap{
 		{ brk::StringHash{ "texture2d" }, brk::EAssetType::Texture2D },
+		{ brk::StringHash{ "shader" }, brk::EAssetType::Shader },
 	};
 
 	struct Parser
@@ -198,6 +199,9 @@ namespace brk::editor {
 			device.GetHandle(),
 			&transferBufferInfo);
 		BRK_ASSERT(transferBuffer, "Failed to create transfer buffer: {}", SDL_GetError());
+		void* bufMem = SDL_MapGPUTransferBuffer(device.GetHandle(), transferBuffer, false);
+		std::memcpy(bufMem, data, transferBufferInfo.size);
+		SDL_UnmapGPUTransferBuffer(device.GetHandle(), transferBuffer);
 
 		SDL_GPUTextureTransferInfo transferInfo{
 			.transfer_buffer = transferBuffer,

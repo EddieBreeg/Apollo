@@ -3,6 +3,7 @@
 #include <core/Log.hpp>
 #include <core/ULIDFormatter.hpp>
 
+#include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
 
 namespace {
@@ -39,6 +40,7 @@ namespace brk {
 		: m_ImportBank(settings.m_MetadataImportFunc)
 		, m_TypeInfo{ 
 			{&ConstructAsset<rdr::Texture2D>, settings.m_ImportTexture2d},
+			{&ConstructAsset<rdr::Shader>, settings.m_LoadShader},
 		 }
 		, m_AssetsPath(settings.m_AssetPath)
 		, m_Loader(gpuDevice)

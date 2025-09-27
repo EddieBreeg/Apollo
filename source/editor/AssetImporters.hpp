@@ -12,4 +12,5 @@ namespace brk::editor {
 		ULIDMap<AssetMetadata>& out_metadata);
 
 	bool ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
+	bool LoadShader(IAsset& out_shader, const AssetMetadata& metadata);
 }

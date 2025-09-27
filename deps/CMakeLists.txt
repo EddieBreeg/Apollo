@@ -6,6 +6,10 @@ add_subdirectory(SDL)
 add_subdirectory(spdlog)
 add_subdirectory(stb)
 
+if(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
+	add_subdirectory(SPIRV-Reflect)
+endif(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
+
 file(GLOB IMGUI_HEADERS "imgui/*.h")
 
 AddLibrary(imgui SOURCES

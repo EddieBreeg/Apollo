@@ -10,3 +10,4 @@ bin/
 *.pdb
 .idea
 imgui.ini
+_assetCache

@@ -20,6 +20,7 @@ int main(int argc, const char** argv)
 	assetManagerSettings.m_MetadataImportFunc = &brk::editor::ImporteAssetMetadata;
 
 	assetManagerSettings.m_ImportTexture2d = brk::editor::ImportTexture2d;
+	assetManagerSettings.m_LoadShader = brk::editor::LoadShader;
 #endif
 
 	brk::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };

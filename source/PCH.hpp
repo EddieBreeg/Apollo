@@ -43,3 +43,5 @@ extern "C" void* alloca(size_t);
 #ifndef BIT
 #define BIT(n) (1ull << (n))
 #endif
+
+#define STATIC_ARRAY_SIZE(arr) std::extent_v<decltype(arr)>

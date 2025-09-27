@@ -7,7 +7,18 @@
 			"binaryDir": "${sourceDir}/build/${presetName}",
 			"cacheVariables": {
 				"SDL_SHARED": "OFF",
-				"SDL_STATIC": "ON"
+				"SDL_STATIC": "ON",
+				"SDL_AUDIO": "OFF",
+				"SDL_CAMERA": "OFF",
+				"SDL_DISKAUDIO": "OFF",
+				"SDL_DUMMYAUDIO": "OFF",
+				"SDL_DUMMYCAMERA": "OFF",
+				"SDL_HIDAPI_LIBUSB_SHARED": "OFF",
+				"SDL_OPENGL": "OFF",
+				"SDL_OPENGLES": "OFF",
+				"SDL_RENDER": "OFF",
+				"SPIRV_REFLECT_STATIC_LIB": "ON",
+				"SPIRV_REFLECT_INSTALL": "OFF"
 			}
 		},
 		{

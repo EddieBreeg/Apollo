@@ -62,9 +62,9 @@ namespace brk {
 				request.m_Metadata->m_Id);
 			[[maybe_unused]] const bool result = request();
 
-#ifdef BRK_DEV
 			if (result)
 			{
+				request.m_Asset->SetState(EAssetState::Loaded);
 				BRK_LOG_TRACE(
 					"Asset {}({}) loaded successfully!",
 					request.m_Metadata->m_Name,
@@ -72,12 +72,12 @@ namespace brk {
 			}
 			else
 			{
+				request.m_Asset->SetState(EAssetState::Invalid);
 				BRK_LOG_ERROR(
 					"Asset {}({}) failed to load",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
 			}
-#endif
 		}
 
 		SDL_EndGPUCopyPass(g_CopyPass);
