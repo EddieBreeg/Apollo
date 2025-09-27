@@ -11,3 +11,4 @@ bin/
 .idea
 imgui.ini
 _assetCache
+*.cap
