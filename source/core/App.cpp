@@ -40,32 +40,12 @@ namespace {
 		ImGui_ImplSDLGPU3_Shutdown();
 		ImGui::DestroyContext();
 	}
-
-	brk::EAppResult ProcessEvents(SDL_Window* mainWindow)
-	{
-		SDL_Event evt;
-		while (SDL_PollEvent(&evt))
-		{
-			ImGui_ImplSDL3_ProcessEvent(&evt);
-			switch (evt.type)
-			{
-			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-				if (evt.window.windowID != SDL_GetWindowID(mainWindow))
-					return brk::EAppResult::Continue;
-				[[fallthrough]];
-			case SDL_EVENT_QUIT: return brk::EAppResult::Success;
-			default: continue;
-			}
-		}
-
-		return brk::EAppResult::Continue;
-	}
 } // namespace
 
 namespace brk {
 	std::unique_ptr<App> App::s_Instance;
 
-	void RegisterCoreSystems(ecs::Manager& manager);
+	void RegisterCoreSystems(App& app, ecs::Manager& manager);
 
 	App::App(const EntryPoint& entry)
 		: m_EntryPoint(entry)
@@ -109,7 +89,7 @@ namespace brk {
 		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_Renderer->GetDevice().GetHandle());
 
 		m_ECSManager = &ecs::Manager::Init();
-		RegisterCoreSystems(*m_ECSManager);
+		RegisterCoreSystems(*this, *m_ECSManager);
 
 		if (m_EntryPoint.m_OnInit)
 			m_Result = m_EntryPoint.m_OnInit(m_EntryPoint, *this);
@@ -131,14 +111,16 @@ namespace brk {
 		return m_Result;
 	}
 
+	void App::RequestAppQuit() noexcept
+	{
+		m_Result = EAppResult::Success;
+	}
+
 	EAppResult App::Update()
 	{
 		ImGui_ImplSDLGPU3_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
-
-		if (const auto res = ProcessEvents(m_Window.GetHandle()); res != EAppResult::Continue)
-			return res;
 
 		m_Renderer->BeginFrame();
 		m_AssetManager->Update();
@@ -158,7 +140,7 @@ namespace brk {
 		}
 		m_GameTime.Update();
 
-		return EAppResult::Continue;
+		return m_Result;
 	}
 
 	App::~App()

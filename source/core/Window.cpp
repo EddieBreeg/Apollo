@@ -24,6 +24,21 @@ namespace brk {
 		}
 	}
 
+	glm::uvec2 Window::GetSize() const
+	{
+		glm::uvec2 size;
+		DEBUG_CHECK(m_Handle)
+		{
+			BRK_LOG_ERROR("Called GetSize on null window");
+			return size;
+		}
+		SDL_GetWindowSize(
+			m_Handle,
+			reinterpret_cast<int32*>(&size.x),
+			reinterpret_cast<int32*>(&size.y));
+		return size;
+	}
+
 	Window::~Window()
 	{
 		if (m_Handle)

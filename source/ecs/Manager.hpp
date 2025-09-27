@@ -52,7 +52,7 @@ namespace brk::ecs {
 		Manager() = default;
 		static std::unique_ptr<Manager> s_Instance;
 
-		std::vector<SystemInstance> m_Systems;
 		entt::registry m_World;
+		std::vector<SystemInstance> m_Systems;
 	};
 } // namespace brk::ecs

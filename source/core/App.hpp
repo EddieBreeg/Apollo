@@ -32,6 +32,7 @@ namespace brk {
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 
 		EAppResult Run();
+		void RequestAppQuit() noexcept;
 
 	private:
 		EAppResult Update();

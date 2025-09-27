@@ -14,7 +14,7 @@ namespace brk {
 		bool m_Resizeable = false;
 	};
 
-	class Window
+	class BRK_API Window
 	{
 	public:
 		Window() = default;
@@ -39,6 +39,8 @@ namespace brk {
 
 		[[nodiscard]] SDL_Window* GetHandle() const noexcept { return m_Handle; }
 		[[nodiscard]] operator bool() const noexcept { return m_Handle; }
+
+		[[nodiscard]] glm::uvec2 GetSize() const;
 
 	private:
 		SDL_Window* m_Handle = nullptr;

@@ -4,8 +4,8 @@
 
 namespace brk
 {
-	void RegisterCoreSystems(ecs::Manager& manager)
+	void RegisterCoreSystems(App& app, ecs::Manager& manager)
 	{
-		manager.AddSystem<inputs::System>();
+		manager.AddSystem<inputs::System>(app);
 	}
 }

@@ -6,6 +6,7 @@
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <entt/entity/registry.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 #include <imgui.h>
@@ -13,6 +14,7 @@
 #include <rendering/Renderer.hpp>
 #include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
+#include <systems/InputEventComponents.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -54,6 +56,23 @@ namespace {
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
+
+		void ProcessWindowResize(entt::registry& world)
+		{
+			using namespace brk::inputs;
+			const WindowResizeEventComponent* eventData = nullptr;
+			const auto view = world.view<const WindowResizeEventComponent>();
+			for (const entt::entity evt : view)
+			{
+				eventData = &view->get(evt);
+				break;
+			}
+			if (!eventData)
+				return;
+
+			const float xMax = .5f * eventData->m_Width / eventData->m_Height;
+			m_CamMatrix = glm::orthoRH(-xMax, xMax, -.5f, .5f, .01f, 10.f);
+		}
 
 		TestSystem(brk::Window& window, brk::rdr::Renderer& renderer)
 			: m_Window(window)
@@ -105,6 +124,10 @@ namespace {
 			};
 			m_Sampler = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
 			BRK_ASSERT(m_Sampler, "Failed to create sampler");
+
+			glm::uvec2 winSize = m_Window.GetSize();
+			const float xMax = .5f * winSize.x / winSize.y;
+			m_CamMatrix = glm::orthoRH(-xMax, xMax, -0.5f, 0.5f, 0.01f, 10.0f);
 		}
 
 		~TestSystem()
@@ -149,7 +172,7 @@ namespace {
 			BRK_ASSERT(m_Pipeline, "Failed to create graphics pipeline");
 		}
 
-		void Update(entt::registry&, const brk::GameTime&)
+		void Update(entt::registry& world, const brk::GameTime&)
 		{
 			if (!m_Window) [[unlikely]]
 				return;
@@ -180,6 +203,7 @@ namespace {
 
 			if (!swapchainTexture || !m_Pipeline)
 				return;
+			ProcessWindowResize(world);
 
 			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
 
