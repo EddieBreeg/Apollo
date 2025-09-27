@@ -12,11 +12,11 @@ namespace brk::ecs {
 		return g_SystemIndex++;
 	}
 
-	void Manager::Update()
+	void Manager::Update(const GameTime& time)
 	{
 		for (SystemInstance& s : m_Systems)
 		{
-			s.Update(m_World);
+			s.Update(m_World, time);
 		}
 	}
 } // namespace brk::ecs

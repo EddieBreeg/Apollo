@@ -149,7 +149,7 @@ namespace {
 			BRK_ASSERT(m_Pipeline, "Failed to create graphics pipeline");
 		}
 
-		void Update(entt::registry&)
+		void Update(entt::registry&, const brk::GameTime&)
 		{
 			if (!m_Window) [[unlikely]]
 				return;

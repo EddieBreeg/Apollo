@@ -10,6 +10,11 @@
 #include <entt/entity/registry.hpp>
 #include <vector>
 
+namespace brk
+{
+	class GameTime;
+}
+
 namespace brk::ecs {
 	class BRK_API Manager : public Singleton<Manager>
 	{
@@ -33,7 +38,7 @@ namespace brk::ecs {
 						.template GetAs<S>();
 		}
 
-		void Update();
+		void Update(const GameTime&);
 
 	private:
 		template <System S>

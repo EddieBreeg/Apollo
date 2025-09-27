@@ -1,11 +1,11 @@
 #include "App.hpp"
-#include "Log.hpp"
 
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <asset/AssetManager.hpp>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlgpu3.h>
+#include <core/Log.hpp>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <imgui.h>
@@ -120,6 +120,8 @@ namespace brk {
 
 	EAppResult App::Run()
 	{
+		m_GameTime.Reset();
+
 		for (;;)
 		{
 			m_Result = Update();
@@ -141,7 +143,7 @@ namespace brk {
 		m_Renderer->BeginFrame();
 		m_AssetManager->Update();
 
-		m_ECSManager->Update();
+		m_ECSManager->Update(m_GameTime);
 		m_Renderer->ImGuiRenderPass();
 
 		ImGui::EndFrame();
@@ -154,6 +156,8 @@ namespace brk {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}
+		m_GameTime.Update();
+
 		return EAppResult::Continue;
 	}
 

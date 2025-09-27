@@ -4,24 +4,29 @@
 #include <core/TypeInfo.hpp>
 #include <entt/entity/fwd.hpp>
 
+namespace brk
+{
+	class GameTime;
+}
+
 namespace brk::ecs {
 	template <class S>
-	concept System = requires(S & instance, entt::registry& world)
+	concept System = requires(S & instance, entt::registry& world, const GameTime& time)
 	{
-		{ instance.Update(world) };
+		{ instance.Update(world, time) };
 	};
 
 	class BRK_API SystemInstance
 	{
-		using UpdateFunc = void(void*, entt::registry&);
+		using UpdateFunc = void(void*, entt::registry&, const GameTime&);
 	public:
 		template <System S, class... Args>
 		static SystemInstance Create(Args&&... args) requires(std::is_constructible_v<S, Args...>)
 		{
 			S* ptr = new S{ std::forward<Args>(args)... };
-			auto update = [](void* system, entt::registry& world)
+			auto update = [](void* system, entt::registry& world, const GameTime& time)
 			{
-				static_cast<S*>(system)->Update(world);
+				static_cast<S*>(system)->Update(world, time);
 			};
 			auto deleteFunc = [](void* system)
 			{
@@ -44,7 +49,7 @@ namespace brk::ecs {
 
 		void Swap(SystemInstance& other) noexcept;
 
-		void Update(entt::registry& world);
+		void Update(entt::registry& world, const GameTime& time);
 
 		void Shutdown();
 

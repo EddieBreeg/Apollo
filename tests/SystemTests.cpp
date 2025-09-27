@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <core/GameTime.hpp>
 #include <ecs/System.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -7,14 +8,14 @@ namespace {
 	{
 		int32 value = 0;
 
-		void Update(entt::registry&) { ++value; }
+		void Update(entt::registry&, const brk::GameTime&) { ++value; }
 	};
 
 	struct S2
 	{
 		uint32& m_OnDelete;
 		~S2() { ++m_OnDelete; }
-		void Update(entt::registry&) {}
+		void Update(entt::registry&, const brk::GameTime&) {}
 	};
 } // namespace
 
@@ -29,9 +30,10 @@ namespace brk::ecs::ut {
 	{
 		SystemInstance system = SystemInstance::Create<S1>();
 		REQUIRE(system.GetAs<const S1>()->value == 0);
-		
+
 		entt::registry world;
-		system.Update(world);
+		brk::GameTime time;
+		system.Update(world, time);
 		CHECK(system.GetAs<const S1>()->value == 1);
 	}
 

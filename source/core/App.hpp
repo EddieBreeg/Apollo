@@ -2,6 +2,7 @@
 
 #include <PCH.hpp>
 
+#include "GameTime.hpp"
 #include "Singleton.hpp"
 #include "Window.hpp"
 
@@ -48,5 +49,6 @@ namespace brk {
 		ImGuiContext* m_ImGuiContext = nullptr;
 
 		EAppResult m_Result;
+		GameTime m_GameTime;
 	};
 } // namespace brk

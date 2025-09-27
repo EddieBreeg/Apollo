@@ -25,5 +25,5 @@ namespace brk::editor {
 		return EAppResult::Continue;
 	}
 
-	void Editor::Update(entt::registry&) {}
+	void Editor::Update(entt::registry&, const GameTime&) {}
 } // namespace brk::editor
