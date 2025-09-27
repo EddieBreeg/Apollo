@@ -164,7 +164,7 @@ namespace brk::editor {
 		const auto pathStr = metadata.m_FilePath.string();
 		int32 width = 0, height = 0;
 		int32 numChannels = 0;
-		const uint8* data = stbi_load(pathStr.c_str(), &width, &height, &numChannels, 4);
+		uint8* data = stbi_load(pathStr.c_str(), &width, &height, &numChannels, 4);
 		if (!data)
 		{
 			BRK_LOG_ERROR("Failed to load texture from {}: {}", pathStr, stbi_failure_reason());
@@ -202,6 +202,7 @@ namespace brk::editor {
 		void* bufMem = SDL_MapGPUTransferBuffer(device.GetHandle(), transferBuffer, false);
 		std::memcpy(bufMem, data, transferBufferInfo.size);
 		SDL_UnmapGPUTransferBuffer(device.GetHandle(), transferBuffer);
+		stbi_image_free(data);
 
 		SDL_GPUTextureTransferInfo transferInfo{
 			.transfer_buffer = transferBuffer,
