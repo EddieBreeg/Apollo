@@ -3,7 +3,7 @@
 #include <PCH.hpp>
 
 #include "Hash.hpp"
-
+#include "JsonFwd.hpp"
 #include <string_view>
 
 namespace brk {
@@ -58,6 +58,9 @@ namespace brk {
 
 		[[nodiscard]] constexpr bool operator==(const ULID other) const noexcept;
 		[[nodiscard]] constexpr bool operator!=(const ULID other) const noexcept;
+
+		BRK_API bool FromJson(const nlohmann::json& json) noexcept;
+		BRK_API void ToJson(nlohmann::json& out_json) const;
 
 	private:
 		friend struct Hash<ULID>;

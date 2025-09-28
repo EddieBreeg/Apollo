@@ -1,6 +1,7 @@
 #include "ULID.hpp"
 #include "RNG.hpp"
 #include <ctime>
+#include <nlohmann/json.hpp>
 
 namespace {
 	thread_local brk::RNG g_Generator;
@@ -19,4 +20,24 @@ namespace brk {
 		return res;
 	}
 
+	bool ULID::FromJson(const nlohmann::json& json) noexcept
+	{
+		if (!json.is_string())
+			return false;
+
+		std::string_view str;
+		json.get_to(str);
+		if (str.length() != 26)
+			return false;
+
+		*this = FromString(str);
+		return true;
+	}
+
+	void ULID::ToJson(nlohmann::json& out_j) const
+	{
+		char buf[26];
+		ToChars(buf);
+		out_j = std::string_view{ buf, 26 };
+	}
 } // namespace brk
