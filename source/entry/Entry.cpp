@@ -6,7 +6,7 @@
 #include <filesystem>
 
 #ifdef BRK_EDITOR
-#include <editor/AssetImporters.hpp>
+#include <editor/asset/AssetLoaders.hpp>
 #include <editor/Editor.hpp>
 #endif
 

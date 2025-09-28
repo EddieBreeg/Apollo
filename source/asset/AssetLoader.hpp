@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-#include "Importer.hpp"
+#include "AssetFunctions.hpp"
 #include "AssetRef.hpp"
 #include <core/Queue.hpp>
 
@@ -32,7 +32,10 @@ namespace brk {
 			: m_Device(device)
 		{}
 
-		void AddRequest(AssetRef<IAsset> asset, AssetImportFunc* importFunc, const AssetMetadata& metadata);
+		void AddRequest(
+			AssetRef<IAsset> asset,
+			AssetImportFunc* importFunc,
+			const AssetMetadata& metadata);
 
 		void ProcessRequests();
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <asset/Importer.hpp>
+#include <asset/AssetFunctions.hpp>
 
 namespace brk {
 	struct AssetManagerSettings;

@@ -1,10 +1,11 @@
-file(GLOB EDITOR_HEADERS *.h *.hpp)
+file(GLOB_RECURSE EDITOR_HEADERS *.h *.hpp)
 
 AddLibrary(${PROJECT_NAME}EditorRuntime
 SOURCES
-	AssetImporters.cpp
-	LoadMaterial.cpp
-	LoadShader.cpp
+	asset/LoadMaterial.cpp
+	asset/LoadMetadata.cpp
+	asset/LoadShader.cpp
+	asset/LoadTexture.cpp
 	Editor.cpp
 	${EDITOR_HEADERS}
 PROPERTIES ${COMMON_PROPERTIES}
