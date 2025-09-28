@@ -3,7 +3,7 @@
 
 namespace {
 	uint32 g_IntIndex;
-	const brk::TypeInfo* g_IntInfo = nullptr;
+	const brk::TypeInfo* g_IntInfo = &brk::TypeInfo::Get<int>();
 
 	struct Gen
 	{
@@ -33,12 +33,9 @@ TEST_CASE("Index using new generator", "[rtti]")
 
 TEST_CASE("Type info test", "[rtti]")
 {
-	const brk::TypeInfo& info = brk::TypeInfo::Get<int>();
-	CHECK(info.m_Index == g_IntIndex);
-	CHECK(info.m_Size == sizeof(int));
-	CHECK(info.m_Alignment == alignof(int));
-
-	g_IntInfo = &info;
+	CHECK(g_IntInfo->m_Index == g_IntIndex);
+	CHECK(g_IntInfo->m_Size == sizeof(int));
+	CHECK(g_IntInfo->m_Alignment == alignof(int));
 }
 
 TEST_CASE("Type info consistency", "[rtti]")
