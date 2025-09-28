@@ -18,11 +18,49 @@ namespace {
 		default: return "Invalid";
 		};
 	}
-} // namespace
 
-namespace brk::editor {
-	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata)
+	brk::EAssetLoadResult ValidateShaderStates(
+		const brk::rdr::Shader* vShader,
+		const brk::rdr::Shader* fShader)
 	{
+		const brk::EAssetState s1 = vShader->GetState(), s2 = fShader->GetState();
+		if (s1 == brk::EAssetState::Invalid || s2 == brk::EAssetState::Invalid)
+			return brk::EAssetLoadResult::Failure;
+
+		if (s1 == brk::EAssetState::Loaded && s2 == brk::EAssetState::Loaded)
+			return brk::EAssetLoadResult::Success;
+
+		return brk::EAssetLoadResult::TryAgain;
+	}
+
+	bool ValidateShaderStages(const brk::rdr::Shader* vShader, const brk::rdr::Shader* fShader)
+	{
+		brk::rdr::EShaderStage stage = vShader->GetStage();
+		if (stage != brk::rdr::EShaderStage::Vertex)
+		{
+			BRK_LOG_ERROR(
+				"Shader {} has stage {}, expected Vertex",
+				vShader->GetId(),
+				GetStageName(stage));
+			return false;
+		}
+		if ((stage = fShader->GetStage()) != brk::rdr::EShaderStage::Fragment)
+		{
+			BRK_LOG_ERROR(
+				"Shader {} has stage {}, expected Fragment",
+				fShader->GetId(),
+				GetStageName(stage));
+			return false;
+		}
+		return true;
+	}
+
+	brk::EAssetLoadResult LoadMaterialJson(
+		const brk::AssetMetadata& metadata,
+		brk::AssetRef<brk::rdr::Shader>& out_vShader,
+		brk::AssetRef<brk::rdr::Shader>& out_fShader)
+	{
+		using namespace brk;
 		auto* manager = AssetManager::GetInstance();
 		DEBUG_CHECK(manager)
 		{
@@ -68,10 +106,7 @@ namespace brk::editor {
 				metadata.m_Id);
 			return EAssetLoadResult::Failure;
 		}
-
-		auto& mat = dynamic_cast<rdr::Material&>(out_asset);
-		mat.m_VertShader = manager->GetAsset<rdr::Shader>(vShaderId);
-		if (!mat.m_VertShader)
+		if (!(out_vShader = manager->GetAsset<rdr::Shader>(vShaderId)))
 		{
 			BRK_LOG_ERROR(
 				"Failed to load material {}({}): vertex shader {} was not found",
@@ -80,8 +115,7 @@ namespace brk::editor {
 				vShaderId);
 			return EAssetLoadResult::Failure;
 		}
-		mat.m_FragShader = manager->GetAsset<rdr::Shader>(fShaderId);
-		if (!mat.m_FragShader)
+		if (!(out_fShader = manager->GetAsset<rdr::Shader>(fShaderId)))
 		{
 			BRK_LOG_ERROR(
 				"Failed to load material {}({}): fragment shader {} was not found",
@@ -90,38 +124,31 @@ namespace brk::editor {
 				fShaderId);
 			return EAssetLoadResult::Failure;
 		}
+		const EAssetLoadResult result = ValidateShaderStates(out_vShader.Get(), out_fShader.Get());
+		if (result != EAssetLoadResult::Success)
+			return result;
 
-		if (mat.m_VertShader->GetState() == EAssetState::Invalid ||
-			mat.m_FragShader->GetState() == EAssetState::Invalid)
-			return EAssetLoadResult::Failure;
+		return ValidateShaderStages(out_vShader.Get(), out_fShader.Get())
+				   ? EAssetLoadResult::Success
+				   : EAssetLoadResult::Failure;
+	}
+} // namespace
 
-		if (mat.m_VertShader->GetState() != EAssetState::Loaded ||
-			mat.m_FragShader->GetState() != EAssetState::Loaded)
-			return EAssetLoadResult::TryAgain;
+namespace brk::editor {
+	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata)
+	{
+		auto& mat = dynamic_cast<rdr::Material&>(out_asset);
+		if (!mat.m_VertShader && !mat.m_FragShader)
+			return LoadMaterialJson(metadata, mat.m_VertShader, mat.m_FragShader);
 
-		rdr::EShaderStage stage = mat.m_VertShader->GetStage();
-		if (stage != rdr::EShaderStage::Vertex)
-		{
-			BRK_LOG_ERROR(
-				"Failed to load material {}({}): shader {} has stage {} instead of Vertex",
-				metadata.m_Name,
-				metadata.m_Id,
-				vShaderId,
-				GetStageName(stage));
-			return EAssetLoadResult::Failure;
-		}
+		const EAssetLoadResult result = ValidateShaderStates(
+			mat.m_VertShader.Get(),
+			mat.m_FragShader.Get());
+		if (result != EAssetLoadResult::Success)
+			return result;
 
-		if ((stage = mat.m_FragShader->GetStage()) != rdr::EShaderStage::Fragment)
-		{
-			BRK_LOG_ERROR(
-				"Failed to load material {}({}): shader {} has stage {} instead of Fragment",
-				metadata.m_Name,
-				metadata.m_Id,
-				fShaderId,
-				GetStageName(stage));
-			return EAssetLoadResult::Failure;
-		}
-
-		return EAssetLoadResult::Success;
+		return ValidateShaderStages(mat.m_VertShader.Get(), mat.m_FragShader.Get())
+				   ? EAssetLoadResult::Success
+				   : EAssetLoadResult::Failure;
 	}
 } // namespace brk::editor
