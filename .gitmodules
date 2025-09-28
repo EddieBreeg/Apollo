@@ -19,3 +19,6 @@
 [submodule "deps/entt"]
 	path = deps/entt
 	url = git@github.com:skypjack/entt.git
+[submodule "deps/json"]
+	path = deps/json
+	url = git@github.com:nlohmann/json.git
