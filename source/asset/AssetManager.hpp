@@ -33,6 +33,7 @@ namespace brk {
 		// Asset importers
 		AssetImportFunc* m_ImportTexture2d = nullptr;
 		AssetImportFunc* m_LoadShader = nullptr;
+		AssetImportFunc* m_LoadMaterial = nullptr;
 
 		std::filesystem::path m_AssetPath;
 	};

@@ -12,11 +12,11 @@ namespace {
 } // namespace
 
 namespace brk {
-	bool AssetLoadRequest::operator()()
+	EAssetLoadResult AssetLoadRequest::operator()()
 	{
 		DEBUG_CHECK(m_Asset && m_Import && m_Metadata)
 		{
-			return false;
+			return EAssetLoadResult::Failure;
 		}
 
 		return m_Import(*m_Asset, *m_Metadata);
@@ -56,22 +56,26 @@ namespace brk {
 			if (!request.m_Asset || request.m_Asset->GetState() != EAssetState::Loading)
 				[[unlikely]]
 				continue;
+
 			BRK_LOG_TRACE(
 				"Loading asset {}({})",
 				request.m_Metadata->m_Name,
 				request.m_Metadata->m_Id);
-			[[maybe_unused]] const bool result = request();
+			const EAssetLoadResult result = request();
 
-			if (result)
+			switch (result)
 			{
+			case brk::EAssetLoadResult::Success:
 				request.m_Asset->SetState(EAssetState::Loaded);
 				BRK_LOG_TRACE(
 					"Asset {}({}) loaded successfully!",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
-			}
-			else
-			{
+				continue;
+			case brk::EAssetLoadResult::TryAgain:
+				m_Requests.AddEmplace(std::move(request));
+				continue;
+			default:
 				request.m_Asset->SetState(EAssetState::Invalid);
 				BRK_LOG_ERROR(
 					"Asset {}({}) failed to load",

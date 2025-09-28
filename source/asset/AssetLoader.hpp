@@ -22,7 +22,7 @@ namespace brk {
 		AssetImportFunc* m_Import = nullptr;
 		const AssetMetadata* m_Metadata = nullptr;
 
-		bool operator()();
+		EAssetLoadResult operator()();
 	};
 
 	class BRK_API AssetLoader

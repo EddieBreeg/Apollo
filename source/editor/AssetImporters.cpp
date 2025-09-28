@@ -23,6 +23,7 @@ namespace {
 	const brk::StringHashMap<brk::EAssetType> g_AssetTypeMap{
 		{ brk::StringHash{ "texture2d" }, brk::EAssetType::Texture2D },
 		{ brk::StringHash{ "shader" }, brk::EAssetType::Shader },
+		{ brk::StringHash{ "material" }, brk::EAssetType::Material },
 	};
 
 	struct Parser
@@ -160,7 +161,7 @@ namespace brk::editor {
 		return true;
 	}
 
-	bool ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
+	EAssetLoadResult ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
 	{
 		const auto pathStr = metadata.m_FilePath.string();
 		int32 width = 0, height = 0;
@@ -169,7 +170,7 @@ namespace brk::editor {
 		if (!data)
 		{
 			BRK_LOG_ERROR("Failed to load texture from {}: {}", pathStr, stbi_failure_reason());
-			return false;
+			return EAssetLoadResult::Failure;
 		}
 
 		rdr::EPixelFormat format = rdr::EPixelFormat::Invalid;
@@ -205,7 +206,7 @@ namespace brk::editor {
 
 		DEBUG_CHECK(tex.m_Handle)
 		{
-			return false;
+			return EAssetLoadResult::Failure;
 		}
 
 		SDL_GPUTransferBufferCreateInfo transferBufferInfo{
@@ -262,6 +263,6 @@ namespace brk::editor {
 
 		SDL_ReleaseGPUTransferBuffer(device.GetHandle(), transferBuffer);
 
-		return true;
+		return EAssetLoadResult::Success;
 	}
 } // namespace brk::editor

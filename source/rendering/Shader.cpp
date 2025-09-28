@@ -21,9 +21,10 @@ namespace brk::rdr {
 
 	Shader::Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen)
 		: IAsset(id)
+		, m_Stage(info.m_Stage)
 	{
 		BRK_ASSERT(
-			info.m_Stage > EShaderStage::Invalid && info.m_Stage < EShaderStage::NStages,
+			m_Stage > EShaderStage::Invalid && info.m_Stage < EShaderStage::NStages,
 			"Invalid shader stage {}",
 			int32(info.m_Stage));
 

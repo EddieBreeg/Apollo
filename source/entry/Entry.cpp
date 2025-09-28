@@ -21,6 +21,7 @@ int main(int argc, const char** argv)
 
 	assetManagerSettings.m_ImportTexture2d = brk::editor::ImportTexture2d;
 	assetManagerSettings.m_LoadShader = brk::editor::LoadShader;
+	assetManagerSettings.m_LoadMaterial = &brk::editor::LoadMaterial;
 #endif
 
 	brk::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };

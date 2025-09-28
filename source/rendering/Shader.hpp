@@ -41,6 +41,8 @@ namespace brk::rdr {
 
 		~Shader();
 
+		[[nodiscard]] EShaderStage GetStage() const noexcept { return m_Stage; }
+
 		GET_ASSET_TYPE_IMPL(EAssetType::Shader);
 
 	private:

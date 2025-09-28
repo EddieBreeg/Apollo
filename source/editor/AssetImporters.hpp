@@ -11,6 +11,7 @@ namespace brk::editor {
 		const std::filesystem::path& assetRootPath,
 		ULIDMap<AssetMetadata>& out_metadata);
 
-	bool ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
-	bool LoadShader(IAsset& out_shader, const AssetMetadata& metadata);
-}
+	EAssetLoadResult ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
+	EAssetLoadResult LoadShader(IAsset& out_shader, const AssetMetadata& metadata);
+	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata);	
+} // namespace brk::editor

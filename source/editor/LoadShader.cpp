@@ -70,7 +70,7 @@ namespace {
 #endif
 
 namespace brk::editor {
-	bool LoadShader(IAsset& out_asset, const AssetMetadata& metadata)
+	EAssetLoadResult LoadShader(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		std::ifstream inFile{
 			metadata.m_FilePath,
@@ -84,7 +84,7 @@ namespace brk::editor {
 				metadata.m_Id,
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
-			return false;
+			return EAssetLoadResult::Failure;
 		}
 		size_t len = inFile.tellg();
 		inFile.seekg(0, std::ios::beg);
@@ -97,7 +97,7 @@ namespace brk::editor {
 				metadata.m_Id,
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
-			return false;
+			return EAssetLoadResult::Failure;
 		}
 
 		rdr::Shader& shader = dynamic_cast<rdr::Shader&>(out_asset);
@@ -112,7 +112,7 @@ namespace brk::editor {
 				metadata.m_Name,
 				metadata.m_Id,
 				GetSpirvReflectErrorMsg(res));
-			return false;
+			return EAssetLoadResult::Failure;
 		}
 		GetSpirvShaderInfo(reflectModule, info);
 #endif
@@ -129,7 +129,7 @@ namespace brk::editor {
 		spvReflectDestroyShaderModule(&reflectModule);
 #endif
 
-		return shader;
+		return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
 	}
 
 } // namespace brk::editor

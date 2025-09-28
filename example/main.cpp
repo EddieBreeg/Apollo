@@ -11,8 +11,8 @@
 #include <glm/mat4x4.hpp>
 #include <imgui.h>
 #include <rendering/Device.hpp>
+#include <rendering/Material.hpp>
 #include <rendering/Renderer.hpp>
-#include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
 #include <systems/InputEventComponents.hpp>
 
@@ -51,7 +51,7 @@ namespace {
 		brk::Window& m_Window;
 		brk::rdr::Renderer& m_Renderer;
 		brk::AssetRef<brk::rdr::Texture2D> m_Texture;
-		brk::AssetRef<brk::rdr::Shader> m_VShader, m_FShader;
+		brk::AssetRef<brk::rdr::Material> m_Material;
 		SDL_GPUBuffer* m_VBuffer = nullptr;
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
@@ -146,8 +146,8 @@ namespace {
 				.blend_state = SDL_GPUColorTargetBlendState{},
 			};
 			const SDL_GPUGraphicsPipelineCreateInfo pipelineDesc{
-				.vertex_shader = m_VShader->GetHandle(),
-				.fragment_shader = m_FShader->GetHandle(),
+				.vertex_shader = m_Material->GetVertexShader()->GetHandle(),
+				.fragment_shader = m_Material->GetFragmentShader()->GetHandle(),
 				.vertex_input_state =
 					SDL_GPUVertexInputState{
 						.vertex_buffer_descriptions = &g_VBufferDescription,
@@ -188,15 +188,12 @@ namespace {
 
 				m_Texture = assetManager->GetAsset<rdr::Texture2D>(
 					"01K61BK2C2QZS0A18PWHGARASK"_ulid);
-				m_VShader = assetManager->GetAsset<brk::rdr::Shader>(
-					"01K65F71RK1WNJ6D7XDNTNPVX4"_ulid);
-				m_FShader = assetManager->GetAsset<brk::rdr::Shader>(
-					"01K65MTCW215MP1KK72CG1WQ1T"_ulid);
+				m_Material = assetManager->GetAsset<brk::rdr::Material>(
+					"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
 			}
 
 			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
-			if (!m_Pipeline && m_VShader->GetState() == brk::EAssetState::Loaded &&
-				m_FShader->GetState() == brk::EAssetState::Loaded)
+			if (!m_Pipeline && m_Material->GetState() == brk::EAssetState::Loaded)
 			{
 				InitPipeline();
 			}

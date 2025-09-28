@@ -18,10 +18,6 @@ namespace brk {
 			{
 				manager->RequestUnload(ptr);
 			}
-			else
-			{
-				delete ptr;
-			}
 		}
 	}
 

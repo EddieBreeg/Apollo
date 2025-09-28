@@ -3,6 +3,7 @@
 #include <core/Log.hpp>
 #include <core/ULIDFormatter.hpp>
 
+#include <rendering/Material.hpp>
 #include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
 
@@ -33,7 +34,23 @@ namespace brk {
 
 	AssetManager::~AssetManager()
 	{
-		ProcessUnloadRequests(m_UnloadQueue, m_Cache);
+		while (m_Cache.size())
+		{
+			auto it = m_Cache.begin();
+			while(it != m_Cache.end())
+			{
+				if (AssetRetainTraits::GetCount(it->second)) // asset still in use, delete later
+				{
+					++it;
+					continue;
+				}
+
+				const auto [id, asset] = *it;
+				it = m_Cache.erase(it);
+				BRK_LOG_TRACE("Unloading asset {}", id);
+				delete asset;
+			}
+		}
 	}
 
 	AssetManager::AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice)
@@ -41,6 +58,7 @@ namespace brk {
 		, m_TypeInfo{ 
 			{&ConstructAsset<rdr::Texture2D>, settings.m_ImportTexture2d},
 			{&ConstructAsset<rdr::Shader>, settings.m_LoadShader},
+			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
 		 }
 		, m_AssetsPath(settings.m_AssetPath)
 		, m_Loader(gpuDevice)
@@ -75,7 +93,19 @@ namespace brk {
 		{
 			const auto it = m_Cache.find(id);
 			if (it != m_Cache.end())
+			{
+				const EAssetType actualType = it->second->GetType();
+				DEBUG_CHECK(actualType == type)
+				{
+					BRK_LOG_ERROR(
+						"Asset {} has type {} instead of the expected {}",
+						id,
+						GetAssetTypeName(actualType),
+						GetAssetTypeName(type));
+					return nullptr;
+				}
 				return it->second;
+			}
 		}
 
 		const AssetTypeInfo& info = m_TypeInfo[int32(type)];

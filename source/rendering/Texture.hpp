@@ -7,9 +7,12 @@
 
 struct SDL_GPUTexture;
 
-namespace brk::editor {
+namespace brk {
+	enum class EAssetLoadResult : int8;
+}
 
-	bool ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
+namespace brk::editor {
+	EAssetLoadResult ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
 }
 
 namespace brk::rdr {
@@ -81,6 +84,6 @@ namespace brk::rdr {
 
 	private:
 		TextureSettings m_Settings;
-		friend bool brk::editor::ImportTexture2d(IAsset&, const AssetMetadata&);
+		friend EAssetLoadResult brk::editor::ImportTexture2d(IAsset&, const AssetMetadata&);
 	};
 } // namespace brk::rdr

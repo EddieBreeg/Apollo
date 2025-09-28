@@ -15,6 +15,7 @@ namespace brk {
 		Invalid = -1,
 		Texture2D,
 		Shader,
+		Material,
 		NTypes
 	};
 
@@ -24,9 +25,12 @@ namespace brk {
 		Loading = BIT(0),
 		Loaded = BIT(1),
 		Unloading = BIT(2),
+		Unloaded = BIT(3),
 	};
 
-	class IAsset
+	[[nodiscard]] BRK_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
+
+	class BRK_API IAsset
 	{
 	public:
 		IAsset();
@@ -40,6 +44,7 @@ namespace brk {
 		void SetState(EAssetState state) noexcept { m_State = state; }
 
 		[[nodiscard]] virtual EAssetType GetType() const noexcept = 0;
+		[[nodiscard]] std::string_view GetTypeName() const noexcept;
 
 	protected:
 		brk::ULID m_Id;
