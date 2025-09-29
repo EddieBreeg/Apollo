@@ -18,7 +18,8 @@
 				"SDL_OPENGLES": "OFF",
 				"SDL_RENDER": "OFF",
 				"SPIRV_REFLECT_STATIC_LIB": "ON",
-				"SPIRV_REFLECT_INSTALL": "OFF"
+				"SPIRV_REFLECT_INSTALL": "OFF",
+				"MSDFGEN_CORE_ONLY": "ON"
 			}
 		},
 		{

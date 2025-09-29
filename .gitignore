@@ -12,3 +12,9 @@ bin/
 imgui.ini
 _assetCache
 *.cap
+deps/freetype2/**/*.mk
+deps/freetype2/**/meson.build
+deps/freetype2/**/meson.sln
+deps/freetype2/**/*.sh
+deps/freetype2/**/Makefile
+deps/freetype2/**/configure
