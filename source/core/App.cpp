@@ -100,6 +100,7 @@ namespace brk {
 
 	EAppResult App::Run()
 	{
+		m_ECSManager->PostInit();
 		m_GameTime.Reset();
 
 		for (;;)

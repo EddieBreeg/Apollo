@@ -38,6 +38,7 @@ namespace brk::ecs {
 						.template GetAs<S>();
 		}
 
+		void PostInit();
 		void Update(const GameTime&);
 
 	private:

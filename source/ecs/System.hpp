@@ -4,8 +4,7 @@
 #include <core/TypeInfo.hpp>
 #include <entt/entity/fwd.hpp>
 
-namespace brk
-{
+namespace brk {
 	class GameTime;
 }
 
@@ -16,9 +15,18 @@ namespace brk::ecs {
 		{ instance.Update(world, time) };
 	};
 
+	namespace _internal {
+		template <class T>
+		concept HasPostInit = requires(T & obj)
+		{
+			{ obj.PostInit() };
+		};
+	} // namespace _internal
+
 	class BRK_API SystemInstance
 	{
 		using UpdateFunc = void(void*, entt::registry&, const GameTime&);
+
 	public:
 		template <System S, class... Args>
 		static SystemInstance Create(Args&&... args) requires(std::is_constructible_v<S, Args...>)
@@ -32,7 +40,22 @@ namespace brk::ecs {
 			{
 				delete static_cast<S*>(system);
 			};
-			SystemInstance res{ ptr, update, deleteFunc };
+			void (*postInit)(void*) = nullptr;
+			if constexpr (_internal::HasPostInit<S>)
+			{
+				postInit = [](void* ptr)
+				{
+					static_cast<S*>(ptr)->PostInit();
+				};
+			}
+			SystemInstance res{
+				VTable{
+					.m_Update = update,
+					.m_Delete = deleteFunc,
+					.m_PostInit = postInit,
+				},
+				ptr,
+			};
 			return res;
 		}
 
@@ -51,6 +74,7 @@ namespace brk::ecs {
 
 		void Update(entt::registry& world, const GameTime& time);
 
+		void PostInit();
 		void Shutdown();
 
 		template <class S>
@@ -72,10 +96,16 @@ namespace brk::ecs {
 		}
 
 	private:
-		SystemInstance(void* ptr, UpdateFunc* updateFunc, void (*deleteFunc)(void*));
+		struct VTable
+		{
+			UpdateFunc* m_Update = nullptr;
+			void (*m_Delete)(void*) = nullptr;
+			void (*m_PostInit)(void*) = nullptr;
+		};
+
+		SystemInstance(const VTable& impl, void* ptr);
 
 		void* m_Ptr = nullptr;
-		UpdateFunc* m_Update = nullptr;
-		void (*m_Delete)(void*) = nullptr;
+		VTable m_Impl;
 	};
 } // namespace brk::ecs

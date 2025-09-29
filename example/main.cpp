@@ -172,25 +172,23 @@ namespace {
 			BRK_ASSERT(m_Pipeline, "Failed to create graphics pipeline");
 		}
 
+		void PostInit()
+		{
+			using namespace brk;
+
+			BRK_LOG_TRACE("Example Post-Init");
+			auto* assetManager = AssetManager::GetInstance();
+			BRK_ASSERT(assetManager, "Asset manager hasb't been initialized!");
+
+			m_Texture = assetManager->GetAsset<rdr::Texture2D>("01K61BK2C2QZS0A18PWHGARASK"_ulid);
+			m_Material = assetManager->GetAsset<brk::rdr::Material>(
+				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
+		}
+
 		void Update(entt::registry& world, const brk::GameTime&)
 		{
 			if (!m_Window) [[unlikely]]
 				return;
-
-			static bool firstFrame = true;
-			if (firstFrame)
-			{
-				using namespace brk;
-
-				firstFrame = false;
-				auto* assetManager = AssetManager::GetInstance();
-				BRK_ASSERT(assetManager, "Asset manager hasb't been initialized!");
-
-				m_Texture = assetManager->GetAsset<rdr::Texture2D>(
-					"01K61BK2C2QZS0A18PWHGARASK"_ulid);
-				m_Material = assetManager->GetAsset<brk::rdr::Material>(
-					"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
-			}
 
 			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
 			if (!m_Pipeline && m_Material->GetState() == brk::EAssetState::Loaded)

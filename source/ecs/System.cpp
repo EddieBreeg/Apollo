@@ -1,19 +1,15 @@
 #include "System.hpp"
 
 namespace brk::ecs {
-	SystemInstance::SystemInstance(
-		void* ptr,
-		UpdateFunc* updateFunc,
-		void (*deleteFunc)(void*))
+	SystemInstance::SystemInstance(const VTable& impl, void* ptr)
 		: m_Ptr(ptr)
-		, m_Update(updateFunc)
-		, m_Delete(deleteFunc)
+		, m_Impl(impl)
 	{}
 
 	void SystemInstance::Update(entt::registry& world, const GameTime& time)
 	{
 		if (m_Ptr) [[likely]]
-			m_Update(m_Ptr, world, time);
+			m_Impl.m_Update(m_Ptr, world, time);
 	}
 
 	SystemInstance::~SystemInstance()
@@ -23,29 +19,31 @@ namespace brk::ecs {
 
 	SystemInstance::SystemInstance(SystemInstance&& other) noexcept
 		: m_Ptr(other.m_Ptr)
-		, m_Update(other.m_Update)
-		, m_Delete(other.m_Delete)
+		, m_Impl(other.m_Impl)
 	{
 		other.m_Ptr = nullptr;
-		other.m_Update = nullptr;
-		other.m_Delete = nullptr;
+		other.m_Impl = {};
 	}
 
 	void SystemInstance::Swap(SystemInstance& other) noexcept
 	{
 		std::swap(m_Ptr, other.m_Ptr);
-		std::swap(m_Update, other.m_Update);
-		std::swap(m_Delete, other.m_Delete);
+		std::swap(m_Impl, other.m_Impl);
 	}
 
 	void SystemInstance::Shutdown()
 	{
 		if (m_Ptr)
 		{
-			m_Delete(m_Ptr);
+			m_Impl.m_Delete(m_Ptr);
 			m_Ptr = nullptr;
-			m_Update = nullptr;
-			m_Delete = nullptr;
+			m_Impl = {};
 		}
+	}
+
+	void SystemInstance::PostInit()
+	{
+		if (m_Ptr && m_Impl.m_PostInit)
+			m_Impl.m_PostInit(m_Ptr);
 	}
 } // namespace brk::ecs

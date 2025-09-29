@@ -12,6 +12,12 @@ namespace brk::ecs {
 		return g_SystemIndex++;
 	}
 
+	void Manager::PostInit()
+	{
+		for (SystemInstance& s : m_Systems)
+			s.PostInit();
+	}
+
 	void Manager::Update(const GameTime& time)
 	{
 		for (SystemInstance& s : m_Systems)
