@@ -1,10 +1,10 @@
-AddLibrary(${PROJECT_NAME}Entry SOURCES Entry.cpp Entry.hpp
+AddLibrary(${PROJECT_NAME}Entry SOURCES GameEntry.cpp Entry.hpp
 LINK PRIVATE ${PROJECT_NAME}Runtime
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 )
 
-AddLibrary(${PROJECT_NAME}EditorEntry SOURCES Entry.cpp Entry.hpp
+AddLibrary(${PROJECT_NAME}EditorEntry SOURCES EditorEntry.cpp Entry.hpp
 LINK PUBLIC "${PROJECT_NAME}Runtime" "${PROJECT_NAME}EditorRuntime"
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}

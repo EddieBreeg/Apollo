@@ -5,10 +5,8 @@
 
 #include <filesystem>
 
-#ifdef BRK_EDITOR
 #include <editor/asset/AssetLoaders.hpp>
 #include <editor/Editor.hpp>
-#endif
 
 int main(int argc, const char** argv)
 {
@@ -16,13 +14,11 @@ int main(int argc, const char** argv)
 		.m_AssetPath = argc > 1 ? std::filesystem::absolute(argv[1])
 								: std::filesystem::current_path(),
 	};
-#ifdef BRK_EDITOR
 	assetManagerSettings.m_MetadataImportFunc = &brk::editor::ImporteAssetMetadata;
 
 	assetManagerSettings.m_ImportTexture2d = brk::editor::ImportTexture2d;
 	assetManagerSettings.m_LoadShader = brk::editor::LoadShader;
 	assetManagerSettings.m_LoadMaterial = &brk::editor::LoadMaterial;
-#endif
 
 	brk::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
 	brk::GetEntryPoint(entry);
@@ -35,11 +31,7 @@ int main(int argc, const char** argv)
 	if (res != brk::EAppResult::Continue) [[unlikely]]
 		goto APP_END;
 
-#ifdef BRK_EDITOR
 	brk::editor::Editor::Init(entry, app);
-#else
-	brk::AssetManager::GetInstance()->ImportMetadataBank();
-#endif
 
 	res = app.Run();
 
