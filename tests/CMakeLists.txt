@@ -2,6 +2,7 @@ set(CMAKE_FOLDER "tests")
 
 AddExecutable(${PROJECT_NAME}Tests
 SOURCES
+	BitmapTests.cpp
 	EnumTests.cpp
 	HashTests.cpp
 	JsonTests.cpp
@@ -16,6 +17,7 @@ PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 )
 
+AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("Hash Tests" "${PROJECT_NAME}Tests" FILTERS "[hash]")
 AddTest("Container Tests" "${PROJECT_NAME}Tests" FILTERS "[containers]")
