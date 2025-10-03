@@ -10,6 +10,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 #include <imgui.h>
+#include <rendering/Buffer.hpp>
 #include <rendering/Device.hpp>
 #include <rendering/Material.hpp>
 #include <rendering/Renderer.hpp>
@@ -52,7 +53,7 @@ namespace {
 		brk::rdr::Renderer& m_Renderer;
 		brk::AssetRef<brk::rdr::Texture2D> m_Texture;
 		brk::AssetRef<brk::rdr::Material> m_Material;
-		SDL_GPUBuffer* m_VBuffer = nullptr;
+		brk::rdr::Buffer m_VBuffer;
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
@@ -77,43 +78,16 @@ namespace {
 		TestSystem(brk::Window& window, brk::rdr::Renderer& renderer)
 			: m_Window(window)
 			, m_Renderer(renderer)
+			, m_VBuffer(brk::rdr::EBufferFlags::Vertex, sizeof(g_QuadVert))
 		{
 			auto& device = m_Renderer.GetDevice();
-			SDL_GPUBufferCreateInfo bufCreateInfo{
-				.usage = SDL_GPU_BUFFERUSAGE_VERTEX,
-				.size = sizeof(g_QuadVert),
-			};
-			m_VBuffer = SDL_CreateGPUBuffer(device.GetHandle(), &bufCreateInfo);
-			BRK_ASSERT(m_VBuffer, "Failed to create vertex buffer");
 
 			auto* cmdBuffer = SDL_AcquireGPUCommandBuffer(device.GetHandle());
 			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
-
-			SDL_GPUTransferBufferCreateInfo transferBufferInfo{
-				.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-				.size = sizeof(g_QuadVert)
-			};
-			auto* transferBuffer = SDL_CreateGPUTransferBuffer(
-				device.GetHandle(),
-				&transferBufferInfo);
-			BRK_ASSERT(transferBuffer, "Failed to create transfer buffer");
-			Vertex2d* bufMem = (Vertex2d*)
-				SDL_MapGPUTransferBuffer(device.GetHandle(), transferBuffer, false);
-			std::copy(std::begin(g_QuadVert), std::end(g_QuadVert), bufMem);
-
-			SDL_UnmapGPUTransferBuffer(device.GetHandle(), transferBuffer);
-
-			const SDL_GPUTransferBufferLocation loc{
-				.transfer_buffer = transferBuffer,
-			};
-			const SDL_GPUBufferRegion dest{
-				.buffer = m_VBuffer,
-				.size = sizeof(g_QuadVert),
-			};
-			SDL_UploadToGPUBuffer(copyPass, &loc, &dest, false);
-			SDL_ReleaseGPUTransferBuffer(device.GetHandle(), transferBuffer);
+			m_VBuffer.UploadData(copyPass, g_QuadVert, sizeof(g_QuadVert));
 			SDL_EndGPUCopyPass(copyPass);
 			SDL_SubmitGPUCommandBuffer(cmdBuffer);
+
 			const SDL_GPUSamplerCreateInfo samplerInfo{
 				.min_filter = SDL_GPU_FILTER_LINEAR,
 				.mag_filter = SDL_GPU_FILTER_LINEAR,
@@ -133,7 +107,6 @@ namespace {
 		~TestSystem()
 		{
 			auto* device = m_Renderer.GetDevice().GetHandle();
-			SDL_ReleaseGPUBuffer(device, m_VBuffer);
 			SDL_ReleaseGPUSampler(device, m_Sampler);
 			SDL_ReleaseGPUGraphicsPipeline(device, m_Pipeline);
 		}
@@ -220,7 +193,10 @@ namespace {
 
 			SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
 
-			const SDL_GPUBufferBinding bufferBinding{ .buffer = m_VBuffer, .offset = 0 };
+			const SDL_GPUBufferBinding bufferBinding{
+				.buffer = m_VBuffer.GetHandle(),
+				.offset = 0,
+			};
 			SDL_BindGPUVertexBuffers(renderPass, 0, &bufferBinding, 1);
 
 			const SDL_GPUTextureSamplerBinding binding{
