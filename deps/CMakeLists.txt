@@ -7,7 +7,7 @@ add_subdirectory(spdlog)
 add_subdirectory(stb)
 add_subdirectory(entt)
 add_subdirectory(json)
-add_subdirectory(freetype2)
+add_subdirectory(freetype)
 
 add_subdirectory(msdfgen)
 

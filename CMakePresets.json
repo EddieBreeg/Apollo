@@ -19,7 +19,15 @@
 				"SDL_RENDER": "OFF",
 				"SPIRV_REFLECT_STATIC_LIB": "ON",
 				"SPIRV_REFLECT_INSTALL": "OFF",
-				"MSDFGEN_CORE_ONLY": "ON"
+				"MSDFGEN_CORE_ONLY": "ON",
+				"MSDFGEN_DYNAMIC_RUNTIME": "ON",
+				"MSDFGEN_DISABLE_SVG": "ON",
+				"MSDFGEN_DISABLE_PNG": "ON",
+				"MSDFGEN_USE_SKIA": "OFF",
+				"MSDFGEN_USE_VCPKG": "OFF"
+			},
+			"environment": {
+				"FREETYPE_DIR": "${sourceDir}/build/install"
 			}
 		},
 		{
