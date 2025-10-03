@@ -2,6 +2,7 @@
 
 #include <BreakoutRuntimeExport.h>
 
+#include "core/Rectangle.hpp"
 #include <concepts>
 #include <cstdint>
 #include <glm/vec2.hpp>
@@ -45,3 +46,7 @@ extern "C" void* alloca(size_t);
 #endif
 
 #define STATIC_ARRAY_SIZE(arr) std::extent_v<decltype(arr)>
+
+using RectF = brk::Rectangle<float>;
+using RectI32 = brk::Rectangle<int32>;
+using RectU32 = brk::Rectangle<uint32>;

@@ -6,8 +6,9 @@ SOURCES
 	EnumTests.cpp
 	HashTests.cpp
 	JsonTests.cpp
-	RetainPtrTests.cpp
 	QueueTests.cpp
+	RetainPtrTests.cpp
+	RectTests.cpp
 	TypeInfoTests.cpp
 	SystemTests.cpp
 	TypeInfoTests.cpp
@@ -26,3 +27,4 @@ AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
 AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
 AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
 AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
+AddTest("Util Tests" "${PROJECT_NAME}Tests" FILTERS "[util]")
