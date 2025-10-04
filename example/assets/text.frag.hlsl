@@ -18,11 +18,15 @@ float Median(float a, float b, float c)
 	return max(min(a, b), min(max(a, b), c));
 }
 
-float Cheb(float2 p)
+float Chebichev(float2 v)
 {
-	return max(abs(p.x - 0.5), abs(p.y - 0.5));
+	return max(abs(v.x), abs(v.y));
 }
 
+float Outline(float d, float w, float inner, float outer)
+{
+	return smoothstep(outer - w, outer + w, d) - smoothstep(inner - w, inner + w, d);
+}
 
 float4 main(Fragment frag): SV_TARGET
 {
@@ -30,11 +34,16 @@ float4 main(Fragment frag): SV_TARGET
 	float d = Median(px.x, px.y, px.z);
 	float w = fwidth(d);
 
-	float outer = smoothstep(0.5 - OutlineWidth - w, 0.5 - OutlineWidth + w, d);
-	float inner = smoothstep(0.5 - w, 0.5 + w, d);
+	float innerThreshold = 0.5;
+	float outerThreshold = 0.5 - OutlineWidth;
 
-	float d2 = Cheb(frag.Uv);
+	float outline = Outline(d, w, innerThreshold, outerThreshold);
+	float fill = smoothstep(innerThreshold - w, innerThreshold + w, d);
+
+	float d2 = Chebichev(frag.Uv - 0.5);
 	float borderFac = smoothstep(0.5 - 2* fwidth(d2), 0.5, d2);
 
-	return inner * float4(1) + (outer - inner + borderFac) * float4(1, 0, 0, 1);
+	float fac = outline + borderFac;
+
+	return fill * float4(1) + fac * float4(1, 0, 0, 1);
 }

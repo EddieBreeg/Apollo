@@ -62,6 +62,12 @@ namespace brk::rdr {
 		Texture2D(const TextureSettings& settings)
 			: Texture2D(ULID::Generate(), settings)
 		{}
+		Texture2D(Texture2D&& other) noexcept
+			: BaseType::BaseType(std::move(other))
+			, m_Settings(other.m_Settings)
+		{
+			other.m_Settings = TextureSettings{ .m_Usage = ETextureUsageFlags::None };
+		}
 
 		using BaseType::BaseType;
 		Texture2D& operator=(Texture2D&& other)

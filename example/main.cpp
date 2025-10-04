@@ -54,11 +54,12 @@ namespace brk::demo {
 		brk::rdr::Buffer m_VBuffer;
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
+
 		float m_Scale = 1.0f;
 		float m_OutlineThickness = 0.0f;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
-		char m_RenderedChar = 'a';
+		GlyphRange m_GlyphRange;
 		FreetypeContext m_FTContext;
 
 		void ProcessWindowResize(entt::registry& world)
@@ -74,93 +75,20 @@ namespace brk::demo {
 			m_CamMatrix = glm::orthoRH(-xMax, xMax, -.5f, .5f, .01f, 10.f);
 		}
 
-		void InitTexture(
-			msdfgen::Shape& glyphShape,
-			rdr::GPUDevice& device,
-			SDL_GPUCopyPass* copyPass)
+		void InitTexture(SDL_GPUCopyPass* copyPass)
 		{
-			static constexpr float scale = 64;
-			static constexpr uint32 padding = 4;
-			static constexpr float pxRange = 12;
-			const auto bounds = glyphShape.getBounds();
-			const uint32 width = scale * (bounds.r - bounds.l) + 0.5 + 2 * padding;
-			const uint32 height = scale * (bounds.t - bounds.b) + 0.5 + 2 * padding;
-			const msdfgen::Vector2 offset{
-				padding / scale - bounds.l,
-				padding / scale - bounds.b,
-			};
-
-			m_Texture = rdr::Texture2D(
-				rdr::TextureSettings{
-					.m_Width = width,
-					.m_Height = height,
-				});
-			using Pixel = rdr::RGBAPixel<uint8>;
-			const SDL_GPUTransferBufferCreateInfo tBufferInfo{
-				.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-				.size = uint32(width * height * sizeof(Pixel)),
-			};
-			SDL_GPUTransferBuffer* tBuffer = SDL_CreateGPUTransferBuffer(
-				device.GetHandle(),
-				&tBufferInfo);
-
-			BRK_ASSERT(tBuffer, "Failed to create transfer buffer: {}", SDL_GetError());
-			rdr::BitmapView view{
-				(Pixel*)SDL_MapGPUTransferBuffer(device.GetHandle(), tBuffer, false),
-				width,
-				height,
-			};
-
-			{
-				const msdfgen::Range range{ pxRange / Min(width, height) };
-				const msdfgen::SDFTransformation transform{
-					msdfgen::Projection{ scale, offset },
-					range,
-				};
-				msdfgen::Bitmap<float, 3> msdf{ (int)width, (int)height, msdfgen::Y_DOWNWARD };
-				msdfgen::generateMSDF(msdf, glyphShape, transform);
-				for (uint32 j = 0; j < height; ++j)
-				{
-					for (uint32 i = 0; i < width; ++i)
-					{
-						const float* inPixel = msdf(i, j);
-						view(i, j) = Pixel{
-							uint8(255 * Clamp(inPixel[0], 0.0f, 1.0f) + 0.5f),
-							uint8(255 * Clamp(inPixel[1], 0.0f, 1.0f) + 0.5f),
-							uint8(255 * Clamp(inPixel[2], 0.0f, 1.0f) + 0.5f),
-							255,
-						};
-					}
-				}
-			}
-
-			SDL_UnmapGPUTransferBuffer(device.GetHandle(), tBuffer);
-
-			const SDL_GPUTextureTransferInfo transferInfo{
-				.transfer_buffer = tBuffer,
-				.offset = 0,
-				.pixels_per_row = m_Texture.GetSettings().m_Width,
-				.rows_per_layer = m_Texture.GetSettings().m_Height,
-			};
-			const SDL_GPUTextureRegion dest{
-				.texture = m_Texture.GetHandle(),
-				.w = width,
-				.h = height,
-				.d = 1,
-			};
-			SDL_UploadToGPUTexture(copyPass, &transferInfo, &dest, false);
-			SDL_ReleaseGPUTransferBuffer(device.GetHandle(), tBuffer);
+			m_Texture = m_FTContext.LoadRange(copyPass, m_GlyphRange, 64.0f, 10.0f, 4);
 		}
 
 		TestSystem(
 			brk::Window& window,
 			brk::rdr::Renderer& renderer,
 			FreetypeContext ftCtx,
-			char ch = 'a')
+			GlyphRange range)
 			: m_Window(window)
 			, m_Renderer(renderer)
 			, m_VBuffer(rdr::EBufferFlags::Vertex, 4 * sizeof(Vertex2d))
-			, m_RenderedChar(ch)
+			, m_GlyphRange(range)
 			, m_FTContext(std::move(ftCtx))
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
@@ -190,7 +118,8 @@ namespace brk::demo {
 						.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
 						.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
 						.alpha_blend_op = SDL_GPU_BLENDOP_ADD,
-						.color_write_mask = 0b1111,
+						.color_write_mask = SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G |
+											SDL_GPU_COLORCOMPONENT_B | SDL_GPU_COLORCOMPONENT_A,
 						.enable_blend = true,
 					},
 			};
@@ -245,13 +174,7 @@ namespace brk::demo {
 			auto* cmdBuffer = SDL_AcquireGPUCommandBuffer(device.GetHandle());
 			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
 
-			msdfgen::Shape shape;
-			if (!m_FTContext.LoadGlyph(m_RenderedChar, shape))
-			{
-				return;
-			}
-			BRK_LOG_TRACE("Successfully decomposed glyph '{}'", m_RenderedChar);
-			InitTexture(shape, m_Renderer.GetDevice(), copyPass);
+			InitTexture(copyPass);
 			const float texRatio = float(m_Texture.GetSettings().m_Width) /
 								   m_Texture.GetSettings().m_Height;
 			const Vertex2d vert[] = {
@@ -260,6 +183,7 @@ namespace brk::demo {
 				Vertex2d{ { -0.5f * texRatio, .5f }, { 0, 0 } },
 				Vertex2d{ { 0.5f * texRatio, .5f }, { 1, 0 } },
 			};
+
 			m_VBuffer.UploadData(copyPass, vert, sizeof(vert));
 			SDL_EndGPUCopyPass(copyPass);
 			SDL_SubmitGPUCommandBuffer(cmdBuffer);
@@ -340,9 +264,23 @@ namespace brk::demo {
 	brk::EAppResult Init(const brk::EntryPoint& entry, brk::App& app)
 	{
 		spdlog::set_level(spdlog::level::trace);
-		const std::string
-			fontPath = (entry.m_AssetManagerSettings.m_AssetPath / "assets/fonts/arial.ttf").string();
-		const char ch = entry.m_Args.size() > 2 ? entry.m_Args[2][0] : 'a';
+		const std::span args = entry.m_Args;
+		const std::string fontPath =
+			args.size() > 2
+				? args[2]
+				: (entry.m_AssetManagerSettings.m_AssetPath / "assets/fonts/arial.ttf").string();
+
+		GlyphRange range;
+		if (args.size() > 3)
+		{
+			range.m_First = args[3][0];
+			range.m_Last = range.m_First;
+		}
+		if (args.size() > 4)
+		{
+			range.m_Last = args[4][0];
+		}
+
 		auto& renderer = *brk::rdr::Renderer::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *brk::ecs::Manager::GetInstance();
@@ -350,7 +288,7 @@ namespace brk::demo {
 			app.GetMainWindow(),
 			renderer,
 			FreetypeContext{ fontPath.c_str() },
-			ch);
+			range);
 		return EAppResult::Continue;
 	}
 } // namespace brk::demo
