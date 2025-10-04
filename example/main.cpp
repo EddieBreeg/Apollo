@@ -61,17 +61,13 @@ namespace {
 		void ProcessWindowResize(entt::registry& world)
 		{
 			using namespace brk::inputs;
-			const WindowResizeEventComponent* eventData = nullptr;
 			const auto view = world.view<const WindowResizeEventComponent>();
-			for (const entt::entity evt : view)
-			{
-				eventData = &view->get(evt);
-				break;
-			}
-			if (!eventData)
+			if (view->empty())
 				return;
 
-			const float xMax = .5f * eventData->m_Width / eventData->m_Height;
+			const WindowResizeEventComponent& eventData = *view->begin();
+
+			const float xMax = .5f * eventData.m_Width / eventData.m_Height;
 			m_CamMatrix = glm::orthoRH(-xMax, xMax, -.5f, .5f, .01f, 10.f);
 		}
 

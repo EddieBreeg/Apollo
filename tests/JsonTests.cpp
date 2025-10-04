@@ -8,7 +8,7 @@ namespace brk::json::ut {
 		int val1 = 0;
 		std::string_view val2;
 
-		static constexpr FieldList<&S1::val1, &S1::val2> JsonFields = { {
+		static constexpr FieldList<&S1::val1, &S1::val2> JsonFields{ {
 			{ "val1", true },
 			{ "val2" },
 		} };
@@ -40,7 +40,7 @@ namespace brk::json::ut {
 		};
 		S1 s;
 		CHECK(ConverterT::FromJson(s, j));
-	
+
 		CHECK(s.val1 == 0);
 		CHECK((s.val2 == "hello"));
 	}

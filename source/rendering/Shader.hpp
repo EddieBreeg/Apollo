@@ -9,7 +9,7 @@
 struct SDL_GPUShader;
 
 namespace brk::rdr {
-	class BRK_API Shader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
+	class Shader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
 	{
 	public:
 		Shader() = default;
@@ -24,8 +24,8 @@ namespace brk::rdr {
 			other.m_Stage = EShaderStage::Invalid;
 		}
 
-		Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen);
-		Shader(const ShaderInfo& info, const void* code, size_t codeLen);
+		BRK_API Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen);
+		BRK_API Shader(const ShaderInfo& info, const void* code, size_t codeLen);
 
 		void Swap(Shader& other) noexcept
 		{
@@ -39,7 +39,7 @@ namespace brk::rdr {
 			return *this;
 		}
 
-		~Shader();
+		BRK_API ~Shader();
 
 		[[nodiscard]] EShaderStage GetStage() const noexcept { return m_Stage; }
 

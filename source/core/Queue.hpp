@@ -224,9 +224,9 @@ namespace brk {
 
 	template <class T, class Alloc>
 	Queue<T, Alloc>& Queue<T, Alloc>::operator=(Queue&& other) noexcept(
-		(std::allocator_traits<Alloc>::propagate_on_container_move_assignment::value &&
+		(AllocatorTraits::propagate_on_container_move_assignment::value &&
 		 std::is_nothrow_swappable_v<Alloc>) ||
-		std::allocator_traits<Alloc>::is_always_equal::value)
+		AllocatorTraits::is_always_equal::value)
 	{
 		using Traits = std::allocator_traits<Alloc>;
 		if constexpr (Traits::propagate_on_container_move_assignment::value)
@@ -257,29 +257,31 @@ namespace brk {
 			}
 			return *this;
 		}
-
-		for (uint32 i = 0; i < m_Size && i < other.m_Size; ++i)
-		{
-			Get(i) = std::move(other.Get(i));
-		}
-		while (m_Size < other.m_Size)
-		{
-			const uint32 i = (m_Start + m_Size) % m_Capacity;
-			new (m_Ptr + i) T{ std::move(other.Get(m_Size++)) };
-		}
-		if constexpr (!std::is_trivially_destructible_v<T>)
-		{
-			while (other.m_Size < m_Size)
-			{
-				Get(--m_Size).~T();
-			}
-		}
 		else
 		{
-			m_Size = other.m_Size;
-		}
+			for (uint32 i = 0; i < m_Size && i < other.m_Size; ++i)
+			{
+				Get(i) = std::move(other.Get(i));
+			}
+			while (m_Size < other.m_Size)
+			{
+				const uint32 i = (m_Start + m_Size) % m_Capacity;
+				new (m_Ptr + i) T{ std::move(other.Get(m_Size++)) };
+			}
+			if constexpr (!std::is_trivially_destructible_v<T>)
+			{
+				while (other.m_Size < m_Size)
+				{
+					Get(--m_Size).~T();
+				}
+			}
+			else
+			{
+				m_Size = other.m_Size;
+			}
 
-		return *this;
+			return *this;
+		}
 	}
 
 	template <class T, class Alloc>

@@ -14,7 +14,7 @@ namespace brk {
 }
 
 namespace brk::rdr {
-	class BRK_API Renderer : public Singleton<Renderer>
+	class Renderer : public Singleton<Renderer>
 	{
 	public:
 		~Renderer() = default;
@@ -24,7 +24,7 @@ namespace brk::rdr {
 		GPUDevice& GetDevice() noexcept { return m_Device; }
 
 		// Creates the main command buffer, and acquires the swapchain texture
-		void BeginFrame();
+		BRK_API void BeginFrame();
 
 		// Returns null if called outside of BeginFrame/EndFrame
 		[[nodiscard]] SDL_GPUCommandBuffer* GetMainCommandBuffer() noexcept
@@ -35,16 +35,16 @@ namespace brk::rdr {
 		[[nodiscard]] SDL_GPUTexture* GetSwapchainTexture() noexcept { return m_SwapchainTexture; }
 
 		// Renders out ImGui content
-		void ImGuiRenderPass();
+		BRK_API void ImGuiRenderPass();
 
 		// Submits the main command buffer
-		void EndFrame();
+		BRK_API void EndFrame();
 
 	private:
 		Renderer(EBackend backend, Window& window, bool gpuDebug = false, bool vSync = false);
 		friend class Singleton<Renderer>;
 
-		static std::unique_ptr<Renderer> s_Instance;
+		static BRK_API std::unique_ptr<Renderer> s_Instance;
 
 		GPUDevice m_Device;
 		Window& m_Window;

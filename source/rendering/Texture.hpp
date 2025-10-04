@@ -54,11 +54,11 @@ namespace brk::rdr {
 		ETextureUsageFlags m_Usage = ETextureUsageFlags::GraphicsShaderRead;
 	};
 
-	class BRK_API Texture2D : public IAsset, public _internal::HandleWrapper<SDL_GPUTexture*>
+	class  Texture2D : public IAsset, public _internal::HandleWrapper<SDL_GPUTexture*>
 	{
 	public:
 		using IAsset::IAsset;
-		Texture2D(const ULID& id, const TextureSettings& settings);
+		BRK_API Texture2D(const ULID& id, const TextureSettings& settings);
 		Texture2D(const TextureSettings& settings)
 			: Texture2D(ULID::Generate(), settings)
 		{}
@@ -76,7 +76,7 @@ namespace brk::rdr {
 			std::swap(m_Settings, other.m_Settings);
 		}
 
-		~Texture2D();
+		BRK_API ~Texture2D();
 
 		[[nodiscard]] const TextureSettings& GetSettings() const noexcept { return m_Settings; }
 

@@ -30,10 +30,10 @@ namespace brk {
 
 	[[nodiscard]] BRK_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
 
-	class BRK_API IAsset
+	class IAsset
 	{
 	public:
-		IAsset();
+		BRK_API IAsset();
 		IAsset(const ULID& id)
 			: m_Id{ id }
 		{}
@@ -43,8 +43,8 @@ namespace brk {
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
 		void SetState(EAssetState state) noexcept { m_State = state; }
 
-		[[nodiscard]] virtual EAssetType GetType() const noexcept = 0;
-		[[nodiscard]] std::string_view GetTypeName() const noexcept;
+		[[nodiscard]] virtual BRK_API EAssetType GetType() const noexcept = 0;
+		[[nodiscard]] BRK_API std::string_view GetTypeName() const noexcept;
 
 	protected:
 		brk::ULID m_Id;

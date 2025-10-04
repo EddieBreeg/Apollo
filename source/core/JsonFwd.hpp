@@ -20,12 +20,13 @@ namespace brk::json {
 		struct IsFieldList : std::false_type
 		{};
 
-		template <class T, class... M, M T::*... Ptr>
-		struct IsFieldList<FieldList<Ptr...>> : std::true_type
-		{};
-
 		template <class T>
 		struct IsFieldList<const T> : IsFieldList<T>
+		{};
+
+		
+		template <auto... Ptr>
+		struct IsFieldList<FieldList<Ptr...>> : std::true_type
 		{};
 	} // namespace _internal
 

@@ -4,10 +4,10 @@
 #include <chrono>
 
 namespace brk {
-	class BRK_API GameTime
+	class GameTime
 	{
 	public:
-		GameTime();
+		BRK_API GameTime();
 		~GameTime() = default;
 
 		
@@ -15,8 +15,8 @@ namespace brk {
 		using Duration = std::chrono::duration<float>;
 		using TimePoint = ClockType::time_point;
 		
-		void Update();
-		void Reset();
+		BRK_API void Update();
+		BRK_API void Reset();
 
 		[[nodiscard]] Duration GetDelta() const noexcept { return m_Delta; }
 		template <class D>

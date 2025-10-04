@@ -20,12 +20,12 @@ namespace brk::rdr {
 		NFlags = 4
 	};
 
-	class BRK_API Buffer : public _internal::HandleWrapper<SDL_GPUBuffer*>
+	class  Buffer : public _internal::HandleWrapper<SDL_GPUBuffer*>
 	{
 	public:
 		using BaseType::BaseType;
-		Buffer(EnumFlags<EBufferFlags> usage, uint32 size);
-		~Buffer();
+		 BRK_API Buffer(EnumFlags<EBufferFlags> usage, uint32 size);
+		BRK_API ~Buffer();
 		Buffer(Buffer&& other)
 			: BaseType(std::move(other))
 			, m_Flags(other.m_Flags)
@@ -35,7 +35,7 @@ namespace brk::rdr {
 			other.m_Size = 0;
 		}
 
-		void UploadData(
+		BRK_API void UploadData(
 			SDL_GPUCopyPass* copyPass,
 			const void* data,
 			uint32 size,

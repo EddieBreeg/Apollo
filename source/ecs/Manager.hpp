@@ -16,7 +16,7 @@ namespace brk
 }
 
 namespace brk::ecs {
-	class BRK_API Manager : public Singleton<Manager>
+	class  Manager : public Singleton<Manager>
 	{
 		struct IndexGen
 		{
@@ -26,7 +26,7 @@ namespace brk::ecs {
 		using SystemIndex = TypeIndex<S, IndexGen>;
 
 	public:
-		~Manager() = default;
+		BRK_API ~Manager() = default;
 
 		template <System S, class... T>
 		S& AddSystem(T&&... args)
@@ -38,8 +38,8 @@ namespace brk::ecs {
 						.template GetAs<S>();
 		}
 
-		void PostInit();
-		void Update(const GameTime&);
+		BRK_API void PostInit();
+		BRK_API void Update(const GameTime&);
 
 	private:
 		template <System S>
@@ -51,7 +51,7 @@ namespace brk::ecs {
 
 		friend class Singleton<Manager>;
 		Manager() = default;
-		static std::unique_ptr<Manager> s_Instance;
+		static BRK_API std::unique_ptr<Manager> s_Instance;
 
 		entt::registry m_World;
 		std::vector<SystemInstance> m_Systems;

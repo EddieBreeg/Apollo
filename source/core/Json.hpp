@@ -3,6 +3,7 @@
 #include <PCH.hpp>
 
 #include "JsonFwd.hpp"
+#include "TypeTraits.hpp"
 #include <nlohmann/json.hpp>
 
 namespace brk::json {
@@ -62,10 +63,14 @@ namespace brk::json {
 		template <class List>
 		struct ListTraits;
 
-		template <class... M, M T::*... Ptr>
+		template <auto... Ptr>
 		struct ListTraits<const FieldList<Ptr...>>
 		{
-			static constexpr bool NoThrowFromJson = (NoThrowVisitable<M, const char*> && ...);
+			static constexpr bool NoThrowFromJson =
+				(NoThrowVisitable<
+					 typename meta::MemberObjectTraits<decltype(Ptr)>::MemberType,
+					 const char*> &&
+				 ...);
 		};
 
 		static constexpr bool NoThrowFromJson = ListTraits<decltype(T::JsonFields)>::NoThrowFromJson;

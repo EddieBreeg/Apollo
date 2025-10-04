@@ -23,24 +23,24 @@ namespace brk {
 
 	struct EntryPoint;
 
-	class BRK_API App : public Singleton<App>
+	class App : public Singleton<App>
 	{
 	public:
-		~App();
+		BRK_API ~App();
 		[[nodiscard]] EAppResult GetResultCode() const noexcept { return m_Result; }
 		[[nodiscard]] Window& GetMainWindow() noexcept { return m_Window; }
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 
-		EAppResult Run();
-		void RequestAppQuit() noexcept;
+		BRK_API EAppResult Run();
+		BRK_API void RequestAppQuit() noexcept;
 
 	private:
-		EAppResult Update();
+		BRK_API EAppResult Update();
 
-		App(const EntryPoint& entry);
+		BRK_API App(const EntryPoint& entry);
 		friend class Singleton<App>;
 
-		static std::unique_ptr<App> s_Instance;
+		static BRK_API std::unique_ptr<App> s_Instance;
 
 		const EntryPoint& m_EntryPoint;
 		Window m_Window;

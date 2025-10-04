@@ -16,7 +16,7 @@ namespace brk::editor {
 }
 
 namespace brk::rdr {
-	class BRK_API Material : public IAsset
+	class Material : public IAsset
 	{
 	public:
 		using IAsset::IAsset;

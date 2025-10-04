@@ -57,7 +57,7 @@ namespace brk::rdr::bitmap_ut {
 	}
 	BITMAP_TEST("Set pixel values")
 	{
-		R8Pixel pixels[]{};
+		R8Pixel pixels[4]{};
 		BitmapView<R8Pixel> view{ pixels, 2, 2 };
 		view(0, 0) = R8Pixel{ 1 };
 		view(1, 0) = R8Pixel{ 2 };

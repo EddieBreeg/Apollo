@@ -25,22 +25,22 @@ namespace brk {
 		EAssetLoadResult operator()();
 	};
 
-	class BRK_API AssetLoader
+	class AssetLoader
 	{
 	public:
 		AssetLoader(rdr::GPUDevice& device)
 			: m_Device(device)
 		{}
 
-		void AddRequest(
+		BRK_API void AddRequest(
 			AssetRef<IAsset> asset,
 			AssetImportFunc* importFunc,
 			const AssetMetadata& metadata);
 
-		void ProcessRequests();
+		BRK_API void ProcessRequests();
 
-		static SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
-		static SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
+		static BRK_API SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
+		static BRK_API SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
 
 		~AssetLoader() = default;
 

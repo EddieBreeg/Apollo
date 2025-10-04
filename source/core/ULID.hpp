@@ -11,7 +11,7 @@ namespace brk {
 	 * Unique lexographically sortable identifier. The spec for this format can
 	 * be found here: https://github.com/ulid/spec
 	 */
-	class ULID
+	class BRK_API ULID
 	{
 	public:
 		/**
@@ -33,7 +33,7 @@ namespace brk {
 		 * Generates a new identifier, with a 48-bit unix timestamp (in milliseconds) and
 		 * 80 bits of pseudo-random data
 		 */
-		[[nodiscard]] BRK_API static ULID Generate();
+		[[nodiscard]] static ULID Generate();
 
 		/**
 		 * Converts the ULID object into a base 32 string
@@ -59,8 +59,8 @@ namespace brk {
 		[[nodiscard]] constexpr bool operator==(const ULID other) const noexcept;
 		[[nodiscard]] constexpr bool operator!=(const ULID other) const noexcept;
 
-		BRK_API bool FromJson(const nlohmann::json& json) noexcept;
-		BRK_API void ToJson(nlohmann::json& out_json) const;
+		bool FromJson(const nlohmann::json& json) noexcept;
+		void ToJson(nlohmann::json& out_json) const;
 
 	private:
 		friend struct Hash<ULID>;

@@ -110,7 +110,7 @@ namespace brk::rdr {
 	private:
 		Pixel* m_Data = nullptr;
 		uint32 m_Width = 0, m_Height = 0;
-		size_t m_Stride = 0;
+		uint32 m_Stride = 0;
 	};
 
 	template <class Pixel>
