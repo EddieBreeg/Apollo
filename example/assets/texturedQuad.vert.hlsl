@@ -13,12 +13,13 @@ struct Fragment
 cbuffer CamData: register(b0, space1)
 {
 	float4x4 ViewProjMatrix;
+	float4x4 ModelMatrix;
 };
 
 Fragment main(Vertex v)
 {
 	Fragment res;
-	res.Position = mul(ViewProjMatrix, float4(v.m_Position, 0, 1));
+	res.Position = mul(ViewProjMatrix, mul(ModelMatrix, float4(v.m_Position, 0, 1)));
 	res.Uv = v.m_Uv;
 	return res;
 }

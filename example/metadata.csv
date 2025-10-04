@@ -1,4 +1,5 @@
-01K61BK2C2QZS0A18PWHGARASK,texture2d,glyph,assets/glyph.jpg
+01K61BK2C2QZS0A18PWHGARASK,texture2d,glyph,assets/msdf.png
 01K65F71RK1WNJ6D7XDNTNPVX4,shader,texturedQuadVert,".brk/_assetCache/texturedQuad.vert"
 01K65MTCW215MP1KK72CG1WQ1T,shader,texturedQuadFrag,".brk/_assetCache/texturedQuad.frag"
+01K6G8959Y1A6BM730HAQSS9PC,shader,textFrag,".brk/_assetCache/text.frag"
 01K6841M7W2D1J00QKJHHBDJG5,material,texturedQuad,"assets/texturedQuad.mat"

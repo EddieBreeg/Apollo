@@ -51,7 +51,7 @@ namespace brk::rdr {
 		uint32 m_Width = 0;
 		uint32 m_Height = 0;
 		EPixelFormat m_Format = EPixelFormat::RGBA8_UNorm;
-		ETextureUsageFlags m_Usage = ETextureUsageFlags::GraphicsShaderRead;
+		ETextureUsageFlags m_Usage = ETextureUsageFlags::Sampled;
 	};
 
 	class  Texture2D : public IAsset, public _internal::HandleWrapper<SDL_GPUTexture*>

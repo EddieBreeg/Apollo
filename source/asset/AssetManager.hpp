@@ -68,6 +68,7 @@ namespace brk {
 		}
 
 		BRK_API void Update();
+		const std::filesystem::path& GetAssetPath() const noexcept { return m_AssetsPath; }
 
 	private:
 		BRK_API AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
