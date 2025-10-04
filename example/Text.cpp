@@ -246,6 +246,7 @@ namespace brk::demo {
 		GridPacker packer{ 512 };
 
 		GameTime timer;
+		const double paddingNormalized = padding / size;
 
 		// First step: load glyphs, decompose shapes, compute metrics and pack rectangles
 		for (char32_t ch = range.m_First; ch <= range.m_Last; ++ch)
@@ -289,10 +290,10 @@ namespace brk::demo {
 			glyph.m_Shape.normalize();
 			msdfgen::edgeColoringSimple(glyph.m_Shape, 3.0);
 			glyph.m_Shape.orientContours();
-			glyph.m_Bounds = glyph.m_Shape.getBounds();
+			glyph.m_Bounds = glyph.m_Shape.getBounds(paddingNormalized);
 
-			const uint32 width = size * (glyph.m_Bounds.r - glyph.m_Bounds.l) + 2 * padding + 1.5f;
-			const uint32 height = size * (glyph.m_Bounds.t - glyph.m_Bounds.b) + 2 * padding + 1.5f;
+			const uint32 width = size * (glyph.m_Bounds.r - glyph.m_Bounds.l) + 1.5f;
+			const uint32 height = size * (glyph.m_Bounds.t - glyph.m_Bounds.b) + 1.5f;
 			glyph.m_UvRect = RectU32{ .width = width, .height = height };
 			packer.Pack(glyph.m_UvRect);
 			glyphs.emplace_back(std::move(glyph));
@@ -324,6 +325,8 @@ namespace brk::demo {
 
 		std::vector<rdr::Pixel<float, 3>> msdf;
 
+		const msdfgen::Range distRange{ pxRange / size };
+
 		timer.Reset();
 		// Second step: iterate over loaded glyphs, render MSDF and copy to atlas texture
 		for (const Glyph& glyph : glyphs)
@@ -335,12 +338,9 @@ namespace brk::demo {
 			const msdfgen::Projection projection{
 				size,
 				msdfgen::Vector2{
-					padding / size - glyph.m_Bounds.l,
-					padding / size - glyph.m_Bounds.b,
+					-glyph.m_Bounds.l,
+					-glyph.m_Bounds.b,
 				},
-			};
-			const msdfgen::Range distRange{
-				pxRange / Min(glyph.m_UvRect.width, glyph.m_UvRect.height),
 			};
 			msdfgen::BitmapSection<float, 3> msdfSection{
 				&msdf.data()->r,
