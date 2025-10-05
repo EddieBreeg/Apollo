@@ -6,6 +6,11 @@
 namespace brk::utf8 {
 	static constexpr char32_t g_InvalidCodePoint = 0xffffffff;
 
+	[[nodiscard]] constexpr bool IsWhitespace(char32_t ch) noexcept
+	{
+		return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' || ch == '\v';
+	}
+
 	inline constexpr char* Encode(char32_t codePoint, char out_str[4]) noexcept;
 
 	struct Decoder

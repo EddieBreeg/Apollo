@@ -63,6 +63,7 @@ namespace brk::demo {
 
 	private:
 		bool LoadGlyph(char32_t ch, msdfgen::Shape& out_shape);
+
 		FT_LibraryRec_* m_FreetypeHandle = nullptr;
 		FT_FaceRec_* m_Face = nullptr;
 		float m_Scale = 1.0f;

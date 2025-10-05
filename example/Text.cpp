@@ -8,6 +8,7 @@
 #include <msdfgen.h>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Renderer.hpp>
+#include <thread>
 
 namespace {
 #undef FTERRORS_H_
@@ -203,6 +204,7 @@ namespace {
 
 namespace brk::demo {
 	FontAtlas::FontAtlas()
+		: m_Texture()
 	{
 		FT_Error err = FT_Init_FreeType(&m_FreetypeHandle);
 		BRK_ASSERT(!err, "Failed to init Freetype: {}", GetFreetypeErrMsg(err));
@@ -305,7 +307,7 @@ namespace brk::demo {
 		GridPacker packer{ maxTexWith };
 
 		const double paddingNormalized = padding / double(size);
-		
+
 		GameTime timer;
 		// First step: load glyphs, decompose shapes, compute metrics and pack rectangles
 		for (char32_t ch = range.m_First; ch <= range.m_Last; ++ch)
@@ -314,9 +316,19 @@ namespace brk::demo {
 			Glyph glyph{
 				.m_Ch = ch,
 				.m_Advance = m_Face->glyph->metrics.horiAdvance / 64.0f,
+				.m_Offset = float2{ 0, 0 },
 			};
+
 			if (!LoadGlyph(ch, shape))
 				continue;
+
+			// hack: do not try to pack whitespace characters, their bounds will be incorrect
+			if (utf8::IsWhitespace(ch))
+			{
+				shapes.emplace_back(std::move(shape));
+				m_Glyphs.emplace_back(glyph);
+				continue;
+			}
 
 			DEBUG_CHECK(shape.validate())
 			{
@@ -326,8 +338,8 @@ namespace brk::demo {
 			const auto bounds = shape.getBounds(paddingNormalized);
 			glyph.m_Offset = { bounds.l, bounds.b };
 
-			glyph.m_UvRect.width = size * (bounds.r - bounds.l) + 1.5f;
-			glyph.m_UvRect.height = size * (bounds.t - bounds.b) + 1.5f;
+			glyph.m_UvRect.width = uint32(size * (bounds.r - bounds.l) + 1.5f);
+			glyph.m_UvRect.height = uint32(size * (bounds.t - bounds.b) + 1.5f);
 			packer.Pack(glyph.m_UvRect);
 			m_Glyphs.emplace_back(std::move(glyph));
 			shapes.emplace_back(std::move(shape));
@@ -358,22 +370,46 @@ namespace brk::demo {
 
 		const msdfgen::Range distRange{ pxRange / size };
 
-		std::vector<float> msdfBitmap;
-		msdfBitmap.reserve(size * size);
-		Rasterizer rasterizer{
-			.m_Size = size,
-			.m_DistanceRange = distRange,
-			.m_Bitmap = msdfBitmap,
-			.m_OutBuf = buf,
-			.m_BufStride = atlasSize.x,
-		};
+#ifdef USE_MULTITHREADING
+		const uint32 numThreads = Clamp(
+			std::thread::hardware_concurrency(),
+			1u,
+			(uint32)m_Glyphs.size());
+#else
+		const uint32 numThreads = 1;
+#endif
+		std::thread* threads = Alloca(std::thread, numThreads);
+		Milliseconds* threadTimers = Alloca(Milliseconds, numThreads);
+		BRK_LOG_TRACE("Running {} threads", numThreads);
 
 		timer.Reset();
-		// Second step: iterate over loaded m_Glyphs, render MSDF and copy to atlas texture
-		for (uint32 index = 0; index < m_Glyphs.size(); ++index)
+		for (uint32 i = 0; i < numThreads; ++i)
 		{
-			const Glyph& glyph = m_Glyphs[index];
-			rasterizer(glyph.m_Offset, glyph.m_UvRect, shapes[index]);
+			new (threads + i) std::thread{
+				[=, id = i, this, &shapes]()
+				{
+					std::vector<float> msdfBitmap(size * size);
+					Rasterizer rasterizer{
+						.m_Size = size,
+						.m_DistanceRange = distRange,
+						.m_Bitmap = msdfBitmap,
+						.m_OutBuf = buf,
+						.m_BufStride = atlasSize.x,
+					};
+					auto t = std::chrono::steady_clock::now();
+					for (uint32 i = id; i < m_Glyphs.size(); i += numThreads)
+					{
+						const Glyph& glyph = m_Glyphs[i];
+						rasterizer(glyph.m_Offset, glyph.m_UvRect, shapes[i]);
+					}
+					threadTimers[id] = std::chrono::steady_clock::now() - t;
+				},
+			};
+		}
+		for (uint32 i = 0; i < numThreads; ++i)
+		{
+			threads[i].join();
+			BRK_LOG_TRACE("Thread {} took {}ms", i, threadTimers[i].count());
 		}
 		timer.Update();
 

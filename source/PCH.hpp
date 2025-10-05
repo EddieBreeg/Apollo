@@ -33,7 +33,7 @@ extern "C" void* _alloca(size_t);
 extern "C" void* alloca(size_t);
 #endif
 
-#define Alloca(Type, n) static_cast<Type*>((n) * sizeof(Type))
+#define Alloca(Type, n) static_cast<Type*>(alloca((n) * sizeof(Type)))
 
 #ifdef BRK_DEV
 #define DEBUG_CHECK(expr) if (!(expr)) [[unlikely]]
