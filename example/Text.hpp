@@ -28,31 +28,46 @@ namespace brk::demo {
 		[[nodiscard]] constexpr uint32 GetSize() const noexcept { return m_Last - m_First + 1; }
 	};
 
-	struct FreetypeContext
+	struct Glyph
 	{
-		FreetypeContext();
-		FreetypeContext(const char* fontPath);
-		~FreetypeContext();
+		char32_t m_Ch;
+		float m_Advance;
+		float2 m_Offset;
+		RectU32 m_UvRect;
+	};
 
-		FreetypeContext(const FreetypeContext&) = delete;
-		FreetypeContext(FreetypeContext&&) noexcept;
+	struct FontAtlas
+	{
+		FontAtlas();
+		FontAtlas(const char* fontPath);
+		~FontAtlas();
 
-		FreetypeContext& operator=(const FreetypeContext&) = delete;
-		FreetypeContext& operator=(FreetypeContext&&) noexcept;
+		FontAtlas(const FontAtlas&) = delete;
+		FontAtlas(FontAtlas&&) noexcept;
 
-		void Swap(FreetypeContext& other) noexcept;
+		FontAtlas& operator=(const FontAtlas&) = delete;
+		FontAtlas& operator=(FontAtlas&&) noexcept;
 
-		bool LoadGlyph(char32_t ch, msdfgen::Shape& out_shape);
-		rdr::Texture2D LoadRange(
+		void Swap(FontAtlas& other) noexcept;
+
+		rdr::Texture2D& LoadRange(
 			SDL_GPUCopyPass* copyPass,
 			GlyphRange range,
-			float size,
+			uint32 size,
 			float pxRange,
+			uint32 maxTexWith = 512,
 			uint32 padding = 1);
 
+		[[nodiscard]] rdr::Texture2D& GetTexture() noexcept { return m_Texture; }
+		[[nodiscard]] const rdr::Texture2D& GetTexture() const noexcept { return m_Texture; }
+
 	private:
+		bool LoadGlyph(char32_t ch, msdfgen::Shape& out_shape);
 		FT_LibraryRec_* m_FreetypeHandle = nullptr;
 		FT_FaceRec_* m_Face = nullptr;
 		float m_Scale = 1.0f;
+		GlyphRange m_Range;
+		rdr::Texture2D m_Texture;
+		std::vector<Glyph> m_Glyphs;
 	};
 } // namespace brk::demo

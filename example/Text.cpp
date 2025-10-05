@@ -103,15 +103,6 @@ namespace {
 		};
 	};
 
-	struct Glyph
-	{
-		char32_t m_Ch;
-		float m_Advance;
-		msdfgen::Shape::Bounds m_Bounds;
-		RectU32 m_UvRect;
-		msdfgen::Shape m_Shape;
-	};
-
 	struct GridPacker
 	{
 		GridPacker(uint32 maxWidth)
@@ -143,17 +134,39 @@ namespace {
 		uint32 m_RowHeight = 0;
 		glm::uvec2 m_Pos = { 0, 0 };
 	};
+
+	void CopyBitmap(
+		const msdfgen::BitmapSection<float, 3>& src,
+		brk::rdr::BitmapView<brk::rdr::Pixel<uint8, 4>> dest)
+	{
+		using Pixel = brk::rdr::Pixel<uint8, 4>;
+		const uint32 w = dest.GetWidth();
+		const uint32 h = dest.GetHeight();
+		for (uint32 j = 0; j < h; ++j)
+		{
+			for (uint32 i = 0; i < w; ++i)
+			{
+				const float* inPx = src(i, j);
+				dest(i, j) = Pixel{
+					uint8(255 * brk::Clamp(inPx[0], 0.0f, 1.0f) + 0.5),
+					uint8(255 * brk::Clamp(inPx[1], 0.0f, 1.0f) + 0.5),
+					uint8(255 * brk::Clamp(inPx[2], 0.0f, 1.0f) + 0.5),
+					255,
+				};
+			}
+		}
+	}
 } // namespace
 
 namespace brk::demo {
-	FreetypeContext::FreetypeContext()
+	FontAtlas::FontAtlas()
 	{
 		FT_Error err = FT_Init_FreeType(&m_FreetypeHandle);
 		BRK_ASSERT(!err, "Failed to init Freetype: {}", GetFreetypeErrMsg(err));
 	}
 
-	FreetypeContext::FreetypeContext(const char* path)
-		: FreetypeContext()
+	FontAtlas::FontAtlas(const char* path)
+		: FontAtlas()
 	{
 		FT_Error err = FT_New_Face(m_FreetypeHandle, path, 0, &m_Face);
 		DEBUG_CHECK(!err)
@@ -164,7 +177,7 @@ namespace brk::demo {
 		m_Scale = m_Face->units_per_EM ? (1.0f / m_Face->units_per_EM) : 1.0f;
 	}
 
-	FreetypeContext::FreetypeContext(FreetypeContext&& other) noexcept
+	FontAtlas::FontAtlas(FontAtlas&& other) noexcept
 		: m_FreetypeHandle(other.m_FreetypeHandle)
 		, m_Face(other.m_Face)
 		, m_Scale(other.m_Scale)
@@ -173,20 +186,20 @@ namespace brk::demo {
 		other.m_Face = nullptr;
 	}
 
-	FreetypeContext& FreetypeContext::operator=(FreetypeContext&& other) noexcept
+	FontAtlas& FontAtlas::operator=(FontAtlas&& other) noexcept
 	{
 		Swap(other);
 		return *this;
 	}
 
-	void FreetypeContext::Swap(FreetypeContext& other) noexcept
+	void FontAtlas::Swap(FontAtlas& other) noexcept
 	{
 		std::swap(m_Face, other.m_Face);
 		std::swap(m_FreetypeHandle, other.m_FreetypeHandle);
 		std::swap(m_Scale, other.m_Scale);
 	}
 
-	bool FreetypeContext::LoadGlyph(char32_t ch, msdfgen::Shape& out_shape)
+	bool FontAtlas::LoadGlyph(char32_t ch, msdfgen::Shape& out_shape)
 	{
 		DEBUG_CHECK(m_Face)
 		{
@@ -221,82 +234,60 @@ namespace brk::demo {
 		if (!out_shape.validate())
 			return false;
 		out_shape.normalize();
+		out_shape.orientContours();
 		msdfgen::edgeColoringSimple(out_shape, 3.0);
 
 		return true;
 	}
 
-	FreetypeContext::~FreetypeContext()
+	FontAtlas::~FontAtlas()
 	{
 		if (m_Face)
 			FT_Done_Face(m_Face);
 		FT_Done_FreeType(m_FreetypeHandle);
 	}
 
-	rdr::Texture2D FreetypeContext::LoadRange(
+	rdr::Texture2D& FontAtlas::LoadRange(
 		SDL_GPUCopyPass* copyPass,
 		GlyphRange range,
-		float size,
+		uint32 size,
 		float pxRange,
+		uint32 maxTexWith,
 		uint32 padding)
 	{
-		std::vector<Glyph> glyphs;
-		glyphs.reserve(range.GetSize());
+		m_Glyphs.reserve(range.GetSize());
+		std::vector<msdfgen::Shape> shapes;
+		shapes.reserve(range.GetSize());
 
-		GridPacker packer{ 512 };
+		GridPacker packer{ maxTexWith };
 
 		GameTime timer;
-		const double paddingNormalized = padding / size;
+		const double paddingNormalized = padding / double(size);
 
 		// First step: load glyphs, decompose shapes, compute metrics and pack rectangles
 		for (char32_t ch = range.m_First; ch <= range.m_Last; ++ch)
 		{
-			const uint32 index = FT_Get_Char_Index(m_Face, ch);
-			// if glyph wasn't found, silently skip
-			if (!index)
-				continue;
-			FT_Error err = FT_Load_Glyph(m_Face, index, FT_LOAD_NO_BITMAP);
-
-			DEBUG_CHECK(err == FT_Err_Ok)
-			{
-				BRK_LOG_ERROR(
-					"Failed to load glyph U+{:08X}: {}",
-					uint32(ch),
-					GetFreetypeErrMsg(err));
-				continue;
-			}
-
+			msdfgen::Shape shape;
 			Glyph glyph{
 				.m_Ch = ch,
 				.m_Advance = m_Face->glyph->metrics.horiAdvance / 64.0f,
 			};
-			GlyphContext ctx{ .m_OutShape = glyph.m_Shape, .m_Scale = m_Scale };
-			err = FT_Outline_Decompose(&m_Face->glyph->outline, &GlyphContext::s_OutlineFuncs, &ctx);
-			DEBUG_CHECK(err == FT_Err_Ok)
-			{
-				BRK_LOG_ERROR(
-					"Failed to decompose glyph U+{:08X}: {}",
-					uint32(ch),
-					GetFreetypeErrMsg(err));
+			if (!LoadGlyph(ch, shape))
 				continue;
-			}
-			ctx.FinishContour();
 
-			DEBUG_CHECK(glyph.m_Shape.validate())
+			DEBUG_CHECK(shape.validate())
 			{
 				BRK_LOG_ERROR("Failed to validate shape for glyph U+{:08X}", uint32(ch));
 				continue;
 			}
-			glyph.m_Shape.normalize();
-			msdfgen::edgeColoringSimple(glyph.m_Shape, 3.0);
-			glyph.m_Shape.orientContours();
-			glyph.m_Bounds = glyph.m_Shape.getBounds(paddingNormalized);
+			const auto bounds = shape.getBounds(paddingNormalized);
+			glyph.m_Offset = { bounds.l, bounds.b };
 
-			const uint32 width = size * (glyph.m_Bounds.r - glyph.m_Bounds.l) + 1.5f;
-			const uint32 height = size * (glyph.m_Bounds.t - glyph.m_Bounds.b) + 1.5f;
-			glyph.m_UvRect = RectU32{ .width = width, .height = height };
+			glyph.m_UvRect.width = size * (bounds.r - bounds.l) + 1.5f;
+			glyph.m_UvRect.height = size * (bounds.t - bounds.b) + 1.5f;
 			packer.Pack(glyph.m_UvRect);
-			glyphs.emplace_back(std::move(glyph));
+			m_Glyphs.emplace_back(std::move(glyph));
+			shapes.emplace_back(std::move(shape));
 		}
 		timer.Update();
 		BRK_LOG_TRACE(
@@ -306,7 +297,7 @@ namespace brk::demo {
 		const auto atlasSize = packer.GetTotalSize();
 		const uint32 pixelCount = atlasSize.x * atlasSize.y;
 
-		rdr::Texture2D atlasTex{ rdr::TextureSettings{
+		m_Texture = rdr::Texture2D{ rdr::TextureSettings{
 			atlasSize.x,
 			atlasSize.y,
 			rdr::EPixelFormat::RGBA8_UNorm,
@@ -323,38 +314,49 @@ namespace brk::demo {
 		SDL_GPUTransferBuffer* transferBuf = SDL_CreateGPUTransferBuffer(device, &tBufferInfo);
 		RGBA8Pixel* buf = (RGBA8Pixel*)SDL_MapGPUTransferBuffer(device, transferBuf, true);
 
-		std::vector<rdr::Pixel<float, 3>> msdf;
+		std::vector<float> msdf;
+		msdf.reserve(3 * size * size);
 
 		const msdfgen::Range distRange{ pxRange / size };
 
-		timer.Reset();
-		// Second step: iterate over loaded glyphs, render MSDF and copy to atlas texture
-		for (const Glyph& glyph : glyphs)
+		using Milliseconds = std::chrono::duration<double, std::milli>;
+
+		Milliseconds renderTime;
+		Milliseconds copyTime;
+
+		// Second step: iterate over loaded m_Glyphs, render MSDF and copy to atlas texture
+		for (uint32 index = 0; index < m_Glyphs.size(); ++index)
 		{
-			const uint32 msdfSize = glyph.m_UvRect.width * glyph.m_UvRect.height;
+			const Glyph& glyph = m_Glyphs[index];
+			const uint32 msdfSize = 3 * glyph.m_UvRect.width * glyph.m_UvRect.height;
 			if (msdf.size() < msdfSize)
 				msdf.resize(msdfSize);
 
 			const msdfgen::Projection projection{
 				size,
 				msdfgen::Vector2{
-					-glyph.m_Bounds.l,
-					-glyph.m_Bounds.b,
+					-glyph.m_Offset.x,
+					-glyph.m_Offset.y,
 				},
 			};
 			msdfgen::BitmapSection<float, 3> msdfSection{
-				&msdf.data()->r,
+				msdf.data(),
 				(int)glyph.m_UvRect.width,
 				(int)glyph.m_UvRect.height,
 				msdfgen::Y_DOWNWARD,
 			};
+			using ClockType = std::chrono::steady_clock;
+			auto t = ClockType::now();
 			msdfgen::generateMSDF(
 				msdfSection,
-				glyph.m_Shape,
+				shapes[index],
 				msdfgen::SDFTransformation{
 					projection,
 					distRange,
 				});
+
+			renderTime += ClockType::now() - t;
+
 			rdr::BitmapView<RGBA8Pixel> dest{
 				buf,
 				glyph.m_UvRect.x,
@@ -364,24 +366,13 @@ namespace brk::demo {
 				atlasSize.x,
 			};
 
-			for (uint32 j = 0; j < dest.GetHeight(); ++j)
-			{
-				for (uint32 i = 0; i < dest.GetWidth(); ++i)
-				{
-					const float* inPix = msdfSection(i, j);
-					dest(i, j) = RGBA8Pixel{
-						uint8(255 * Clamp(inPix[0], 0.0f, 1.0f) + 0.5f),
-						uint8(255 * Clamp(inPix[1], 0.0f, 1.0f) + 0.5f),
-						uint8(255 * Clamp(inPix[2], 0.0f, 1.0f) + 0.5f),
-						255,
-					};
-				}
-			}
+			t = ClockType::now();
+			CopyBitmap(msdfSection, dest);
+			copyTime += ClockType::now() - t;
 		}
 		timer.Update();
-		BRK_LOG_TRACE(
-			"Glyph MSDF rendering took {}ms",
-			timer.GetElapsedAs<std::chrono::milliseconds>().count());
+		BRK_LOG_TRACE("Glyph MSDF rendering took {}ms", renderTime.count());
+		BRK_LOG_TRACE("Glyph copying took {}ms", copyTime.count());
 
 		const SDL_GPUTextureTransferInfo srcLoc{
 			.transfer_buffer = transferBuf,
@@ -389,7 +380,7 @@ namespace brk::demo {
 			.rows_per_layer = atlasSize.y,
 		};
 		const SDL_GPUTextureRegion destRegion{
-			.texture = atlasTex.GetHandle(),
+			.texture = m_Texture.GetHandle(),
 			.w = atlasSize.x,
 			.h = atlasSize.y,
 			.d = 1,
@@ -397,6 +388,6 @@ namespace brk::demo {
 		SDL_UploadToGPUTexture(copyPass, &srcLoc, &destRegion, true);
 
 		SDL_ReleaseGPUTransferBuffer(device, transferBuf);
-		return atlasTex;
+		return m_Texture;
 	}
 } // namespace brk::demo

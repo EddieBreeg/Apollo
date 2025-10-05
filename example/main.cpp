@@ -49,7 +49,6 @@ namespace brk::demo {
 	{
 		brk::Window& m_Window;
 		brk::rdr::Renderer& m_Renderer;
-		brk::rdr::Texture2D m_Texture;
 		brk::AssetRef<brk::rdr::Material> m_Material;
 		brk::rdr::Buffer m_VBuffer;
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
@@ -60,7 +59,7 @@ namespace brk::demo {
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
 		GlyphRange m_GlyphRange;
-		FreetypeContext m_FTContext;
+		FontAtlas m_Atlas;
 
 		void ProcessWindowResize(entt::registry& world)
 		{
@@ -77,19 +76,19 @@ namespace brk::demo {
 
 		void InitTexture(SDL_GPUCopyPass* copyPass)
 		{
-			m_Texture = m_FTContext.LoadRange(copyPass, m_GlyphRange, 64.0f, 10.0f, 4);
+			m_Atlas.LoadRange(copyPass, m_GlyphRange, 64.0f, 10.0f, 1024, 4);
 		}
 
 		TestSystem(
 			brk::Window& window,
 			brk::rdr::Renderer& renderer,
-			FreetypeContext ftCtx,
+			FontAtlas atlas,
 			GlyphRange range)
 			: m_Window(window)
 			, m_Renderer(renderer)
 			, m_VBuffer(rdr::EBufferFlags::Vertex, 4 * sizeof(Vertex2d))
 			, m_GlyphRange(range)
-			, m_FTContext(std::move(ftCtx))
+			, m_Atlas(std::move(atlas))
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
 
@@ -175,8 +174,8 @@ namespace brk::demo {
 			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
 
 			InitTexture(copyPass);
-			const float texRatio = float(m_Texture.GetSettings().m_Width) /
-								   m_Texture.GetSettings().m_Height;
+			const rdr::TextureSettings settings = m_Atlas.GetTexture().GetSettings();
+			const float texRatio = float(settings.m_Width) / settings.m_Height;
 			const Vertex2d vert[] = {
 				Vertex2d{ { -0.5f * texRatio, -.5f }, { 0, 1 } },
 				Vertex2d{ { 0.5f * texRatio, -.5f }, { 1, 1 } },
@@ -211,7 +210,9 @@ namespace brk::demo {
 				InitPipeline();
 			}
 
-			if (!swapchainTexture || !m_Pipeline || !m_Texture)
+			rdr::Texture2D& texture = m_Atlas.GetTexture();
+
+			if (!swapchainTexture || !m_Pipeline || !texture)
 				return;
 
 			ProcessWindowResize(world);
@@ -248,7 +249,7 @@ namespace brk::demo {
 			SDL_BindGPUVertexBuffers(renderPass, 0, &bufferBinding, 1);
 
 			const SDL_GPUTextureSamplerBinding binding{
-				.texture = m_Texture.GetHandle(),
+				.texture = texture.GetHandle(),
 				.sampler = m_Sampler,
 			};
 			SDL_BindGPUFragmentSamplers(renderPass, 0, &binding, 1);
@@ -287,7 +288,7 @@ namespace brk::demo {
 		manager.AddSystem<TestSystem>(
 			app.GetMainWindow(),
 			renderer,
-			FreetypeContext{ fontPath.c_str() },
+			FontAtlas{ fontPath.c_str() },
 			range);
 		return EAppResult::Continue;
 	}
