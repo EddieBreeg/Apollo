@@ -171,6 +171,9 @@ namespace {
 		void operator()(float2 offset, const RectU32& bounds, const msdfgen::Shape& shape)
 		{
 			const uint32 bitmapSize = bounds.width * bounds.height * 4;
+			if (!bitmapSize)
+				return;
+
 			if (m_Bitmap.size() < bitmapSize)
 				m_Bitmap.resize(bitmapSize);
 			const msdfgen::SDFTransformation transform{
@@ -205,6 +208,7 @@ namespace {
 namespace brk::demo {
 	FontAtlas::FontAtlas()
 		: m_Texture()
+		, m_PixelSize(0)
 	{
 		FT_Error err = FT_Init_FreeType(&m_FreetypeHandle);
 		BRK_ASSERT(!err, "Failed to init Freetype: {}", GetFreetypeErrMsg(err));
@@ -219,16 +223,21 @@ namespace brk::demo {
 			BRK_LOG_ERROR("Failed to load font {}: {}", path, GetFreetypeErrMsg(err));
 			return;
 		}
-		m_Scale = m_Face->units_per_EM ? (1.0f / m_Face->units_per_EM) : 1.0f;
 	}
 
 	FontAtlas::FontAtlas(FontAtlas&& other) noexcept
 		: m_FreetypeHandle(other.m_FreetypeHandle)
 		, m_Face(other.m_Face)
-		, m_Scale(other.m_Scale)
+		, m_Range(other.m_Range)
+		, m_Texture(std::move(other.m_Texture))
+		, m_Glyphs(std::move(other.m_Glyphs))
+		, m_Indices(std::move(other.m_Indices))
+		, m_PixelSize(other.m_PixelSize)
 	{
 		other.m_FreetypeHandle = nullptr;
 		other.m_Face = nullptr;
+		other.m_Range = GlyphRange{ 0, 0 };
+		other.m_PixelSize = 0;
 	}
 
 	FontAtlas& FontAtlas::operator=(FontAtlas&& other) noexcept
@@ -241,10 +250,14 @@ namespace brk::demo {
 	{
 		std::swap(m_Face, other.m_Face);
 		std::swap(m_FreetypeHandle, other.m_FreetypeHandle);
-		std::swap(m_Scale, other.m_Scale);
+		std::swap(m_PixelSize, other.m_PixelSize);
+		std::swap(m_Range, other.m_Range);
+		m_Texture.Swap(other.GetTexture());
+		m_Glyphs.swap(other.m_Glyphs);
+		m_Indices.swap(other.m_Indices);
 	}
 
-	bool FontAtlas::LoadGlyph(char32_t ch, msdfgen::Shape& out_shape)
+	bool FontAtlas::LoadGlyph(char32_t ch, msdfgen::Shape& out_shape, float scale)
 	{
 		DEBUG_CHECK(m_Face)
 		{
@@ -255,7 +268,7 @@ namespace brk::demo {
 		if (!index)
 			return false;
 
-		FT_Error err = FT_Load_Glyph(m_Face, index, FT_LOAD_NO_BITMAP);
+		FT_Error err = FT_Load_Glyph(m_Face, index, FT_LOAD_NO_BITMAP | FT_LOAD_NO_SCALE);
 		DEBUG_CHECK(!err)
 		{
 			char buf[5]{};
@@ -268,7 +281,7 @@ namespace brk::demo {
 			return false;
 		}
 
-		GlyphContext ctx{ .m_OutShape = out_shape, .m_Scale = m_Scale };
+		GlyphContext ctx{ .m_OutShape = out_shape, .m_Scale = scale };
 		err = FT_Outline_Decompose(&m_Face->glyph->outline, &GlyphContext::s_OutlineFuncs, &ctx);
 		if (err)
 		{
@@ -300,9 +313,14 @@ namespace brk::demo {
 		uint32 maxTexWith,
 		uint32 padding)
 	{
+		range.m_First = Max(range.m_First, U' ');
+		m_Range = range;
+		m_PixelSize = size;
 		m_Glyphs.reserve(range.GetSize());
+		m_Indices.resize(range.GetSize(), UINT32_MAX);
 		std::vector<msdfgen::Shape> shapes;
 		shapes.reserve(range.GetSize());
+		float scale = m_Face->units_per_EM ? (1.0f / m_Face->units_per_EM) : 1.0f;
 
 		GridPacker packer{ maxTexWith };
 
@@ -313,17 +331,20 @@ namespace brk::demo {
 		for (char32_t ch = range.m_First; ch <= range.m_Last; ++ch)
 		{
 			msdfgen::Shape shape;
+
+			if (!LoadGlyph(ch, shape, scale))
+				continue;
+
+			m_Indices[range.GetIndex(ch)] = (uint32)m_Glyphs.size();
+
 			Glyph glyph{
 				.m_Ch = ch,
-				.m_Advance = m_Face->glyph->metrics.horiAdvance / 64.0f,
+				.m_Advance = m_Face->glyph->metrics.horiAdvance * scale,
 				.m_Offset = float2{ 0, 0 },
 			};
 
-			if (!LoadGlyph(ch, shape))
-				continue;
-
-			// hack: do not try to pack whitespace characters, their bounds will be incorrect
-			if (utf8::IsWhitespace(ch))
+			// if shape has no contour, the character has no glyph per say, just ignore it
+			if (!shape.contours.size())
 			{
 				shapes.emplace_back(std::move(shape));
 				m_Glyphs.emplace_back(glyph);
@@ -336,6 +357,7 @@ namespace brk::demo {
 				continue;
 			}
 			const auto bounds = shape.getBounds(paddingNormalized);
+
 			glyph.m_Offset = { bounds.l, bounds.b };
 
 			glyph.m_UvRect.width = uint32(size * (bounds.r - bounds.l) + 1.5f);
@@ -429,6 +451,44 @@ namespace brk::demo {
 		SDL_UploadToGPUTexture(copyPass, &srcLoc, &destRegion, true);
 
 		SDL_ReleaseGPUTransferBuffer(device, transferBuf);
+		BRK_LOG_TRACE("Atlas texture size: ({}, {})", atlasSize.x, atlasSize.y);
 		return m_Texture;
+	}
+
+	const Glyph* FontAtlas::GetGlyph(char32_t c, char32_t fallback) const noexcept
+	{
+		if (const Glyph* g = FindGlyph(c))
+			return g;
+		return FindGlyph(fallback);
+	}
+
+	float2 FontAtlas::GetKerning(char32_t left, char32_t right) const
+	{
+		if (!FT_HAS_KERNING(m_Face))
+			return { 0, 0 };
+
+		const uint32 leftIndex = FT_Get_Char_Index(m_Face, left);
+		const uint32 rightIndex = FT_Get_Char_Index(m_Face, right);
+
+		const float scale = m_Face->units_per_EM ? (1.0F / m_Face->units_per_EM) : 1.0f;
+		FT_Vector vec{ 0, 0 };
+		const FT_Error
+			err = FT_Get_Kerning(m_Face, leftIndex, rightIndex, FT_KERNING_UNSCALED, &vec);
+		(void)err;
+		return {
+			scale * vec.x,
+			scale * vec.y,
+		};
+	}
+
+	const Glyph* FontAtlas::FindGlyph(char32_t c) const noexcept
+	{
+		const uint32 i = m_Range.GetIndex(c);
+		if (i > m_Indices.size())
+			return nullptr;
+
+		if (const uint32 j = m_Indices[i]; j < m_Glyphs.size())
+			return m_Glyphs.data() + j;
+		return nullptr;
 	}
 } // namespace brk::demo

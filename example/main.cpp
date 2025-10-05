@@ -3,6 +3,7 @@
 #include <asset/AssetManager.hpp>
 #include <core/App.hpp>
 #include <core/Log.hpp>
+#include <core/Utf8.hpp>
 #include <core/Window.hpp>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
@@ -45,12 +46,38 @@ namespace brk::demo {
 		.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
 	};
 
+	GlyphRange ParseGlyphRange(std::string_view text, uint32* out_unicodeLen = nullptr)
+	{
+		brk::utf8::Decoder decoder{ text };
+		GlyphRange range{ UINT32_MAX, 0 };
+
+		uint32 len = 0;
+		while (char32_t c = decoder.DecodeNext())
+		{
+			if (c == utf8::g_InvalidCodePoint)
+				c = ' ';
+			++len;
+
+			range.m_First = Min(range.m_First, c);
+			range.m_Last = Max(range.m_Last, c);
+		}
+
+		if (out_unicodeLen)
+			*out_unicodeLen = len;
+		return range;
+	}
+
+	constexpr const char* g_DefaultText =
+		R"(The quick brown
+fox jumps over
+the lazy dog.)";
+
 	struct TestSystem
 	{
 		brk::Window& m_Window;
 		brk::rdr::Renderer& m_Renderer;
 		brk::AssetRef<brk::rdr::Material> m_Material;
-		brk::rdr::Buffer m_VBuffer;
+		brk::rdr::Buffer m_VBuffer, m_IBuffer;
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 
@@ -60,8 +87,11 @@ namespace brk::demo {
 		float m_GlowFalloff = 0.0f;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
+		std::string_view m_Text;
+		uint32 m_UnicodeLen = 0;
 		GlyphRange m_GlyphRange;
 		FontAtlas m_Atlas;
+		RectF m_TextBox = {};
 
 		void ProcessWindowResize(entt::registry& world)
 		{
@@ -85,11 +115,10 @@ namespace brk::demo {
 			brk::Window& window,
 			brk::rdr::Renderer& renderer,
 			FontAtlas atlas,
-			GlyphRange range)
+			std::string_view text)
 			: m_Window(window)
 			, m_Renderer(renderer)
-			, m_VBuffer(rdr::EBufferFlags::Vertex, 4 * sizeof(Vertex2d))
-			, m_GlyphRange(range)
+			, m_Text(text)
 			, m_Atlas(std::move(atlas))
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
@@ -97,6 +126,7 @@ namespace brk::demo {
 			glm::uvec2 winSize = m_Window.GetSize();
 			const float xMax = .5f * winSize.x / winSize.y;
 			m_CamMatrix = glm::orthoRH(-xMax, xMax, -0.5f, 0.5f, 0.01f, 10.0f);
+			m_GlyphRange = ParseGlyphRange(m_Text, &m_UnicodeLen);
 		}
 
 		~TestSystem()
@@ -134,7 +164,7 @@ namespace brk::demo {
 						.vertex_attributes = g_VertexAttributes,
 						.num_vertex_attributes = STATIC_ARRAY_SIZE(g_VertexAttributes),
 					},
-				.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLESTRIP,
+				.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
 				.rasterizer_state =
 					SDL_GPURasterizerState{
 						.fill_mode = SDL_GPU_FILLMODE_FILL,
@@ -176,16 +206,93 @@ namespace brk::demo {
 			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
 
 			InitTexture(copyPass);
+			constexpr float textScale = 0.2f;
 			const rdr::TextureSettings settings = m_Atlas.GetTexture().GetSettings();
-			const float texRatio = float(settings.m_Width) / settings.m_Height;
-			const Vertex2d vert[] = {
-				Vertex2d{ { -0.5f * texRatio, -.5f }, { 0, 1 } },
-				Vertex2d{ { 0.5f * texRatio, -.5f }, { 1, 1 } },
-				Vertex2d{ { -0.5f * texRatio, .5f }, { 0, 0 } },
-				Vertex2d{ { 0.5f * texRatio, .5f }, { 1, 0 } },
-			};
+			const float2 uvScale{ settings.m_Width, settings.m_Height };
+			std::vector<Vertex2d> vertices;
+			vertices.reserve(4 * m_UnicodeLen);
+			std::vector<uint32> indices;
+			indices.reserve(6 * m_UnicodeLen);
 
-			m_VBuffer.UploadData(copyPass, vert, sizeof(vert));
+			float2 pos{ 0, 0 };
+			utf8::Decoder decoder{ m_Text };
+			const float fontScale = 1.0f / m_Atlas.GetPixelSize();
+			char32_t prev = 0;
+
+			uint32 baseIndex = 0;
+
+			while (char32_t c = decoder.DecodeNext())
+			{
+				const Glyph* glyph = m_Atlas.GetGlyph(c);
+				if (c == '\n')
+				{
+					pos = float2{ 0, pos.y - textScale };
+					prev = c;
+					continue;
+				}
+				else if (!(glyph->m_UvRect.width && glyph->m_UvRect.height))
+				{
+					pos.x += textScale * glyph->m_Advance;
+					prev = c;
+					continue;
+				}
+				pos += textScale * m_Atlas.GetKerning(prev, c);
+
+				const RectU32& uvRect = glyph->m_UvRect;
+				const float2 glyphSize{
+					fontScale * uvRect.width,
+					fontScale * uvRect.height,
+				};
+
+				const Vertex2d bottomLeft{
+					pos + textScale * glyph->m_Offset,
+					float2{ uvRect.x, uvRect.y + uvRect.height } / uvScale,
+				};
+				const Vertex2d topLeft{
+					bottomLeft.m_Position + textScale * float2{ 0, glyphSize.y },
+					float2{ uvRect.x, uvRect.y } / uvScale,
+				};
+				const Vertex2d bottomRight{
+					bottomLeft.m_Position + textScale * float2{ glyphSize.x, 0 },
+					float2{ uvRect.x + uvRect.width, uvRect.y + uvRect.height } / uvScale,
+				};
+				const Vertex2d topRight{
+					bottomLeft.m_Position + glyphSize * textScale,
+					float2{ uvRect.x + uvRect.width, uvRect.y } / uvScale,
+				};
+				m_TextBox += RectF{
+					bottomLeft.m_Position.x,
+					bottomLeft.m_Position.y,
+					bottomRight.m_Position.x - bottomLeft.m_Position.x,
+					topLeft.m_Position.y - bottomLeft.m_Position.y,
+				};
+
+				vertices.emplace_back(topLeft);
+				vertices.emplace_back(bottomLeft);
+				vertices.emplace_back(bottomRight);
+				vertices.emplace_back(topRight);
+				indices.emplace_back(baseIndex);
+				indices.emplace_back(baseIndex + 1);
+				indices.emplace_back(baseIndex + 2);
+				indices.emplace_back(baseIndex + 2);
+				indices.emplace_back(baseIndex + 3);
+				indices.emplace_back(baseIndex);
+				pos.x += textScale * glyph->m_Advance;
+				prev = c;
+				baseIndex += 4;
+			}
+			const float2 offset{ -0.5f * m_TextBox.width, 0.5f * m_TextBox.height };
+			for (Vertex2d& v : vertices)
+				v.m_Position += offset;
+
+			const uint32 vertexDataSize = vertices.size() * sizeof(Vertex2d);
+			const uint32 indexDataSize = 4 * indices.size();
+			m_VBuffer = rdr::Buffer(rdr::EBufferFlags::Vertex, vertexDataSize);
+			m_IBuffer = rdr::Buffer(rdr::EBufferFlags::Index, indexDataSize);
+
+			m_VBuffer.UploadData(copyPass, vertices.data(), vertexDataSize);
+			m_IBuffer.UploadData(copyPass, indices.data(), indexDataSize);
+
 			SDL_EndGPUCopyPass(copyPass);
 			SDL_SubmitGPUCommandBuffer(cmdBuffer);
 		}
@@ -250,19 +357,25 @@ namespace brk::demo {
 
 			SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
 
-			const SDL_GPUBufferBinding bufferBinding{
+			const SDL_GPUBufferBinding vBufferBinding{
 				.buffer = m_VBuffer.GetHandle(),
 				.offset = 0,
 			};
-			SDL_BindGPUVertexBuffers(renderPass, 0, &bufferBinding, 1);
+			const SDL_GPUBufferBinding iBufferBinding{
+				.buffer = m_IBuffer.GetHandle(),
+				.offset = 0,
+			};
+			SDL_BindGPUVertexBuffers(renderPass, 0, &vBufferBinding, 1);
+			SDL_BindGPUIndexBuffer(renderPass, &iBufferBinding, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 
 			const SDL_GPUTextureSamplerBinding binding{
 				.texture = texture.GetHandle(),
 				.sampler = m_Sampler,
 			};
+			const uint32 indexCount = m_IBuffer.GetSize() / 4;
 			SDL_BindGPUFragmentSamplers(renderPass, 0, &binding, 1);
 
-			SDL_DrawGPUPrimitives(renderPass, 4, 1, 0, 0);
+			SDL_DrawGPUIndexedPrimitives(renderPass, indexCount, 1, 0, 0, 0);
 
 			SDL_EndGPURenderPass(renderPass);
 
@@ -279,16 +392,7 @@ namespace brk::demo {
 				? args[2]
 				: (entry.m_AssetManagerSettings.m_AssetPath / "assets/fonts/arial.ttf").string();
 
-		GlyphRange range;
-		if (args.size() > 3)
-		{
-			range.m_First = args[3][0];
-			range.m_Last = range.m_First;
-		}
-		if (args.size() > 4)
-		{
-			range.m_Last = args[4][0];
-		}
+		const char* text = args.size() > 3 ? args[3] : g_DefaultText;
 
 		auto& renderer = *brk::rdr::Renderer::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
@@ -297,7 +401,7 @@ namespace brk::demo {
 			app.GetMainWindow(),
 			renderer,
 			FontAtlas{ fontPath.c_str() },
-			range);
+			text);
 		return EAppResult::Continue;
 	}
 } // namespace brk::demo

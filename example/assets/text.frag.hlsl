@@ -20,11 +20,6 @@ float Median(float a, float b, float c)
 	return max(min(a, b), min(max(a, b), c));
 }
 
-float Chebichev(float2 v)
-{
-	return max(abs(v.x), abs(v.y));
-}
-
 float Outline(float d, float w, float inner, float outer)
 {
 	return smoothstep(outer - w, outer + w, d) - smoothstep(inner - w, inner + w, d);
@@ -42,12 +37,7 @@ float4 main(Fragment frag): SV_TARGET
 	float outline = Outline(d, w, innerThreshold, outerThreshold);
 	float fill = smoothstep(innerThreshold - w, innerThreshold + w, d);
 
-	float d2 = Chebichev(frag.Uv - 0.5);
-	float borderFac = smoothstep(0.5 - 2* fwidth(d2), 0.5, d2);
-
-	float fac = outline + borderFac;
-
 	float glow = GlowIntensity * pow(px.a, 4 - GlowFalloff);
 
-	return fill * float4(1) + fac * float4(1, 0, 0, 1) + glow;
+	return fill * float4(1) + outline * float4(1, 0, 0, 1) + glow;
 }
