@@ -156,6 +156,49 @@ namespace {
 			}
 		}
 	}
+
+	struct Rasterizer
+	{
+		using RGBA8Pixel = brk::rdr::RGBAPixel<uint8>;
+
+		uint32 m_Size;
+		msdfgen::Range m_DistanceRange;
+		std::vector<float>& m_Bitmap;
+		RGBA8Pixel* m_OutBuf;
+		uint32 m_BufStride;
+
+		void operator()(float2 offset, const RectU32& bounds, const msdfgen::Shape& shape)
+		{
+			const uint32 bitmapSize = bounds.width * bounds.height * 4;
+			if (m_Bitmap.size() < bitmapSize)
+				m_Bitmap.resize(bitmapSize);
+			const msdfgen::SDFTransformation transform{
+				msdfgen::Projection{
+					m_Size,
+					msdfgen::Vector2{ -offset.x, -offset.y },
+				},
+				m_DistanceRange,
+			};
+			msdfgen::BitmapSection<float, 4> section{
+				m_Bitmap.data(),
+				static_cast<int>(bounds.width),
+				static_cast<int>(bounds.height),
+				msdfgen::Y_DOWNWARD,
+			};
+			msdfgen::generateMTSDF(section, shape, transform);
+			CopyBitmap(
+				section,
+				brk::rdr::BitmapView<RGBA8Pixel>{
+					m_OutBuf,
+					bounds.x,
+					bounds.y,
+					bounds.width,
+					bounds.height,
+					m_BufStride,
+				});
+		}
+	};
+
 } // namespace
 
 namespace brk::demo {
@@ -261,9 +304,9 @@ namespace brk::demo {
 
 		GridPacker packer{ maxTexWith };
 
-		GameTime timer;
 		const double paddingNormalized = padding / double(size);
-
+		
+		GameTime timer;
 		// First step: load glyphs, decompose shapes, compute metrics and pack rectangles
 		for (char32_t ch = range.m_First; ch <= range.m_Last; ++ch)
 		{
@@ -289,10 +332,9 @@ namespace brk::demo {
 			m_Glyphs.emplace_back(std::move(glyph));
 			shapes.emplace_back(std::move(shape));
 		}
+		using Milliseconds = std::chrono::duration<double, std::milli>;
 		timer.Update();
-		BRK_LOG_TRACE(
-			"Glyph loading/packing took {}ms",
-			timer.GetElapsedAs<std::chrono::milliseconds>().count());
+		BRK_LOG_TRACE("Glyph loading/packing took {}ms", timer.GetElapsedAs<Milliseconds>().count());
 
 		const auto atlasSize = packer.GetTotalSize();
 		const uint32 pixelCount = atlasSize.x * atlasSize.y;
@@ -314,65 +356,28 @@ namespace brk::demo {
 		SDL_GPUTransferBuffer* transferBuf = SDL_CreateGPUTransferBuffer(device, &tBufferInfo);
 		RGBA8Pixel* buf = (RGBA8Pixel*)SDL_MapGPUTransferBuffer(device, transferBuf, true);
 
-		std::vector<float> msdf;
-		msdf.reserve(4 * size * size);
-
 		const msdfgen::Range distRange{ pxRange / size };
 
-		using Milliseconds = std::chrono::duration<double, std::milli>;
+		std::vector<float> msdfBitmap;
+		msdfBitmap.reserve(size * size);
+		Rasterizer rasterizer{
+			.m_Size = size,
+			.m_DistanceRange = distRange,
+			.m_Bitmap = msdfBitmap,
+			.m_OutBuf = buf,
+			.m_BufStride = atlasSize.x,
+		};
 
-		Milliseconds renderTime;
-		Milliseconds copyTime;
-
+		timer.Reset();
 		// Second step: iterate over loaded m_Glyphs, render MSDF and copy to atlas texture
 		for (uint32 index = 0; index < m_Glyphs.size(); ++index)
 		{
 			const Glyph& glyph = m_Glyphs[index];
-			const uint32 msdfSize = 4 * glyph.m_UvRect.width * glyph.m_UvRect.height;
-			if (msdf.size() < msdfSize)
-				msdf.resize(msdfSize);
-
-			const msdfgen::Projection projection{
-				size,
-				msdfgen::Vector2{
-					-glyph.m_Offset.x,
-					-glyph.m_Offset.y,
-				},
-			};
-			msdfgen::BitmapSection<float, 4> msdfSection{
-				msdf.data(),
-				(int)glyph.m_UvRect.width,
-				(int)glyph.m_UvRect.height,
-				msdfgen::Y_DOWNWARD,
-			};
-			using ClockType = std::chrono::steady_clock;
-			auto t = ClockType::now();
-			msdfgen::generateMTSDF(
-				msdfSection,
-				shapes[index],
-				msdfgen::SDFTransformation{
-					projection,
-					distRange,
-				});
-
-			renderTime += ClockType::now() - t;
-
-			rdr::BitmapView<RGBA8Pixel> dest{
-				buf,
-				glyph.m_UvRect.x,
-				glyph.m_UvRect.y,
-				glyph.m_UvRect.width,
-				glyph.m_UvRect.height,
-				atlasSize.x,
-			};
-
-			t = ClockType::now();
-			CopyBitmap(msdfSection, dest);
-			copyTime += ClockType::now() - t;
+			rasterizer(glyph.m_Offset, glyph.m_UvRect, shapes[index]);
 		}
 		timer.Update();
-		BRK_LOG_TRACE("Glyph MSDF rendering took {}ms", renderTime.count());
-		BRK_LOG_TRACE("Glyph copying took {}ms", copyTime.count());
+
+		BRK_LOG_TRACE("Glyph MSDF rendering took {}ms", timer.GetElapsedAs<Milliseconds>().count());
 
 		const SDL_GPUTextureTransferInfo srcLoc{
 			.transfer_buffer = transferBuf,
