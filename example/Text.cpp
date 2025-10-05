@@ -136,7 +136,7 @@ namespace {
 	};
 
 	void CopyBitmap(
-		const msdfgen::BitmapSection<float, 3>& src,
+		const msdfgen::BitmapSection<float, 4>& src,
 		brk::rdr::BitmapView<brk::rdr::Pixel<uint8, 4>> dest)
 	{
 		using Pixel = brk::rdr::Pixel<uint8, 4>;
@@ -151,7 +151,7 @@ namespace {
 					uint8(255 * brk::Clamp(inPx[0], 0.0f, 1.0f) + 0.5),
 					uint8(255 * brk::Clamp(inPx[1], 0.0f, 1.0f) + 0.5),
 					uint8(255 * brk::Clamp(inPx[2], 0.0f, 1.0f) + 0.5),
-					255,
+					uint8(255 * brk::Clamp(inPx[3], 0.0f, 1.0f) + 0.5),
 				};
 			}
 		}
@@ -315,7 +315,7 @@ namespace brk::demo {
 		RGBA8Pixel* buf = (RGBA8Pixel*)SDL_MapGPUTransferBuffer(device, transferBuf, true);
 
 		std::vector<float> msdf;
-		msdf.reserve(3 * size * size);
+		msdf.reserve(4 * size * size);
 
 		const msdfgen::Range distRange{ pxRange / size };
 
@@ -328,7 +328,7 @@ namespace brk::demo {
 		for (uint32 index = 0; index < m_Glyphs.size(); ++index)
 		{
 			const Glyph& glyph = m_Glyphs[index];
-			const uint32 msdfSize = 3 * glyph.m_UvRect.width * glyph.m_UvRect.height;
+			const uint32 msdfSize = 4 * glyph.m_UvRect.width * glyph.m_UvRect.height;
 			if (msdf.size() < msdfSize)
 				msdf.resize(msdfSize);
 
@@ -339,7 +339,7 @@ namespace brk::demo {
 					-glyph.m_Offset.y,
 				},
 			};
-			msdfgen::BitmapSection<float, 3> msdfSection{
+			msdfgen::BitmapSection<float, 4> msdfSection{
 				msdf.data(),
 				(int)glyph.m_UvRect.width,
 				(int)glyph.m_UvRect.height,
@@ -347,7 +347,7 @@ namespace brk::demo {
 			};
 			using ClockType = std::chrono::steady_clock;
 			auto t = ClockType::now();
-			msdfgen::generateMSDF(
+			msdfgen::generateMTSDF(
 				msdfSection,
 				shapes[index],
 				msdfgen::SDFTransformation{

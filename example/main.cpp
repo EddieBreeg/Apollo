@@ -56,6 +56,8 @@ namespace brk::demo {
 
 		float m_Scale = 1.0f;
 		float m_OutlineThickness = 0.0f;
+		float m_Glow = 0.0f;
+		float m_GlowFalloff = 0.0f;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
 		GlyphRange m_GlyphRange;
@@ -196,6 +198,8 @@ namespace brk::demo {
 				m_ModelMatrix[0].x = m_ModelMatrix[1].y = m_ModelMatrix[2].z = m_Scale;
 			}
 			ImGui::SliderFloat("Outline Thickness", &m_OutlineThickness, 0, 0.5f);
+			ImGui::SliderFloat("Glow", &m_Glow, 0, 10.0f);
+			ImGui::SliderFloat("Glow Falloff", &m_GlowFalloff, 0, 10.0f);
 			ImGui::End();
 		}
 
@@ -238,7 +242,11 @@ namespace brk::demo {
 				0,
 				&m_CamMatrix,
 				2 * sizeof(glm::mat4x4));
-			SDL_PushGPUFragmentUniformData(mainCommandBuffer, 0, &m_OutlineThickness, sizeof(float));
+			SDL_PushGPUFragmentUniformData(
+				mainCommandBuffer,
+				0,
+				&m_OutlineThickness,
+				3 * sizeof(float));
 
 			SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
 

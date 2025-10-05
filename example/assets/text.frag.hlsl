@@ -11,6 +11,8 @@ SamplerState g_Sampler: register(s0, space2);
 cbuffer Params: register(b0, space3)
 {
 	float OutlineWidth;
+	float GlowIntensity;
+	float GlowFalloff;
 };
 
 float Median(float a, float b, float c)
@@ -30,8 +32,8 @@ float Outline(float d, float w, float inner, float outer)
 
 float4 main(Fragment frag): SV_TARGET
 {
-	float3 px = g_Tex.Sample(g_Sampler, frag.Uv).xyz;
-	float d = Median(px.x, px.y, px.z);
+	float4 px = g_Tex.Sample(g_Sampler, frag.Uv);
+	float d = Median(px.r, px.g, px.b);
 	float w = fwidth(d);
 
 	float innerThreshold = 0.5;
@@ -45,5 +47,7 @@ float4 main(Fragment frag): SV_TARGET
 
 	float fac = outline + borderFac;
 
-	return fill * float4(1) + fac * float4(1, 0, 0, 1);
+	float glow = GlowIntensity * pow(px.a, 4 - GlowFalloff);
+
+	return fill * float4(1) + fac * float4(1, 0, 0, 1) + glow;
 }
