@@ -2,6 +2,11 @@
 
 #include <PCH.hpp>
 
+/**
+ * \file TypeInfo.hpp
+ * Custom RTTI implementation. Currently, this kinda breaks down when crossing DLL boundaries...
+ */
+
 namespace brk {
 	namespace _internal {
 		struct BRK_API DefaultTypeIndexGenerator

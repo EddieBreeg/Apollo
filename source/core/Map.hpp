@@ -2,6 +2,10 @@
 
 #include <unordered_map>
 
+/**
+ * Just some hashmap shortcuts
+ */
+
 namespace brk {
 	class ULID;
 

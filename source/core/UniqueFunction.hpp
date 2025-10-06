@@ -9,6 +9,11 @@ namespace brk {
 	template <class F>
 	class UniqueFunction;
 
+	/**
+	 * Move-only alternative to std::function. Unlike the STL counterpart, this can store
+	 * objects which may not be copied, like promises, which in turn makes it usable for things
+	 * like asynchronous operations
+	 */
 	template <class R, class... Args>
 	class UniqueFunction<R(Args...)>
 	{
@@ -24,11 +29,18 @@ namespace brk {
 	public:
 		UniqueFunction() = default;
 
+		/**
+		 * Small-object constructor: this does not perform any heap allocation
+		 */
 		template <class F>
 		explicit UniqueFunction(F&& func) noexcept(
 			noexcept(m_Storage.Construct<std::decay_t<F>>(std::forward<F>(func))))
 			requires(IsInvocable<std::decay_t<F>>&& FitsStorage<std::decay_t<F>>);
 
+		/**
+		 * Bit-object constructor: this calls new. Only used if func can't fit into the static
+		 * storage buffer (see FitsStorage above)
+		 */
 		template <class F>
 		explicit UniqueFunction(F&& func)
 			requires(IsInvocable<std::decay_t<F>> && !FitsStorage<std::decay_t<F>>);

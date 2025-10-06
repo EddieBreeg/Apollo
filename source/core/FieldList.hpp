@@ -16,6 +16,9 @@ namespace brk::meta {
 		FieldType Fields[Size] = {};
 	};
 
+	/**
+	 * Default struct field, which contains the member's name, size and alignment
+	 */
 	struct BasicField
 	{
 		const char* m_Name = nullptr;

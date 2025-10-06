@@ -14,6 +14,16 @@ namespace brk::json {
 		{ j = b };
 	};
 
+	/**
+	 * Looks for a specific key in a json object, and attempts to convert the associated value to a
+	 * C++ object if it was found. This overload is only valid for type which are natively
+	 * recognized by nlohmann::json
+	 * \param out_obj: The destination object
+	 * \param j: The JSON object to look into
+	 * \param key: The key to look for
+	 * \param optional: The value which gets returned if key was not found
+	 * \returns true if the object was successfully converted, false otherwise
+	 */
 	template <class T, class K>
 	bool Visit(T& out_obj, const nlohmann::json& j, K&& key, bool optional = false)
 		requires(NativeJsonType<T>)
@@ -26,9 +36,19 @@ namespace brk::json {
 		return true;
 	}
 
-	template <class T, class K>
+	/**
+	 * Looks for a specific key in a json object, and attempts to convert the associated value to a
+	 * C++ object if it was found. This overload is only valid for types which meet the requirements for
+	 * the JsonEnabledType concept
+	 * \param out_obj: The destination object
+	 * \param j: The JSON object to look into
+	 * \param key: The key to look for
+	 * \param optional: The value which gets returned if key was not found
+	 * \returns true if the object was successfully converted, false otherwise
+	 */
+	template <JsonEnabledType T, class K>
 	bool Visit(T& out_obj, const nlohmann::json& j, K&& key, bool optional = false) noexcept(
-		noexcept(out_obj.FromJson(j))) requires(JsonEnabledType<T>)
+		noexcept(out_obj.FromJson(j)))
 	{
 		const auto it = j.find(std::forward<K>(key));
 		if (it == j.end())
@@ -42,6 +62,11 @@ namespace brk::json {
 	static constexpr bool NoThrowVisitable = noexcept(
 		Visit(std::declval<T&>(), std::declval<const nlohmann::json&>(), std::declval<K>()));
 
+	/**
+	 * Default JSON Converter implementation. This specialisation is valid for any type which meets
+	 * the requirements of the HasJsonFieldList concept, provided the fields in the list are
+	 * themselves JSON compatible.
+	 */
 	template <class T>
 	requires(HasJsonFieldList<T>) struct Converter<T>
 	{

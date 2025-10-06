@@ -4,6 +4,10 @@
 #include <bit>
 
 namespace brk {
+	/**
+	 * Generic object hasher. This should have a specialisation for any type T which needs to be
+	 * hashed
+	 */
 	template <class T>
 	struct Hash;
 
@@ -20,6 +24,9 @@ namespace brk {
 		{ h(val) }->std::convertible_to<uint64>;
 	};
 
+	/**
+	 * Integer hash implementation
+	 */
 	template <std::integral Int>
 	struct Hash<Int>
 	{
@@ -46,12 +53,24 @@ namespace brk {
 		}
 	};
 
+	/**
+	 *  Pointer implementation.
+	 */
 	template <class T>
 	struct Hash<T*>
 	{
+		/**
+		 * This casts the pointer to an integer value, and does not attempt to dereference it
+		 */
 		[[nodiscard]] uintptr_t operator()(T* const ptr) const noexcept { return uintptr_t(ptr); }
 	};
 
+	/**
+	 * Hash combination primitive. Useful to hash multiple objects together
+	 * \param  seed: The initial hash value. This is typically returned from a specialisation of Hash
+	 * \param val: The values to combine with the seed. Each one will be hashed using the default
+	 * corresponding specialisation of Hash
+	 */
 	template <class... K>
 	[[nodiscard]] constexpr uint64 HashCombine(uint64 seed, K&&... val)
 		requires(Hashable<std::decay_t<K>>&&...)
@@ -62,6 +81,10 @@ namespace brk {
 		return seed;
 	}
 
+	/**
+	 * This overload does the same thing as the the one above, except the user can specify a hasher
+	 * object, which will be used to hash every value in the parameter pack.
+	 */
 	template <class H, class... K>
 	[[nodiscard]] constexpr uint64 HashCombine(uint64 seed, H&& hasher, K&&... val) noexcept(
 		(noexcept(hasher(val)) && ...)) requires(Hasher<H, std::decay_t<K>>&&...)

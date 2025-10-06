@@ -16,7 +16,15 @@ namespace brk {
 	struct Adopt_t
 	{};
 
+	/**
+	 * Retain action. This tells RetainPtr to increment the ref counter when
+	 * wrapping a new pointer
+	 */
 	static constexpr Retain_t s_Retain;
+	/**
+	 * Adopt action. This tells RetainPtr to leave the ref counter alone when
+	 * wrapping a new pointer
+	 */
 	static constexpr Adopt_t s_Adopt;
 
 	/**
@@ -41,6 +49,9 @@ namespace brk {
 		{ TraitType::GetCount((const T*)ptr) }->std::convertible_to<uint32>;
 	};
 
+	/**
+	 * Default retain traits. RetainPtr will default to this unless otherwise specified
+	 */
 	template <class T>
 	struct DefaultRetainTraits
 	{
@@ -58,7 +69,8 @@ namespace brk {
 	 *  A smart pointer with intrusive reference counting
 	 * \tparam T: The type of object pointed at
 	 * \tparam Traits: The retain traits which defines all relevant operations on the
-	 * reference counter (Increment, Decrement and GetCount) as well as DefaultAction
+	 * reference counter (Increment, Decrement and GetCount) as well as DefaultAction, which informs
+	 * the default behaviour when wrapping a pointer. See Adopt_t and Retain_t for details
 	 */
 	template <class T, RetainTraits<T> Traits = DefaultRetainTraits<T>>
 	class RetainPtr
@@ -139,10 +151,7 @@ namespace brk {
 			return m_Ptr != other.m_Ptr;
 		}
 
-		void Swap(RetainPtr& other) noexcept
-		{
-			std::swap(m_Ptr, other.m_Ptr);
-		}
+		void Swap(RetainPtr& other) noexcept { std::swap(m_Ptr, other.m_Ptr); }
 
 	private:
 		T* m_Ptr = nullptr;

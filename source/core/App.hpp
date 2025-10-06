@@ -23,6 +23,10 @@ namespace brk {
 
 	struct EntryPoint;
 
+	/**
+	 * Main App class. This gets initialised in the entry point, and destroyed at the end of the
+	 * program
+	 */
 	class App : public Singleton<App>
 	{
 	public:
@@ -31,7 +35,11 @@ namespace brk {
 		[[nodiscard]] Window& GetMainWindow() noexcept { return m_Window; }
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 
+		// Main loop. Blocks until the program comes to an end, e.g. after calling RequestAppQuit()
 		BRK_API EAppResult Run();
+
+		// Internally requests program termination. The loop will stop once the current iteration is
+		// done
 		BRK_API void RequestAppQuit() noexcept;
 
 	private:

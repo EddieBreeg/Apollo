@@ -3,6 +3,9 @@
 #include <PCH.hpp>
 
 namespace brk {
+	/**
+	 * Fixed-size storage utility
+	 */
 	template <uint32 Size, uint32 Alignment = alignof(std::max_align_t)>
 	struct StaticStorage
 	{
@@ -30,9 +33,6 @@ namespace brk {
 			return new (m_Buf) T{ std::forward<decltype(args)>(args)... };
 		}
 
-		void Swap(StaticStorage& other) noexcept
-		{
-			std::swap(m_Buf, other.m_Buf);
-		}
+		void Swap(StaticStorage& other) noexcept { std::swap(m_Buf, other.m_Buf); }
 	};
 } // namespace brk

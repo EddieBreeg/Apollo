@@ -2,7 +2,14 @@
 
 #include <PCH.hpp>
 
+/**
+ * \namespace brk::poly
+ * Type-erasure support
+ */
 namespace brk::poly {
+	/**
+	 * Type-erased destructor
+	 */
 	template <class T>
 	void Destroy(void* ptr)
 	{
@@ -13,6 +20,10 @@ namespace brk::poly {
 		}
 	}
 
+	/**
+	 * Type-erased delete function
+	 */
+
 	template <class T>
 	void Delete(void* ptr)
 	{
@@ -20,6 +31,9 @@ namespace brk::poly {
 			delete static_cast<T*>(ptr);
 	}
 
+	/**
+	 * Type-erased functor invocation function
+	 */
 	template <class F, class... Args>
 	decltype(auto) Invoke(void* ptr, Args&&... args) requires(std::is_invocable_v<F, Args...>)
 	{
