@@ -10,6 +10,7 @@ SamplerState g_Sampler: register(s0, space2);
 
 cbuffer Params: register(b0, space3)
 {
+	float AntiAliasing;
 	float OutlineWidth;
 	float GlowIntensity;
 	float GlowFalloff;
@@ -29,7 +30,7 @@ float4 main(Fragment frag): SV_TARGET
 {
 	float4 px = g_Tex.Sample(g_Sampler, frag.Uv);
 	float d = Median(px.r, px.g, px.b);
-	float w = fwidth(d);
+	float w = AntiAliasing * fwidth(d);
 
 	float innerThreshold = 0.5;
 	float outerThreshold = 0.5 - OutlineWidth;

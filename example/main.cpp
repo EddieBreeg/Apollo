@@ -82,6 +82,8 @@ the lazy dog.)";
 		SDL_GPUSampler* m_Sampler = nullptr;
 
 		float m_Scale = 1.0f;
+
+		float m_AntiAliasing = 1.0f;
 		float m_OutlineThickness = 0.0f;
 		float m_Glow = 0.0f;
 		float m_GlowFalloff = 0.0f;
@@ -108,7 +110,7 @@ the lazy dog.)";
 
 		void InitTexture(SDL_GPUCopyPass* copyPass)
 		{
-			m_Atlas.LoadRange(copyPass, m_GlyphRange, 64, 10.0f, 1024, 4);
+			m_Atlas.LoadRange(copyPass, m_GlyphRange, 32, 10.0f, 1024, 4);
 		}
 
 		TestSystem(
@@ -300,6 +302,7 @@ the lazy dog.)";
 		void DisplayUi()
 		{
 			ImGui::Begin("Settings");
+			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
 			if (ImGui::SliderFloat("Scale", &m_Scale, 0, 1))
 			{
 				m_ModelMatrix[0].x = m_ModelMatrix[1].y = m_ModelMatrix[2].z = m_Scale;
@@ -352,8 +355,8 @@ the lazy dog.)";
 			SDL_PushGPUFragmentUniformData(
 				mainCommandBuffer,
 				0,
-				&m_OutlineThickness,
-				3 * sizeof(float));
+				&m_AntiAliasing,
+				4 * sizeof(float));
 
 			SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
 

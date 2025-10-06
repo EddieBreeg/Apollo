@@ -8,6 +8,7 @@
 #include <msdfgen.h>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Renderer.hpp>
+#include <span>
 #include <thread>
 
 namespace {
@@ -164,7 +165,7 @@ namespace {
 
 		uint32 m_Size;
 		msdfgen::Range m_DistanceRange;
-		std::vector<float>& m_Bitmap;
+		std::vector<float> m_Bitmap;
 		RGBA8Pixel* m_OutBuf;
 		uint32 m_BufStride;
 
@@ -200,6 +201,24 @@ namespace {
 					bounds.height,
 					m_BufStride,
 				});
+		}
+	};
+
+	struct RenderJob
+	{
+		std::span<const brk::demo::Glyph> m_Glyphs;
+		std::span<const msdfgen::Shape> m_Shapes;
+		Rasterizer m_Rasterizer;
+		std::chrono::duration<double, std::milli>& m_OutTimer;
+
+		void operator()()
+		{
+			auto t = std::chrono::steady_clock::now();
+			for (uint32 i = 0; i < m_Glyphs.size(); ++i)
+			{
+				m_Rasterizer(m_Glyphs[i].m_Offset, m_Glyphs[i].m_UvRect, m_Shapes[i]);
+			}
+			m_OutTimer = std::chrono::steady_clock::now() - t;
 		}
 	};
 
@@ -403,30 +422,31 @@ namespace brk::demo {
 		std::thread* threads = Alloca(std::thread, numThreads);
 		Milliseconds* threadTimers = Alloca(Milliseconds, numThreads);
 		BRK_LOG_TRACE("Running {} threads", numThreads);
+		const uint32 glyphsPerThread = m_Glyphs.size() / numThreads;
+		uint32 jobStartIndex = 0;
 
 		timer.Reset();
 		for (uint32 i = 0; i < numThreads; ++i)
 		{
-			new (threads + i) std::thread{
-				[=, id = i, this, &shapes]()
-				{
-					std::vector<float> msdfBitmap(size * size);
-					Rasterizer rasterizer{
+			const Glyph* gPtr = m_Glyphs.data() + jobStartIndex;
+			const msdfgen::Shape* sPtr = shapes.data() + jobStartIndex;
+
+			const uint32 jobSize = glyphsPerThread + (i < (m_Glyphs.size() % numThreads));
+			new(threads+i) std::thread{
+				RenderJob{
+					.m_Glyphs = std::span{gPtr, jobSize},
+					.m_Shapes = std::span{sPtr, jobSize},
+					.m_Rasterizer ={
 						.m_Size = size,
 						.m_DistanceRange = distRange,
-						.m_Bitmap = msdfBitmap,
+						.m_Bitmap = std::vector<float>(size * size * 3),
 						.m_OutBuf = buf,
 						.m_BufStride = atlasSize.x,
-					};
-					auto t = std::chrono::steady_clock::now();
-					for (uint32 i = id; i < m_Glyphs.size(); i += numThreads)
-					{
-						const Glyph& glyph = m_Glyphs[i];
-						rasterizer(glyph.m_Offset, glyph.m_UvRect, shapes[i]);
-					}
-					threadTimers[id] = std::chrono::steady_clock::now() - t;
-				},
+					},
+					.m_OutTimer = *(new(threadTimers + i)Milliseconds{}),
+				}
 			};
+			jobStartIndex += jobSize;
 		}
 		for (uint32 i = 0; i < numThreads; ++i)
 		{
