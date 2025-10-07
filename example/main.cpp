@@ -110,7 +110,7 @@ the lazy dog.)";
 
 		void InitTexture(SDL_GPUCopyPass* copyPass)
 		{
-			m_Atlas.LoadRange(copyPass, m_GlyphRange, 32, 10.0f, 1024, 4);
+			m_Atlas.LoadRange(copyPass, m_GlyphRange, 64, 10.0f, 1024, 4);
 		}
 
 		TestSystem(

@@ -1,15 +1,16 @@
 #include "Text.hpp"
 #include <SDL3/SDL_gpu.h>
+#include <core/App.hpp>
 #include <core/Assert.hpp>
 #include <core/GameTime.hpp>
 #include <core/Utf8.hpp>
 #include <freetype/freetype.h>
 #include <freetype/ftoutln.h>
+#include <latch>
 #include <msdfgen.h>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Renderer.hpp>
 #include <span>
-#include <thread>
 
 namespace {
 #undef FTERRORS_H_
@@ -206,6 +207,7 @@ namespace {
 
 	struct RenderJob
 	{
+		std::latch& m_Latch;
 		std::span<const brk::demo::Glyph> m_Glyphs;
 		std::span<const msdfgen::Shape> m_Shapes;
 		Rasterizer m_Rasterizer;
@@ -219,6 +221,7 @@ namespace {
 				m_Rasterizer(m_Glyphs[i].m_Offset, m_Glyphs[i].m_UvRect, m_Shapes[i]);
 			}
 			m_OutTimer = std::chrono::steady_clock::now() - t;
+			m_Latch.count_down();
 		}
 	};
 
@@ -411,16 +414,11 @@ namespace brk::demo {
 
 		const msdfgen::Range distRange{ pxRange / size };
 
-#ifdef USE_MULTITHREADING
-		const uint32 numThreads = Clamp(
-			std::thread::hardware_concurrency(),
-			1u,
-			(uint32)m_Glyphs.size());
-#else
-		const uint32 numThreads = 1;
-#endif
-		std::thread* threads = Alloca(std::thread, numThreads);
+		mt::ThreadPool& threadPool = App::GetInstance()->GetThreadPool();
+		const uint32 numThreads = threadPool.GetThreadCount();
 		Milliseconds* threadTimers = Alloca(Milliseconds, numThreads);
+		std::latch latch{ numThreads };
+
 		BRK_LOG_TRACE("Running {} threads", numThreads);
 		const uint32 glyphsPerThread = m_Glyphs.size() / numThreads;
 		uint32 jobStartIndex = 0;
@@ -432,8 +430,9 @@ namespace brk::demo {
 			const msdfgen::Shape* sPtr = shapes.data() + jobStartIndex;
 
 			const uint32 jobSize = glyphsPerThread + (i < (m_Glyphs.size() % numThreads));
-			new(threads+i) std::thread{
+			threadPool.Enqueue(
 				RenderJob{
+					.m_Latch = latch,
 					.m_Glyphs = std::span{gPtr, jobSize},
 					.m_Shapes = std::span{sPtr, jobSize},
 					.m_Rasterizer ={
@@ -445,12 +444,13 @@ namespace brk::demo {
 					},
 					.m_OutTimer = *(new(threadTimers + i)Milliseconds{}),
 				}
-			};
+			);
 			jobStartIndex += jobSize;
 		}
+		latch.wait();
+
 		for (uint32 i = 0; i < numThreads; ++i)
 		{
-			threads[i].join();
 			BRK_LOG_TRACE("Thread {} took {}ms", i, threadTimers[i].count());
 		}
 		timer.Update();
