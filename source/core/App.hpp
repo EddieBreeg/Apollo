@@ -4,6 +4,7 @@
 
 #include "GameTime.hpp"
 #include "Singleton.hpp"
+#include "ThreadPool.hpp"
 #include "Window.hpp"
 
 struct ImGuiContext;
@@ -42,6 +43,8 @@ namespace brk {
 		// done
 		BRK_API void RequestAppQuit() noexcept;
 
+		[[nodiscard]] mt::ThreadPool& GetThreadPool() noexcept { return m_MainThreadPool; }
+
 	private:
 		BRK_API EAppResult Update();
 
@@ -59,5 +62,6 @@ namespace brk {
 
 		EAppResult m_Result;
 		GameTime m_GameTime;
+		mt::ThreadPool m_MainThreadPool;
 	};
 } // namespace brk

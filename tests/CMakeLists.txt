@@ -11,6 +11,7 @@ SOURCES
 	RectTests.cpp
 	TypeInfoTests.cpp
 	SystemTests.cpp
+	ThreadPoolTests.cpp
 	TypeInfoTests.cpp
 	ULIDTests.cpp
 	UniqueFunctionTests.cpp
@@ -28,5 +29,6 @@ AddTest("Poly Tests" "${PROJECT_NAME}Tests" FILTERS "[poly]")
 AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
 AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
 AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
+AddTest("Multi-Threading Tests" "${PROJECT_NAME}Tests" FILTERS "[mt]")
 AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
 AddTest("Util Tests" "${PROJECT_NAME}Tests" FILTERS "[util]")
