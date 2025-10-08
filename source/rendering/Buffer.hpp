@@ -48,6 +48,12 @@ namespace brk::rdr {
 			std::swap(m_Size, other.m_Size);
 		}
 
+		Buffer& operator=(Buffer&& other) noexcept
+		{
+			Swap(other);
+			return *this;
+		}
+
 	private:
 		EnumFlags<EBufferFlags> m_Flags;
 		uint32 m_Size = 0;
