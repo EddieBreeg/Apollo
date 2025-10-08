@@ -11,9 +11,9 @@ namespace brk {
 		constexpr Rectangle& operator+=(const Rectangle& other) noexcept
 		{
 			x0 = Min(x0, other.x0);
-			y0 = Min(x0, other.y0);
+			y0 = Min(y0, other.y0);
 			x1 = Max(x1, other.x1);
-			y1 = Max(x1, other.y1);
+			y1 = Max(y1, other.y1);
 			return *this;
 		}
 
