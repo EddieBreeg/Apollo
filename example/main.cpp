@@ -226,13 +226,15 @@ the lazy dog.)";
 			while (char32_t c = decoder.DecodeNext())
 			{
 				const Glyph* glyph = m_Atlas.GetGlyph(c);
+				const uint32 width = glyph->m_UvRect.GetWidth(),
+							 height = glyph->m_UvRect.GetHeight();
 				if (c == '\n')
 				{
 					pos = float2{ 0, pos.y - textScale };
 					prev = c;
 					continue;
 				}
-				else if (!(glyph->m_UvRect.width && glyph->m_UvRect.height))
+				else if (!(width && height))
 				{
 					pos.x += textScale * glyph->m_Advance;
 					prev = c;
@@ -242,31 +244,31 @@ the lazy dog.)";
 
 				const RectU32& uvRect = glyph->m_UvRect;
 				const float2 glyphSize{
-					fontScale * uvRect.width,
-					fontScale * uvRect.height,
+					fontScale * width,
+					fontScale * height,
 				};
 
 				const Vertex2d bottomLeft{
 					pos + textScale * glyph->m_Offset,
-					float2{ uvRect.x, uvRect.y + uvRect.height } / uvScale,
+					float2{ uvRect.x0, uvRect.y1 } / uvScale,
 				};
 				const Vertex2d topLeft{
 					bottomLeft.m_Position + textScale * float2{ 0, glyphSize.y },
-					float2{ uvRect.x, uvRect.y } / uvScale,
+					float2{ uvRect.x0, uvRect.y0 } / uvScale,
 				};
 				const Vertex2d bottomRight{
 					bottomLeft.m_Position + textScale * float2{ glyphSize.x, 0 },
-					float2{ uvRect.x + uvRect.width, uvRect.y + uvRect.height } / uvScale,
+					float2{ uvRect.x1, uvRect.y1 } / uvScale,
 				};
 				const Vertex2d topRight{
 					bottomLeft.m_Position + glyphSize * textScale,
-					float2{ uvRect.x + uvRect.width, uvRect.y } / uvScale,
+					float2{ uvRect.x1, uvRect.y0 } / uvScale,
 				};
 				m_TextBox += RectF{
 					bottomLeft.m_Position.x,
 					bottomLeft.m_Position.y,
-					bottomRight.m_Position.x - bottomLeft.m_Position.x,
-					topLeft.m_Position.y - bottomLeft.m_Position.y,
+					topRight.m_Position.x,
+					topRight.m_Position.y,
 				};
 
 				vertices.emplace_back(topLeft);
@@ -283,9 +285,12 @@ the lazy dog.)";
 				prev = c;
 				baseIndex += 4;
 			}
-			const float2 offset{ -0.5f * m_TextBox.width, 0.5f * m_TextBox.height };
+			const float2 center{
+				0.5f * (m_TextBox.x0 + m_TextBox.x1),
+				0.5f * (m_TextBox.y0 + m_TextBox.y1),
+			};
 			for (Vertex2d& v : vertices)
-				v.m_Position += offset;
+				v.m_Position -= center;
 
 			const uint32 vertexDataSize = vertices.size() * sizeof(Vertex2d);
 			const uint32 indexDataSize = 4 * indices.size();
@@ -352,11 +357,7 @@ the lazy dog.)";
 				0,
 				&m_CamMatrix,
 				2 * sizeof(glm::mat4x4));
-			SDL_PushGPUFragmentUniformData(
-				mainCommandBuffer,
-				0,
-				&m_AntiAliasing,
-				4 * sizeof(float));
+			SDL_PushGPUFragmentUniformData(mainCommandBuffer, 0, &m_AntiAliasing, 4 * sizeof(float));
 
 			SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
 

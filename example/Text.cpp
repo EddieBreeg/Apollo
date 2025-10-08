@@ -115,17 +115,23 @@ namespace {
 		void Pack(RectU32& inout_rect)
 		{
 			static constexpr uint32 margin = 1;
-			if ((m_MaxWidth - m_Pos.x) < (inout_rect.width + margin))
+			const uint32 width = inout_rect.GetWidth();
+			const uint32 height = inout_rect.GetHeight();
+
+			if ((m_MaxWidth - m_Pos.x) < (width + margin))
 			{
 				m_Pos = { 0, m_Pos.y + m_RowHeight };
 				m_Height += m_RowHeight;
 				m_RowHeight = 0;
 			}
-			inout_rect.x = m_Pos.x;
-			inout_rect.y = m_Pos.y;
-			m_Pos.x += inout_rect.width + margin;
+			inout_rect.x0 = m_Pos.x;
+			inout_rect.y0 = m_Pos.y;
+			inout_rect.x1 = m_Pos.x + width;
+			inout_rect.y1 = m_Pos.y + height;
+
+			m_Pos.x += width + margin;
 			m_Width = brk::Max(m_Width, m_Pos.x);
-			m_RowHeight = brk::Max(m_RowHeight, inout_rect.height + margin);
+			m_RowHeight = brk::Max(m_RowHeight, height + margin);
 		}
 
 		glm::uvec2 GetTotalSize() const noexcept { return { m_Width, m_Height + m_RowHeight }; }
@@ -172,7 +178,8 @@ namespace {
 
 		void operator()(float2 offset, const RectU32& bounds, const msdfgen::Shape& shape)
 		{
-			const uint32 bitmapSize = bounds.width * bounds.height * 4;
+			const uint32 width = bounds.GetWidth(), height = bounds.GetHeight();
+			const uint32 bitmapSize = width * height * 4;
 			if (!bitmapSize)
 				return;
 
@@ -187,8 +194,8 @@ namespace {
 			};
 			msdfgen::BitmapSection<float, 4> section{
 				m_Bitmap.data(),
-				static_cast<int>(bounds.width),
-				static_cast<int>(bounds.height),
+				static_cast<int>(width),
+				static_cast<int>(height),
 				msdfgen::Y_DOWNWARD,
 			};
 			msdfgen::generateMTSDF(section, shape, transform);
@@ -196,10 +203,10 @@ namespace {
 				section,
 				brk::rdr::BitmapView<RGBA8Pixel>{
 					m_OutBuf,
-					bounds.x,
-					bounds.y,
-					bounds.width,
-					bounds.height,
+					bounds.x0,
+					bounds.y0,
+					width,
+					height,
 					m_BufStride,
 				});
 		}
@@ -363,6 +370,7 @@ namespace brk::demo {
 				.m_Ch = ch,
 				.m_Advance = m_Face->glyph->metrics.horiAdvance * scale,
 				.m_Offset = float2{ 0, 0 },
+				.m_UvRect = {},
 			};
 
 			// if shape has no contour, the character has no glyph per say, just ignore it
@@ -382,8 +390,8 @@ namespace brk::demo {
 
 			glyph.m_Offset = { bounds.l, bounds.b };
 
-			glyph.m_UvRect.width = uint32(size * (bounds.r - bounds.l) + 1.5f);
-			glyph.m_UvRect.height = uint32(size * (bounds.t - bounds.b) + 1.5f);
+			glyph.m_UvRect.x1 = uint32(size * (bounds.r - bounds.l) + 1.5f);
+			glyph.m_UvRect.y1 = uint32(size * (bounds.t - bounds.b) + 1.5f);
 			packer.Pack(glyph.m_UvRect);
 			m_Glyphs.emplace_back(std::move(glyph));
 			shapes.emplace_back(std::move(shape));
