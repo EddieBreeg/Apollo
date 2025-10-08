@@ -20,11 +20,11 @@ namespace brk::rdr {
 		NFlags = 4
 	};
 
-	class  Buffer : public _internal::HandleWrapper<SDL_GPUBuffer*>
+	class Buffer : public _internal::HandleWrapper<SDL_GPUBuffer*>
 	{
 	public:
 		using BaseType::BaseType;
-		 BRK_API Buffer(EnumFlags<EBufferFlags> usage, uint32 size);
+		BRK_API Buffer(EnumFlags<EBufferFlags> usage, uint32 size);
 		BRK_API ~Buffer();
 		Buffer(Buffer&& other)
 			: BaseType(std::move(other))
@@ -53,6 +53,8 @@ namespace brk::rdr {
 			Swap(other);
 			return *this;
 		}
+
+		[[nodiscard]] uint32 GetSize() const noexcept { return m_Size; }
 
 	private:
 		EnumFlags<EBufferFlags> m_Flags;
