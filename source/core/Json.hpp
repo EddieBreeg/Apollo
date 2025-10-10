@@ -14,6 +14,63 @@ namespace brk::json {
 		{ j = b };
 	};
 
+	namespace _internal {
+		template <NativeJsonType T, class = void>
+		struct ValueType;
+
+		template <>
+		struct ValueType<std::string_view>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::string;
+		};
+		template <>
+		struct ValueType<std::string>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::string;
+		};
+		template <>
+		struct ValueType<std::filesystem::path>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::string;
+		};
+
+		template <class Float>
+		struct ValueType<Float, std::enable_if_t<std::is_floating_point_v<Float>>>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::number_float;
+		};
+
+		template<class T, size_t N>
+		struct ValueType<T[N]>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::array;
+		};
+
+		template<class T>
+		struct ValueType<std::vector<T>>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::array;
+		};
+
+		template<>
+		struct ValueType<bool>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::boolean;
+		};
+
+		template<class T, class K, class Hasher, class KeyEq, class Alloc>
+		struct ValueType<std::unordered_map<T, K, Hasher, KeyEq, Alloc>>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::object;
+		};
+
+		template<class T, class K, class LessThan, class Alloc>
+		struct ValueType<std::map<T, K, LessThan, Alloc>>
+		{
+			static constexpr auto Type = nlohmann::json::value_t::object;
+		};
+	} // namespace _internal
+
 	/**
 	 * Looks for a specific key in a json object, and attempts to convert the associated value to a
 	 * C++ object if it was found. This overload is only valid for type which are natively
@@ -32,14 +89,30 @@ namespace brk::json {
 		if (it == j.end())
 			return optional;
 
+		if constexpr(!std::is_arithmetic_v<T>)
+		{
+			if (it->type() != _internal::ValueType<T>::Type)
+				return false;
+		}
+		else if constexpr(std::is_integral_v<T>)
+		{
+			if (!it->is_number_integer())
+				return false;
+		}
+		else if constexpr(std::is_floating_point_v<T>)
+		{
+			if (!it->is_number())
+				return false;
+		}
+
 		it->get_to(out_obj);
 		return true;
 	}
 
 	/**
 	 * Looks for a specific key in a json object, and attempts to convert the associated value to a
-	 * C++ object if it was found. This overload is only valid for types which meet the requirements for
-	 * the JsonEnabledType concept
+	 * C++ object if it was found. This overload is only valid for types which meet the requirements
+	 * for the JsonEnabledType concept
 	 * \param out_obj: The destination object
 	 * \param j: The JSON object to look into
 	 * \param key: The key to look for

@@ -44,6 +44,30 @@ namespace brk::json::ut {
 		CHECK(s.val1 == 0);
 		CHECK((s.val2 == "hello"));
 	}
+
+	JSON_TEST("Visit with wrong output type")
+	{
+		{
+			const nlohmann::json j{
+				{ "str", "hello" },
+				{ "int", 1u },
+			};
+			int32 val = 0;
+			CHECK_FALSE(Visit(val, j, "k"));
+			CHECK(val == 0);
+
+			CHECK(Visit(val, j, "int"));
+			CHECK(val == 1);
+		}
+		{
+			const nlohmann::json j{
+				{"uint", 1},
+			};
+			uint32 x = 0;
+			CHECK(Visit(x, j, "uint"));
+			CHECK(x == 1);
+		}
+	}
 } // namespace brk::json::ut
 
 #undef JSON_TEST
