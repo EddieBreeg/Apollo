@@ -5,6 +5,7 @@ target_sources(${PROJECT_NAME}Runtime PRIVATE
 	Device.cpp
 	Renderer.cpp
 	Texture.cpp
+	text/AtlasGenerator.cpp
 	Shader.cpp
 	${RENDERING_HEADERS}
 )

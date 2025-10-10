@@ -10,7 +10,7 @@ AddLibrary(${PROJECT_NAME}Runtime
 		GLM_FORCE_DEPTH_ZERO_TO_ONE=1
 	INCLUDES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
 	LINK PUBLIC spdlog::spdlog imgui glm::glm EnTT::EnTT nlohmann_json::nlohmann_json
-	PRIVATE SDL3::SDL3
+	PRIVATE SDL3::SDL3 freetype msdfgen::msdfgen-core
 )
 
 target_precompile_headers(${PROJECT_NAME}Runtime PRIVATE PCH.hpp)

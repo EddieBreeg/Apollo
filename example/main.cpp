@@ -226,8 +226,8 @@ the lazy dog.)";
 			while (char32_t c = decoder.DecodeNext())
 			{
 				const Glyph* glyph = m_Atlas.GetGlyph(c);
-				const uint32 width = glyph->m_UvRect.GetWidth(),
-							 height = glyph->m_UvRect.GetHeight();
+				const uint32 width = glyph->m_Uv.GetWidth(),
+							 height = glyph->m_Uv.GetHeight();
 				if (c == '\n')
 				{
 					pos = float2{ 0, pos.y - textScale };
@@ -242,7 +242,7 @@ the lazy dog.)";
 				}
 				pos += textScale * m_Atlas.GetKerning(prev, c);
 
-				const RectU32& uvRect = glyph->m_UvRect;
+				const RectU32& uvRect = glyph->m_Uv;
 				const float2 glyphSize{
 					fontScale * width,
 					fontScale * height,

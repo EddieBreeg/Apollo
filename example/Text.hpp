@@ -2,6 +2,7 @@
 
 #include <PCH.hpp>
 #include <rendering/Texture.hpp>
+#include <rendering/text/FontAtlas.hpp>
 
 struct FT_FaceRec_;
 struct FT_LibraryRec_;
@@ -20,25 +21,8 @@ namespace brk::rdr {
 } // namespace brk::rdr
 
 namespace brk::demo {
-	struct GlyphRange
-	{
-		char32_t m_First = ' ';
-		char32_t m_Last = 255; // Latin-1 supplement
-
-		[[nodiscard]] constexpr uint32 GetSize() const noexcept { return m_Last - m_First + 1; }
-		[[nodiscard]] constexpr uint32 GetIndex(char32_t c) const noexcept
-		{
-			return (c >= m_First && c <= m_Last) ? (c - m_First) : UINT32_MAX;
-		}
-	};
-
-	struct Glyph
-	{
-		char32_t m_Ch;
-		float m_Advance;
-		float2 m_Offset;
-		RectU32 m_UvRect;
-	};
+	using rdr::txt::Glyph;
+	using rdr::txt::GlyphRange;
 
 	struct FontAtlas
 	{
@@ -70,7 +54,6 @@ namespace brk::demo {
 		[[nodiscard]] uint32 GetPixelSize() const noexcept { return m_PixelSize; }
 
 	private:
-		bool LoadGlyph(char32_t ch, msdfgen::Shape& out_shape, float scale);
 		const Glyph* FindGlyph(char32_t ch) const noexcept;
 
 		FT_LibraryRec_* m_FreetypeHandle = nullptr;

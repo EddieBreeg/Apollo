@@ -24,7 +24,8 @@
 				"MSDFGEN_DISABLE_SVG": "ON",
 				"MSDFGEN_DISABLE_PNG": "ON",
 				"MSDFGEN_USE_SKIA": "OFF",
-				"MSDFGEN_USE_VCPKG": "OFF"
+				"MSDFGEN_USE_VCPKG": "OFF",
+				"FT_ENABLE_ERROR_STRINGS": "ON"
 			},
 			"environment": {
 				"FREETYPE_DIR": "${sourceDir}/build/install"
