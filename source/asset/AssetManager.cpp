@@ -6,6 +6,7 @@
 #include <rendering/Material.hpp>
 #include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
+#include <rendering/text/FontAtlas.hpp>
 
 namespace {
 	void ProcessUnloadRequests(brk::Queue<brk::IAsset*> queue, brk::ULIDMap<brk::IAsset*> cache)
@@ -37,7 +38,7 @@ namespace brk {
 		while (m_Cache.size())
 		{
 			auto it = m_Cache.begin();
-			while(it != m_Cache.end())
+			while (it != m_Cache.end())
 			{
 				if (AssetRetainTraits::GetCount(it->second)) // asset still in use, delete later
 				{
@@ -59,6 +60,7 @@ namespace brk {
 			{&ConstructAsset<rdr::Texture2D>, settings.m_ImportTexture2d},
 			{&ConstructAsset<rdr::Shader>, settings.m_LoadShader},
 			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
+			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},
 		 }
 		, m_AssetsPath(settings.m_AssetPath)
 		, m_Loader(gpuDevice)

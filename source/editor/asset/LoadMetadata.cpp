@@ -16,6 +16,7 @@ namespace {
 		{ brk::StringHash{ "texture2d" }, brk::EAssetType::Texture2D },
 		{ brk::StringHash{ "shader" }, brk::EAssetType::Shader },
 		{ brk::StringHash{ "material" }, brk::EAssetType::Material },
+		{ brk::StringHash{ "fontAtlas" }, brk::EAssetType::FontAtlas },
 	};
 
 	struct Parser

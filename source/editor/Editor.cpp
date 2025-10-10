@@ -13,6 +13,7 @@ namespace brk::editor {
 			return;
 
 		m_ProjectPath = args[1];
+		std::filesystem::current_path(m_ProjectPath);
 		auto* assetManager = AssetManager::GetInstance();
 		BRK_ASSERT(assetManager, "Asset manager isn't initialized");
 		assetManager->ImportMetadataBank();

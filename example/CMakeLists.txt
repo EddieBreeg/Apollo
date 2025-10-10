@@ -16,7 +16,7 @@ AddShader(TextFragShader
 )
 
 AddExecutable(${PROJECT_NAME}Example SOURCES
-	main.cpp Text.cpp
+	main.cpp
 LINK PRIVATE ${PROJECT_NAME}::Editor SDL3::SDL3 freetype msdfgen-core
 OPTIONS PRIVATE ${COMPILER_ARGS}
 PROPERTIES ${COMMON_PROPERTIES}

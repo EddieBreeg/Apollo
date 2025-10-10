@@ -3,7 +3,9 @@
 #include <PCH.hpp>
 
 #include "Glyph.hpp"
+#include <asset/Asset.hpp>
 #include <rendering/Bitmap.hpp>
+#include <rendering/Texture.hpp>
 #include <vector>
 
 struct FT_FaceRec_;
@@ -11,6 +13,10 @@ struct FT_FaceRec_;
 namespace msdfgen {
 	class Shape;
 } // namespace msdfgen
+
+namespace brk::editor {
+	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata);
+}
 
 namespace brk::rdr::txt {
 	class AtlasGenerator
@@ -50,5 +56,75 @@ namespace brk::rdr::txt {
 		uint32 m_Res;
 		double m_Padding;
 		double m_Scale = 1.0;
+	};
+
+	class FontAtlas : public IAsset
+	{
+	public:
+		using IAsset::IAsset;
+
+		BRK_API FontAtlas(
+			FT_FaceRec_* faceHandle,
+			uint32 pixelSize,
+			GlyphRange range,
+			std::vector<Glyph> glyphs,
+			std::vector<uint32> indices,
+			Texture2D texture);
+
+		FontAtlas(const FontAtlas&) = delete;
+		FontAtlas(FontAtlas&& other) noexcept
+			: m_FaceHandle(std::exchange(other.m_FaceHandle, nullptr))
+			, m_Range(std::exchange(other.m_Range, { 0, 0 }))
+			, m_Texture(std::move(other.m_Texture))
+			, m_Glyphs(std::move(other.m_Glyphs))
+			, m_Indices(std::move(other.m_Indices))
+			, m_PixelSize(other.m_PixelSize)
+		{}
+
+		FontAtlas& operator=(const FontAtlas&) = delete;
+		FontAtlas& operator=(FontAtlas&& other) noexcept
+		{
+			Swap(other);
+			return *this;
+		}
+
+		void Swap(FontAtlas& other)
+		{
+			std::swap(m_FaceHandle, other.m_FaceHandle);
+			std::swap(m_Range, other.m_Range);
+			std::swap(m_Texture, other.m_Texture);
+			std::swap(m_Glyphs, other.m_Glyphs);
+			std::swap(m_Indices, other.m_Indices);
+			std::swap(m_PixelSize, other.m_PixelSize);
+		}
+
+		BRK_API ~FontAtlas();
+
+		[[nodiscard]] const rdr::Texture2D& GetTexture() const noexcept { return m_Texture; }
+		[[nodiscard]] const Glyph* GetGlyph(char32_t ch, char32_t fallback = U' ') const noexcept
+		{
+			if (const auto* g = FindGlyph(ch))
+				return g;
+			return FindGlyph(fallback);
+		}
+		[[nodiscard]] uint32 GetPixelSize() const noexcept { return m_PixelSize; }
+
+		[[nodiscard]] BRK_API float2 GetKerning(const Glyph& left, const Glyph& right) const noexcept;
+
+		GET_ASSET_TYPE_IMPL(EAssetType::FontAtlas);
+
+	private:
+		BRK_API const Glyph* FindGlyph(char32_t ch) const noexcept;
+
+		FT_FaceRec_* m_FaceHandle = nullptr;
+		GlyphRange m_Range;
+		rdr::Texture2D m_Texture;
+		std::vector<Glyph> m_Glyphs;
+		std::vector<uint32> m_Indices;
+		uint32 m_PixelSize = 64;
+
+		friend EAssetLoadResult brk::editor::LoadFont(
+			IAsset& out_asset,
+			const AssetMetadata& metadata);
 	};
 } // namespace brk::rdr::txt

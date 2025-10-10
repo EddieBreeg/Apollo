@@ -6,6 +6,7 @@ target_sources(${PROJECT_NAME}Runtime PRIVATE
 	Renderer.cpp
 	Texture.cpp
 	text/AtlasGenerator.cpp
+	text/FontAtlas.cpp
 	Shader.cpp
 	${RENDERING_HEADERS}
 )

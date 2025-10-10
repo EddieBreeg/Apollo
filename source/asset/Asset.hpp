@@ -16,6 +16,7 @@ namespace brk {
 		Texture2D,
 		Shader,
 		Material,
+		FontAtlas,
 		NTypes
 	};
 

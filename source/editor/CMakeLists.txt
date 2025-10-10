@@ -2,6 +2,7 @@ file(GLOB_RECURSE EDITOR_HEADERS *.h *.hpp)
 
 AddLibrary(${PROJECT_NAME}EditorRuntime
 SOURCES
+	asset/LoadFont.cpp
 	asset/LoadMaterial.cpp
 	asset/LoadMetadata.cpp
 	asset/LoadShader.cpp
@@ -11,7 +12,7 @@ SOURCES
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 DEFINITIONS PUBLIC BRK_EDITOR=1
-LINK PRIVATE ${PROJECT_NAME}Runtime stb_image SDL3::SDL3
+LINK PRIVATE ${PROJECT_NAME}Runtime stb_image SDL3::SDL3 freetype msdfgen::msdfgen-core
 )
 
 if(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")

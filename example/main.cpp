@@ -1,4 +1,3 @@
-#include "Text.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <asset/AssetManager.hpp>
 #include <core/App.hpp>
@@ -20,6 +19,7 @@
 #include <rendering/Pixel.hpp>
 #include <rendering/Renderer.hpp>
 #include <rendering/Texture.hpp>
+#include <rendering/text/FontAtlas.hpp>
 #include <systems/InputEventComponents.hpp>
 
 namespace ImGui {
@@ -46,27 +46,6 @@ namespace brk::demo {
 		.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
 	};
 
-	GlyphRange ParseGlyphRange(std::string_view text, uint32* out_unicodeLen = nullptr)
-	{
-		brk::utf8::Decoder decoder{ text };
-		GlyphRange range{ UINT32_MAX, 0 };
-
-		uint32 len = 0;
-		while (char32_t c = decoder.DecodeNext())
-		{
-			if (c == utf8::g_InvalidCodePoint)
-				c = ' ';
-			++len;
-
-			range.m_First = Min(range.m_First, c);
-			range.m_Last = Max(range.m_Last, c);
-		}
-
-		if (out_unicodeLen)
-			*out_unicodeLen = len;
-		return range;
-	}
-
 	constexpr const char* g_DefaultText =
 		R"(The quick brown
 fox jumps over
@@ -77,6 +56,7 @@ the lazy dog.)";
 		brk::Window& m_Window;
 		brk::rdr::Renderer& m_Renderer;
 		brk::AssetRef<brk::rdr::Material> m_Material;
+		brk::AssetRef<brk::rdr::txt::FontAtlas> m_Font;
 		brk::rdr::Buffer m_VBuffer, m_IBuffer;
 		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
@@ -91,8 +71,6 @@ the lazy dog.)";
 		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
 		std::string_view m_Text;
 		uint32 m_UnicodeLen = 0;
-		GlyphRange m_GlyphRange;
-		FontAtlas m_Atlas;
 		RectF m_TextBox = {};
 
 		void ProcessWindowResize(entt::registry& world)
@@ -108,27 +86,16 @@ the lazy dog.)";
 			m_CamMatrix = glm::orthoRH(-xMax, xMax, -.5f, .5f, .01f, 10.f);
 		}
 
-		void InitTexture(SDL_GPUCopyPass* copyPass)
-		{
-			m_Atlas.LoadRange(copyPass, m_GlyphRange, 64, 10.0f, 1024, 4);
-		}
-
-		TestSystem(
-			brk::Window& window,
-			brk::rdr::Renderer& renderer,
-			FontAtlas atlas,
-			std::string_view text)
+		TestSystem(brk::Window& window, brk::rdr::Renderer& renderer, std::string_view text)
 			: m_Window(window)
 			, m_Renderer(renderer)
 			, m_Text(text)
-			, m_Atlas(std::move(atlas))
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
 
 			glm::uvec2 winSize = m_Window.GetSize();
 			const float xMax = .5f * winSize.x / winSize.y;
 			m_CamMatrix = glm::orthoRH(-xMax, xMax, -0.5f, 0.5f, 0.01f, 10.0f);
-			m_GlyphRange = ParseGlyphRange(m_Text, &m_UnicodeLen);
 		}
 
 		~TestSystem()
@@ -181,35 +148,12 @@ the lazy dog.)";
 			};
 			m_Pipeline = SDL_CreateGPUGraphicsPipeline(device.GetHandle(), &pipelineDesc);
 			BRK_ASSERT(m_Pipeline, "Failed to create graphics pipeline");
-		} // namespace
+		}
 
-		void PostInit()
+		void GenerateGeometry(SDL_GPUCopyPass* copyPass)
 		{
-			auto& device = m_Renderer.GetDevice();
-
-			const SDL_GPUSamplerCreateInfo samplerInfo{
-				.min_filter = SDL_GPU_FILTER_LINEAR,
-				.mag_filter = SDL_GPU_FILTER_LINEAR,
-				.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST,
-				.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
-				.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
-				.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
-			};
-			m_Sampler = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
-			BRK_ASSERT(m_Sampler, "Failed to create sampler");
-
-			BRK_LOG_TRACE("Example Post-Init");
-			auto* assetManager = AssetManager::GetInstance();
-			BRK_ASSERT(assetManager, "Asset manager hasn't been initialized!");
-
-			m_Material = assetManager->GetAsset<brk::rdr::Material>(
-				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
-			auto* cmdBuffer = SDL_AcquireGPUCommandBuffer(device.GetHandle());
-			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
-
-			InitTexture(copyPass);
 			constexpr float textScale = 0.2f;
-			const rdr::TextureSettings settings = m_Atlas.GetTexture().GetSettings();
+			const rdr::TextureSettings settings = m_Font->GetTexture().GetSettings();
 			const float2 uvScale{ settings.m_Width, settings.m_Height };
 			std::vector<Vertex2d> vertices;
 			vertices.reserve(4 * m_UnicodeLen);
@@ -218,29 +162,30 @@ the lazy dog.)";
 
 			float2 pos{ 0, 0 };
 			utf8::Decoder decoder{ m_Text };
-			const float fontScale = 1.0f / m_Atlas.GetPixelSize();
-			char32_t prev = 0;
+			const float fontScale = 1.0f / m_Font->GetPixelSize();
+			const rdr::txt::Glyph* prev = nullptr;
 
 			uint32 baseIndex = 0;
 
 			while (char32_t c = decoder.DecodeNext())
 			{
-				const Glyph* glyph = m_Atlas.GetGlyph(c);
-				const uint32 width = glyph->m_Uv.GetWidth(),
-							 height = glyph->m_Uv.GetHeight();
+				const rdr::txt::Glyph* glyph = m_Font->GetGlyph(c);
+				if (!glyph) [[unlikely]]
+					continue;
+
+				const uint32 width = glyph->m_Uv.GetWidth(), height = glyph->m_Uv.GetHeight();
 				if (c == '\n')
 				{
 					pos = float2{ 0, pos.y - textScale };
-					prev = c;
 					continue;
 				}
 				else if (!(width && height))
 				{
 					pos.x += textScale * glyph->m_Advance;
-					prev = c;
 					continue;
 				}
-				pos += textScale * m_Atlas.GetKerning(prev, c);
+				if (prev)
+					pos += textScale * m_Font->GetKerning(*prev, *glyph);
 
 				const RectU32& uvRect = glyph->m_Uv;
 				const float2 glyphSize{
@@ -282,8 +227,8 @@ the lazy dog.)";
 				indices.emplace_back(baseIndex + 3);
 				indices.emplace_back(baseIndex);
 				pos.x += textScale * glyph->m_Advance;
-				prev = c;
 				baseIndex += 4;
+				prev = glyph;
 			}
 			const float2 center{
 				0.5f * (m_TextBox.x0 + m_TextBox.x1),
@@ -299,6 +244,33 @@ the lazy dog.)";
 
 			m_VBuffer.UploadData(copyPass, vertices.data(), vertexDataSize);
 			m_IBuffer.UploadData(copyPass, indices.data(), indexDataSize);
+		}
+
+		void PostInit()
+		{
+			auto& device = m_Renderer.GetDevice();
+
+			const SDL_GPUSamplerCreateInfo samplerInfo{
+				.min_filter = SDL_GPU_FILTER_LINEAR,
+				.mag_filter = SDL_GPU_FILTER_LINEAR,
+				.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST,
+				.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+				.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+				.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+			};
+			m_Sampler = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
+			BRK_ASSERT(m_Sampler, "Failed to create sampler");
+
+			BRK_LOG_TRACE("Example Post-Init");
+			auto* assetManager = AssetManager::GetInstance();
+			BRK_ASSERT(assetManager, "Asset manager hasn't been initialized!");
+
+			m_Material = assetManager->GetAsset<brk::rdr::Material>(
+				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
+			m_Font = assetManager->GetAsset<brk::rdr::txt::FontAtlas>(
+				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
+			auto* cmdBuffer = SDL_AcquireGPUCommandBuffer(device.GetHandle());
+			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
 
 			SDL_EndGPUCopyPass(copyPass);
 			SDL_SubmitGPUCommandBuffer(cmdBuffer);
@@ -324,19 +296,25 @@ the lazy dog.)";
 				return;
 
 			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
+			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
+
 			if (!m_Pipeline && m_Material->GetState() == brk::EAssetState::Loaded)
 			{
 				InitPipeline();
 			}
+			if (m_Font->GetState() == EAssetState::Loaded && !m_VBuffer)
+			{
+				SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(mainCommandBuffer);
+				GenerateGeometry(copyPass);
+				SDL_EndGPUCopyPass(copyPass);
+			}
 
-			rdr::Texture2D& texture = m_Atlas.GetTexture();
+			const rdr::Texture2D& texture = m_Font->GetTexture();
 
-			if (!swapchainTexture || !m_Pipeline || !texture)
+			if (!swapchainTexture || !m_Pipeline || !texture || !m_Font)
 				return;
 
 			ProcessWindowResize(world);
-
-			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
 
 			const SDL_GPUColorTargetInfo targetInfo{
 				.texture = swapchainTexture,
@@ -391,21 +369,13 @@ the lazy dog.)";
 	{
 		spdlog::set_level(spdlog::level::trace);
 		const std::span args = entry.m_Args;
-		const std::string fontPath =
-			args.size() > 2
-				? args[2]
-				: (entry.m_AssetManagerSettings.m_AssetPath / "assets/fonts/arial.ttf").string();
 
-		const char* text = args.size() > 3 ? args[3] : g_DefaultText;
+		const char* text = args.size() > 2 ? args[2] : g_DefaultText;
 
 		auto& renderer = *brk::rdr::Renderer::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *brk::ecs::Manager::GetInstance();
-		manager.AddSystem<TestSystem>(
-			app.GetMainWindow(),
-			renderer,
-			FontAtlas{ fontPath.c_str() },
-			text);
+		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer, text);
 		return EAppResult::Continue;
 	}
 } // namespace brk::demo

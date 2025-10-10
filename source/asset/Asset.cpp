@@ -6,6 +6,7 @@ namespace {
 		"texture2d",
 		"shader",
 		"material",
+		"fontAtlas",
 	};
 
 	static_assert(
