@@ -2,12 +2,8 @@ include(Shaders)
 
 option(BRK_EXAMPLE_MULTITHREADED "Whether to allow multiple threads to rasterize glyphs" ON)
 
-AddShader(TexturedQuadVShader
-	vertex "assets/texturedQuad.vert.hlsl" ".brk/_assetCache/texturedQuad.vert"
-	DEBUG
-)
-AddShader(TexturedQuadFShader
-	fragment "assets/texturedQuad.frag.hlsl" ".brk/_assetCache/texturedQuad.frag"
+AddShader(TextVertShader
+	vertex "assets/text.vert.hlsl" ".brk/_assetCache/text.vert"
 	DEBUG
 )
 AddShader(TextFragShader
@@ -26,4 +22,4 @@ if(${BRK_EXAMPLE_MULTITHREADED})
 	target_compile_definitions(${PROJECT_NAME}Example PRIVATE USE_MULTITHREADING=1)
 endif(${BRK_EXAMPLE_MULTITHREADED})
 
-add_dependencies(${PROJECT_NAME}Example TexturedQuadVShader TexturedQuadFShader TextFragShader)
+add_dependencies(${PROJECT_NAME}Example TextVertShader TextFragShader)

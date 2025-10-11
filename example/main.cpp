@@ -19,32 +19,21 @@
 #include <rendering/Pixel.hpp>
 #include <rendering/Renderer.hpp>
 #include <rendering/Texture.hpp>
+#include <rendering/text/BatchRenderer.hpp>
 #include <rendering/text/FontAtlas.hpp>
 #include <systems/InputEventComponents.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
+
 }
 
 namespace brk::demo {
-	struct Vertex2d
+	glm::mat4x4 GetProjMatrix(uint32 width, uint32 height)
 	{
-		float2 m_Position;
-		float2 m_Uv;
-	};
-	constexpr SDL_GPUVertexAttribute g_VertexAttributes[] = {
-		SDL_GPUVertexAttribute{ .location = 0, .format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2 },
-		SDL_GPUVertexAttribute{
-			.location = 1,
-			.format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2,
-			.offset = offsetof(Vertex2d, m_Uv),
-		},
-	};
-	constexpr SDL_GPUVertexBufferDescription g_VBufferDescription{
-		.slot = 0,
-		.pitch = sizeof(Vertex2d),
-		.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
-	};
+		const float xmax = float(width) / height;
+		return glm::orthoRH(-xmax, xmax, -1.0f, 1.0f, 0.01f, 100.f);
+	}
 
 	constexpr const char* g_DefaultText =
 		R"(The quick brown
@@ -57,21 +46,15 @@ the lazy dog.)";
 		brk::rdr::Renderer& m_Renderer;
 		brk::AssetRef<brk::rdr::Material> m_Material;
 		brk::AssetRef<brk::rdr::txt::FontAtlas> m_Font;
-		brk::rdr::Buffer m_VBuffer, m_IBuffer;
-		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
-		SDL_GPUSampler* m_Sampler = nullptr;
+		brk::rdr::txt::Renderer2d m_TextRenderer;
+		bool m_GeometryReady = false;
 
 		float m_Scale = 1.0f;
 
 		float m_AntiAliasing = 1.0f;
-		float m_OutlineThickness = 0.0f;
-		float m_Glow = 0.0f;
-		float m_GlowFalloff = 0.0f;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
 		std::string_view m_Text;
-		uint32 m_UnicodeLen = 0;
-		RectF m_TextBox = {};
 
 		void ProcessWindowResize(entt::registry& world)
 		{
@@ -82,8 +65,7 @@ the lazy dog.)";
 
 			const WindowResizeEventComponent& eventData = *view->begin();
 
-			const float xMax = .5f * eventData.m_Width / eventData.m_Height;
-			m_CamMatrix = glm::orthoRH(-xMax, xMax, -.5f, .5f, .01f, 10.f);
+			m_CamMatrix = GetProjMatrix(uint32(eventData.m_Width), uint32(eventData.m_Height));
 		}
 
 		TestSystem(brk::Window& window, brk::rdr::Renderer& renderer, std::string_view text)
@@ -94,172 +76,14 @@ the lazy dog.)";
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
 
 			glm::uvec2 winSize = m_Window.GetSize();
-			const float xMax = .5f * winSize.x / winSize.y;
-			m_CamMatrix = glm::orthoRH(-xMax, xMax, -0.5f, 0.5f, 0.01f, 10.0f);
+			m_CamMatrix = GetProjMatrix(winSize.x, winSize.y);
 		}
 
-		~TestSystem()
-		{
-			auto* device = m_Renderer.GetDevice().GetHandle();
-			SDL_ReleaseGPUSampler(device, m_Sampler);
-			SDL_ReleaseGPUGraphicsPipeline(device, m_Pipeline);
-		}
-
-		void InitPipeline()
-		{
-			brk::rdr::GPUDevice& device = m_Renderer.GetDevice();
-			const SDL_GPUColorTargetDescription targetDesc{
-				.format = SDL_GetGPUSwapchainTextureFormat(device.GetHandle(), m_Window.GetHandle()),
-				.blend_state =
-					SDL_GPUColorTargetBlendState{
-						.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-						.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
-						.color_blend_op = SDL_GPU_BLENDOP_ADD,
-						.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-						.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
-						.alpha_blend_op = SDL_GPU_BLENDOP_ADD,
-						.color_write_mask = SDL_GPU_COLORCOMPONENT_R | SDL_GPU_COLORCOMPONENT_G |
-											SDL_GPU_COLORCOMPONENT_B | SDL_GPU_COLORCOMPONENT_A,
-						.enable_blend = true,
-					},
-			};
-			const SDL_GPUGraphicsPipelineCreateInfo pipelineDesc{
-				.vertex_shader = m_Material->GetVertexShader()->GetHandle(),
-				.fragment_shader = m_Material->GetFragmentShader()->GetHandle(),
-				.vertex_input_state =
-					SDL_GPUVertexInputState{
-						.vertex_buffer_descriptions = &g_VBufferDescription,
-						.num_vertex_buffers = 1,
-						.vertex_attributes = g_VertexAttributes,
-						.num_vertex_attributes = STATIC_ARRAY_SIZE(g_VertexAttributes),
-					},
-				.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-				.rasterizer_state =
-					SDL_GPURasterizerState{
-						.fill_mode = SDL_GPU_FILLMODE_FILL,
-						.cull_mode = SDL_GPU_CULLMODE_NONE,
-					},
-				.multisample_state =
-					SDL_GPUMultisampleState{
-						.sample_count = SDL_GPU_SAMPLECOUNT_1,
-					},
-				.depth_stencil_state = SDL_GPUDepthStencilState{},
-				.target_info = SDL_GPUGraphicsPipelineTargetInfo{ &targetDesc, 1 },
-			};
-			m_Pipeline = SDL_CreateGPUGraphicsPipeline(device.GetHandle(), &pipelineDesc);
-			BRK_ASSERT(m_Pipeline, "Failed to create graphics pipeline");
-		}
-
-		void GenerateGeometry(SDL_GPUCopyPass* copyPass)
-		{
-			constexpr float textScale = 0.2f;
-			const rdr::TextureSettings settings = m_Font->GetTexture().GetSettings();
-			const float2 uvScale{ settings.m_Width, settings.m_Height };
-			std::vector<Vertex2d> vertices;
-			vertices.reserve(4 * m_UnicodeLen);
-			std::vector<uint32> indices;
-			indices.reserve(6 * m_UnicodeLen);
-
-			float2 pos{ 0, 0 };
-			utf8::Decoder decoder{ m_Text };
-			const float fontScale = 1.0f / m_Font->GetPixelSize();
-			const rdr::txt::Glyph* prev = nullptr;
-
-			uint32 baseIndex = 0;
-
-			while (char32_t c = decoder.DecodeNext())
-			{
-				const rdr::txt::Glyph* glyph = m_Font->GetGlyph(c);
-				if (!glyph) [[unlikely]]
-					continue;
-
-				const uint32 width = glyph->m_Uv.GetWidth(), height = glyph->m_Uv.GetHeight();
-				if (c == '\n')
-				{
-					pos = float2{ 0, pos.y - textScale };
-					continue;
-				}
-				else if (!(width && height))
-				{
-					pos.x += textScale * glyph->m_Advance;
-					continue;
-				}
-				if (prev)
-					pos += textScale * m_Font->GetKerning(*prev, *glyph);
-
-				const RectU32& uvRect = glyph->m_Uv;
-				const float2 glyphSize{
-					fontScale * width,
-					fontScale * height,
-				};
-
-				const Vertex2d bottomLeft{
-					pos + textScale * glyph->m_Offset,
-					float2{ uvRect.x0, uvRect.y1 } / uvScale,
-				};
-				const Vertex2d topLeft{
-					bottomLeft.m_Position + textScale * float2{ 0, glyphSize.y },
-					float2{ uvRect.x0, uvRect.y0 } / uvScale,
-				};
-				const Vertex2d bottomRight{
-					bottomLeft.m_Position + textScale * float2{ glyphSize.x, 0 },
-					float2{ uvRect.x1, uvRect.y1 } / uvScale,
-				};
-				const Vertex2d topRight{
-					bottomLeft.m_Position + glyphSize * textScale,
-					float2{ uvRect.x1, uvRect.y0 } / uvScale,
-				};
-				m_TextBox += RectF{
-					bottomLeft.m_Position.x,
-					bottomLeft.m_Position.y,
-					topRight.m_Position.x,
-					topRight.m_Position.y,
-				};
-
-				vertices.emplace_back(topLeft);
-				vertices.emplace_back(bottomLeft);
-				vertices.emplace_back(bottomRight);
-				vertices.emplace_back(topRight);
-				indices.emplace_back(baseIndex);
-				indices.emplace_back(baseIndex + 1);
-				indices.emplace_back(baseIndex + 2);
-				indices.emplace_back(baseIndex + 2);
-				indices.emplace_back(baseIndex + 3);
-				indices.emplace_back(baseIndex);
-				pos.x += textScale * glyph->m_Advance;
-				baseIndex += 4;
-				prev = glyph;
-			}
-			const float2 center{
-				0.5f * (m_TextBox.x0 + m_TextBox.x1),
-				0.5f * (m_TextBox.y0 + m_TextBox.y1),
-			};
-			for (Vertex2d& v : vertices)
-				v.m_Position -= center;
-
-			const uint32 vertexDataSize = vertices.size() * sizeof(Vertex2d);
-			const uint32 indexDataSize = 4 * indices.size();
-			m_VBuffer = rdr::Buffer(rdr::EBufferFlags::Vertex, vertexDataSize);
-			m_IBuffer = rdr::Buffer(rdr::EBufferFlags::Index, indexDataSize);
-
-			m_VBuffer.UploadData(copyPass, vertices.data(), vertexDataSize);
-			m_IBuffer.UploadData(copyPass, indices.data(), indexDataSize);
-		}
+		~TestSystem() {}
 
 		void PostInit()
 		{
-			auto& device = m_Renderer.GetDevice();
-
-			const SDL_GPUSamplerCreateInfo samplerInfo{
-				.min_filter = SDL_GPU_FILTER_LINEAR,
-				.mag_filter = SDL_GPU_FILTER_LINEAR,
-				.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST,
-				.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
-				.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
-				.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
-			};
-			m_Sampler = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
-			BRK_ASSERT(m_Sampler, "Failed to create sampler");
+			m_TextRenderer.m_Style.m_Size = 0.2f;
 
 			BRK_LOG_TRACE("Example Post-Init");
 			auto* assetManager = AssetManager::GetInstance();
@@ -269,11 +93,7 @@ the lazy dog.)";
 				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
 			m_Font = assetManager->GetAsset<brk::rdr::txt::FontAtlas>(
 				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
-			auto* cmdBuffer = SDL_AcquireGPUCommandBuffer(device.GetHandle());
-			SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
-
-			SDL_EndGPUCopyPass(copyPass);
-			SDL_SubmitGPUCommandBuffer(cmdBuffer);
+			m_TextRenderer.SetFont(m_Font);
 		}
 
 		void DisplayUi()
@@ -284,9 +104,13 @@ the lazy dog.)";
 			{
 				m_ModelMatrix[0].x = m_ModelMatrix[1].y = m_ModelMatrix[2].z = m_Scale;
 			}
-			ImGui::SliderFloat("Outline Thickness", &m_OutlineThickness, 0, 0.5f);
-			ImGui::SliderFloat("Glow", &m_Glow, 0, 10.0f);
-			ImGui::SliderFloat("Glow Falloff", &m_GlowFalloff, 0, 10.0f);
+
+			m_GeometryReady &= !ImGui::SliderFloat(
+				"Outline Thickness",
+				&m_TextRenderer.m_Style.m_OutlineThickness,
+				0,
+				0.5f);
+			m_GeometryReady &= !ImGui::DragFloat("Tracking", &m_TextRenderer.m_Style.m_Tracking, 0.001f);
 			ImGui::End();
 		}
 
@@ -297,24 +121,49 @@ the lazy dog.)";
 
 			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
 			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
+			const auto& device = m_Renderer.GetDevice();
 
-			if (!m_Pipeline && m_Material->GetState() == brk::EAssetState::Loaded)
+			if (!m_TextRenderer.IsInitialized() && m_Material->GetState() == EAssetState::Loaded)
 			{
-				InitPipeline();
+				m_TextRenderer.Init(
+					device,
+					*m_Material->GetVertexShader(),
+					*m_Material->GetFragmentShader(),
+					SDL_GPUColorTargetDescription{
+						.format = SDL_GetGPUSwapchainTextureFormat(
+							device.GetHandle(),
+							m_Window.GetHandle()),
+						.blend_state =
+							SDL_GPUColorTargetBlendState{
+								.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
+								.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+								.color_blend_op = SDL_GPU_BLENDOP_ADD,
+								.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
+								.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
+								.alpha_blend_op = SDL_GPU_BLENDOP_ADD,
+								.color_write_mask = SDL_GPU_COLORCOMPONENT_R |
+													SDL_GPU_COLORCOMPONENT_G |
+													SDL_GPU_COLORCOMPONENT_B |
+													SDL_GPU_COLORCOMPONENT_A,
+								.enable_blend = true,
+							},
+					},
+					128);
 			}
-			if (m_Font->GetState() == EAssetState::Loaded && !m_VBuffer)
-			{
-				SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(mainCommandBuffer);
-				GenerateGeometry(copyPass);
-				SDL_EndGPUCopyPass(copyPass);
-			}
-
-			const rdr::Texture2D& texture = m_Font->GetTexture();
-
-			if (!swapchainTexture || !m_Pipeline || !texture || !m_Font)
+			if (!swapchainTexture || !m_Font || m_Font->GetState() != EAssetState::Loaded)
 				return;
 
 			ProcessWindowResize(world);
+			DisplayUi();
+			m_TextRenderer.StartFrame(mainCommandBuffer);
+			if (!m_GeometryReady)
+			{
+				m_TextRenderer.Clear();
+				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::Center);
+				m_GeometryReady = true;
+			}
+
+			m_TextRenderer.StartRender();
 
 			const SDL_GPUColorTargetInfo targetInfo{
 				.texture = swapchainTexture,
@@ -335,33 +184,10 @@ the lazy dog.)";
 				0,
 				&m_CamMatrix,
 				2 * sizeof(glm::mat4x4));
-			SDL_PushGPUFragmentUniformData(mainCommandBuffer, 0, &m_AntiAliasing, 4 * sizeof(float));
 
-			SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
-
-			const SDL_GPUBufferBinding vBufferBinding{
-				.buffer = m_VBuffer.GetHandle(),
-				.offset = 0,
-			};
-			const SDL_GPUBufferBinding iBufferBinding{
-				.buffer = m_IBuffer.GetHandle(),
-				.offset = 0,
-			};
-			SDL_BindGPUVertexBuffers(renderPass, 0, &vBufferBinding, 1);
-			SDL_BindGPUIndexBuffer(renderPass, &iBufferBinding, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-
-			const SDL_GPUTextureSamplerBinding binding{
-				.texture = texture.GetHandle(),
-				.sampler = m_Sampler,
-			};
-			const uint32 indexCount = m_IBuffer.GetSize() / 4;
-			SDL_BindGPUFragmentSamplers(renderPass, 0, &binding, 1);
-
-			SDL_DrawGPUIndexedPrimitives(renderPass, indexCount, 1, 0, 0, 0);
+			m_TextRenderer.Render(renderPass);
 
 			SDL_EndGPURenderPass(renderPass);
-
-			DisplayUi();
 		}
 	};
 
