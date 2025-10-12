@@ -18,6 +18,10 @@ namespace brk::editor {
 	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata);
 }
 
+namespace brk::mt {
+	class ThreadPool;
+}
+
 namespace brk::rdr::txt {
 	class AtlasGenerator
 	{
@@ -48,7 +52,8 @@ namespace brk::rdr::txt {
 			double pxRange,
 			const std::vector<Glyph>& glyphs,
 			const std::vector<msdfgen::Shape>& shapes,
-			rdr::BitmapView<rdr::RGBAPixel<uint8>> out_bitmap);
+			rdr::BitmapView<rdr::RGBAPixel<uint8>> out_bitmap,
+			mt::ThreadPool& threadPool);
 
 	private:
 		FT_FaceRec_* m_Face;
@@ -109,7 +114,8 @@ namespace brk::rdr::txt {
 		}
 		[[nodiscard]] uint32 GetPixelSize() const noexcept { return m_PixelSize; }
 
-		[[nodiscard]] BRK_API float2 GetKerning(const Glyph& left, const Glyph& right) const noexcept;
+		[[nodiscard]] BRK_API float2
+		GetKerning(const Glyph& left, const Glyph& right) const noexcept;
 
 		GET_ASSET_TYPE_IMPL(EAssetType::FontAtlas);
 

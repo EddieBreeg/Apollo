@@ -2,6 +2,7 @@
 #include <SDL3/SDL_gpu.h>
 #include <asset/AssetLoader.hpp>
 #include <asset/AssetManager.hpp>
+#include <core/App.hpp>
 #include <core/Assert.hpp>
 #include <core/Errno.hpp>
 #include <core/Json.hpp>
@@ -23,6 +24,11 @@ namespace {
 			const FT_Error err = FT_Init_FreeType(&m_Handle);
 			BRK_ASSERT(err == FT_Err_Ok, "Failed to init Freetype: {}", FT_Error_String(err));
 			return m_Handle;
+		}
+		~FreetypeContext()
+		{
+			if (m_Handle)
+				FT_Done_FreeType(m_Handle);
 		}
 
 	private:
@@ -131,7 +137,14 @@ namespace brk::editor {
 		auto* buf = (rdr::RGBAPixel<uint8>*)SDL_MapGPUTransferBuffer(device, transferBuf, true);
 		BRK_ASSERT(buf, "Failed to map transfer buffer: {}", SDL_GetError());
 
-		generator.Rasterize(pxRange, atlas.m_Glyphs, shapes, { buf, texSize.x, texSize.y });
+		auto& threadPool = App::GetInstance()->GetThreadPool();
+
+		generator.Rasterize(
+			pxRange,
+			atlas.m_Glyphs,
+			shapes,
+			{ buf, texSize.x, texSize.y },
+			threadPool);
 		const SDL_GPUTextureTransferInfo srcLoc{
 			.transfer_buffer = transferBuf,
 			.pixels_per_row = texSize.x,

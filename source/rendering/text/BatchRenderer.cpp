@@ -5,8 +5,6 @@
 #include <core/Utf8.hpp>
 #include <rendering/Device.hpp>
 
-#pragma clang optimize off
-
 namespace {
 	SDL_GPUGraphicsPipeline* CreatePipeline(
 		const brk::rdr::GPUDevice& device,

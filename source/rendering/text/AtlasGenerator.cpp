@@ -1,7 +1,7 @@
 #include "FontAtlas.hpp"
-#include <core/App.hpp>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>
+#include <core/ThreadPool.hpp>
 #include <core/Utf8.hpp>
 #include <freetype/freetype.h>
 #include <freetype/ftoutln.h>
@@ -305,11 +305,11 @@ namespace brk::rdr::txt {
 		double pxRange,
 		const std::vector<Glyph>& glyphs,
 		const std::vector<msdfgen::Shape>& shapes,
-		rdr::BitmapView<rdr::RGBAPixel<uint8>> out_bitmap)
+		rdr::BitmapView<rdr::RGBAPixel<uint8>> out_bitmap,
+		mt::ThreadPool& threadPool)
 	{
 		const msdfgen::Range distMapping{ pxRange / m_Res };
 
-		mt::ThreadPool& threadPool = App::GetInstance()->GetThreadPool();
 		const uint32 numThreads = threadPool.GetThreadCount();
 		std::latch latch{ numThreads };
 		const uint32 numGlyphs = (uint32)glyphs.size();

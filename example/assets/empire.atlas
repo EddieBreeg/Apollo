@@ -1,0 +1,8 @@
+{
+	"range": {
+		"first": 32,
+		"last": 255
+	},
+	"fontFile": "assets/fonts/Empire.otf",
+	"padding": 0.1
+}
