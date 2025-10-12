@@ -9,7 +9,7 @@
 #include <stb_image.h>
 
 namespace brk::editor {
-	EAssetLoadResult ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
+	EAssetLoadResult LoadTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
 	{
 		const auto pathStr = metadata.m_FilePath.string();
 		int32 width = 0, height = 0;

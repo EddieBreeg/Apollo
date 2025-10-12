@@ -12,7 +12,7 @@ namespace brk {
 }
 
 namespace brk::editor {
-	EAssetLoadResult ImportTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
+	EAssetLoadResult LoadTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
 }
 
 namespace brk::rdr {
@@ -94,6 +94,6 @@ namespace brk::rdr {
 
 	private:
 		TextureSettings m_Settings;
-		friend EAssetLoadResult brk::editor::ImportTexture2d(IAsset&, const AssetMetadata&);
+		friend EAssetLoadResult brk::editor::LoadTexture2d(IAsset&, const AssetMetadata&);
 	};
 } // namespace brk::rdr

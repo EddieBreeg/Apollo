@@ -267,6 +267,7 @@ int main(int argc, const char** argv)
 
 	const nlohmann::json json{
 		{ "fontFile", settings.m_InputPath },
+		{ "textureFile", pngPath },
 		{
 			"range",
 			{

@@ -31,7 +31,7 @@ namespace brk {
 		AssetBankImportFunc* m_MetadataImportFunc = nullptr;
 
 		// Asset importers
-		AssetImportFunc* m_ImportTexture2d = nullptr;
+		AssetImportFunc* m_LoadTexture2d = nullptr;
 		AssetImportFunc* m_LoadShader = nullptr;
 		AssetImportFunc* m_LoadMaterial = nullptr;
 		AssetImportFunc* m_LoadFont = nullptr;

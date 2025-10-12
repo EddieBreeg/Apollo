@@ -57,7 +57,7 @@ namespace brk {
 	AssetManager::AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice)
 		: m_ImportBank(settings.m_MetadataImportFunc)
 		, m_TypeInfo{ 
-			{&ConstructAsset<rdr::Texture2D>, settings.m_ImportTexture2d},
+			{&ConstructAsset<rdr::Texture2D>, settings.m_LoadTexture2d},
 			{&ConstructAsset<rdr::Shader>, settings.m_LoadShader},
 			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
 			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},

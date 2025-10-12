@@ -50,7 +50,44 @@ namespace brk::json {
 		return Visit(out_range.m_Last, *node, "last", true);
 	}
 
+	template <>
+	struct Converter<rdr::txt::Glyph>
+	{
+		static bool FromJson(rdr::txt::Glyph& out_glyph, const nlohmann::json& json)
+		{
+			return Visit(out_glyph.m_Char, json, "codepoint") &&
+				   Visit(out_glyph.m_Advance, json, "advance") &&
+				   Visit(out_glyph.m_Offset, json, "offset") && Visit(out_glyph.m_Uv, json, "uv") &&
+				   Visit(out_glyph.m_Index, json, "index");
+		}
+	};
 } // namespace brk::json
+
+namespace {
+	bool LoadGlyphs(
+		const nlohmann::json& json,
+		const brk::rdr::txt::GlyphRange& range,
+		std::vector<brk::rdr::txt::Glyph>& out_glyphs,
+		std::vector<uint32>& out_indices)
+	{
+		const auto it = json.find("glyphs");
+		if (it == json.end() || !it->is_array())
+			return false;
+
+		using brk::rdr::txt::Glyph;
+
+		Glyph glyph;
+		for (const auto& j : *it)
+		{
+			if (!brk::json::Converter<Glyph>::FromJson(glyph, j))
+				continue;
+
+			out_indices[range.GetIndex(glyph.m_Char)] = (uint32)out_glyphs.size();
+			out_glyphs.emplace_back(glyph);
+		}
+		return true;
+	}
+} // namespace
 
 namespace brk::editor {
 	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata)
@@ -102,6 +139,23 @@ namespace brk::editor {
 			BRK_LOG_ERROR("Failed to load font file {}: {}", fontPath, FT_Error_String(err));
 			return EAssetLoadResult::Failure;
 		}
+
+		std::string_view texPath;
+		if (json::Visit(texPath, json, "textureFile"))
+		{
+			atlas.m_Glyphs.reserve(atlas.m_Range.GetSize());
+			atlas.m_Indices.resize(atlas.m_Range.GetSize(), UINT32_MAX);
+			const EAssetLoadResult loadRes = LoadTexture2d(
+				atlas.m_Texture,
+				AssetMetadata{
+					.m_Id = ULID::Generate(),
+					.m_FilePath = texPath,
+				});
+			if (loadRes == EAssetLoadResult::Success &&
+				LoadGlyphs(json, atlas.m_Range, atlas.m_Glyphs, atlas.m_Indices))
+				return EAssetLoadResult::Success;
+		}
+
 		double pxRange = 10.0;
 		double emPadding = 1.0 / atlas.m_PixelSize;
 		json::Visit(pxRange, json, "pixelRange", true);
