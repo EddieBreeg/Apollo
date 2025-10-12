@@ -280,6 +280,6 @@ int main(int argc, const char** argv)
 		{ "pixelRange", settings.m_PixelRange },
 		{ "glyphs", glyphs },
 	};
-	atlasFile << json.dump(4);
+	atlasFile << json.dump(1, '\t');
 	std::cout << "Packed " << glyphs.size() << " glyphs\n";
 }
