@@ -1,4 +1,5 @@
 #include "FontAtlas.hpp"
+#include <algorithm>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>
 #include <core/ThreadPool.hpp>
@@ -260,12 +261,13 @@ namespace brk::rdr::txt {
 		std::vector<msdfgen::Shape>& out_shapes,
 		std::vector<uint32>& out_indices)
 	{
+		std::vector<uint32> tempIndices;
 		range.m_First = Max(range.m_First, U' ');
 		out_glyphs.reserve(range.GetSize());
 		out_indices.resize(range.GetSize(), UINT32_MAX);
 		out_shapes.reserve(range.GetSize());
+		tempIndices.reserve(range.GetSize());
 
-		GridPacker packer{ m_MaxWidth };
 		for (char32_t ch = range.m_First; ch <= range.m_Last; ++ch)
 		{
 			msdfgen::Shape shape;
@@ -278,7 +280,9 @@ namespace brk::rdr::txt {
 			if (!LoadGlyph(glyph, shape))
 				continue;
 
-			out_indices[range.GetIndex(ch)] = (uint32)out_glyphs.size();
+			const uint32 index = uint32(out_glyphs.size());
+			out_indices[range.GetIndex(ch)] = index;
+			tempIndices.emplace_back(index);
 
 			// if shape has no contour, the character has no glyph per say, just ignore it
 			if (!shape.contours.size())
@@ -294,10 +298,27 @@ namespace brk::rdr::txt {
 
 			glyph.m_Uv.x1 = uint32(m_Res * (bounds.r - bounds.l) + 1.5f);
 			glyph.m_Uv.y1 = uint32(m_Res * (bounds.t - bounds.b) + 1.5f);
-			packer.Pack(glyph.m_Uv);
 			out_glyphs.emplace_back(std::move(glyph));
 			out_shapes.emplace_back(std::move(shape));
 		}
+		// sort glyphs by decreasing height
+		std::sort(
+			tempIndices.begin(),
+			tempIndices.end(),
+			[&](uint32 a, uint32 b)
+			{
+				return out_glyphs[a].m_Uv.GetHeight() > out_glyphs[b].m_Uv.GetHeight();
+			});
+		GridPacker packer{ m_MaxWidth };
+		for (uint32 index : tempIndices)
+		{
+			if (out_shapes[index].contours.empty())
+				continue;
+
+			Glyph& glyph = out_glyphs[index];
+			packer.Pack(glyph.m_Uv);
+		}
+
 		return packer.GetTotalSize();
 	}
 
