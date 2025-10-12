@@ -1,4 +1,5 @@
 #include <core/Errno.hpp>
+#include <core/Json.hpp>
 #include <core/ThreadPool.hpp>
 #include <core/ULID.hpp>
 #include <filesystem>
@@ -6,7 +7,6 @@
 #include <fstream>
 #include <iostream>
 #include <msdfgen.h>
-#include <nlohmann/json.hpp>
 #include <rendering/text/FontAtlas.hpp>
 #include <span>
 
@@ -180,22 +180,8 @@ namespace brk::rdr::txt {
 			{ "codepoint", uint32(glyph.m_Char) },
 			{ "index", glyph.m_Index },
 			{ "advance", glyph.m_Advance },
-			{
-				"offset",
-				{
-					{ "x", glyph.m_Offset.x },
-					{ "y", glyph.m_Offset.y },
-				},
-			},
-			{
-				"uv",
-				{
-					{ "x0", glyph.m_Uv.x0 },
-					{ "y0", glyph.m_Uv.y0 },
-					{ "x1", glyph.m_Uv.x1 },
-					{ "y1", glyph.m_Uv.y1 },
-				},
-			},
+			{ "offset", glyph.m_Offset },
+			{ "uv", glyph.m_Uv },
 		};
 	}
 } // namespace brk::rdr::txt

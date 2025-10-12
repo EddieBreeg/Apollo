@@ -4,6 +4,7 @@
 
 #include "JsonFwd.hpp"
 #include "TypeTraits.hpp"
+#include <glm/detail/qualifier.hpp>
 #include <nlohmann/json.hpp>
 
 namespace brk::json {
@@ -40,31 +41,31 @@ namespace brk::json {
 			static constexpr auto Type = nlohmann::json::value_t::number_float;
 		};
 
-		template<class T, size_t N>
+		template <class T, size_t N>
 		struct ValueType<T[N]>
 		{
 			static constexpr auto Type = nlohmann::json::value_t::array;
 		};
 
-		template<class T>
+		template <class T>
 		struct ValueType<std::vector<T>>
 		{
 			static constexpr auto Type = nlohmann::json::value_t::array;
 		};
 
-		template<>
+		template <>
 		struct ValueType<bool>
 		{
 			static constexpr auto Type = nlohmann::json::value_t::boolean;
 		};
 
-		template<class T, class K, class Hasher, class KeyEq, class Alloc>
+		template <class T, class K, class Hasher, class KeyEq, class Alloc>
 		struct ValueType<std::unordered_map<T, K, Hasher, KeyEq, Alloc>>
 		{
 			static constexpr auto Type = nlohmann::json::value_t::object;
 		};
 
-		template<class T, class K, class LessThan, class Alloc>
+		template <class T, class K, class LessThan, class Alloc>
 		struct ValueType<std::map<T, K, LessThan, Alloc>>
 		{
 			static constexpr auto Type = nlohmann::json::value_t::object;
@@ -89,17 +90,17 @@ namespace brk::json {
 		if (it == j.end())
 			return optional;
 
-		if constexpr(!std::is_arithmetic_v<T>)
+		if constexpr (!std::is_arithmetic_v<T>)
 		{
 			if (it->type() != _internal::ValueType<T>::Type)
 				return false;
 		}
-		else if constexpr(std::is_integral_v<T>)
+		else if constexpr (std::is_integral_v<T>)
 		{
 			if (!it->is_number_integer())
 				return false;
 		}
-		else if constexpr(std::is_floating_point_v<T>)
+		else if constexpr (std::is_floating_point_v<T>)
 		{
 			if (!it->is_number())
 				return false;
@@ -212,4 +213,87 @@ namespace brk::json {
 			}
 		}
 	};
+
+	template <class T, int L>
+	struct Converter<glm::vec<L, T>>
+	{
+		using VecType = glm::vec<L, T>;
+
+		static bool FromJson(VecType& out_vec, const nlohmann::json& j) noexcept
+		{
+			if (!Visit(out_vec.x, j, "x"))
+				return false;
+			if constexpr (L >= 2)
+			{
+				if (!Visit(out_vec.y, j, "y"))
+					return false;
+			}
+			if constexpr (L >= 3)
+			{
+				if (!Visit(out_vec.z, j, "z"))
+					return false;
+			}
+			if constexpr (L >= 4)
+			{
+				if (!Visit(out_vec.w, j, "w"))
+					return false;
+			}
+			return true;
+		}
+
+		static void ToJson(const VecType& vec, nlohmann::json& out_json)
+		{
+			out_json["x"] = vec.x;
+			if constexpr (L >= 2)
+				out_json["y"] = vec.y;
+			if constexpr (L >= 3)
+				out_json["z"] = vec.z;
+			if constexpr (L >= 4)
+				out_json["w"] = vec.w;
+		}
+	};
+
+	template <class T>
+	struct Converter<Rectangle<T>>
+	{
+		static bool FromJson(Rectangle<T>& out_rect, const nlohmann::json& json) noexcept
+		{
+			return Visit(out_rect.x0, json, "x0") && Visit(out_rect.x1, json, "x1") &&
+				   Visit(out_rect.y0, json, "y0") && Visit(out_rect.y1, json, "y1");
+		}
+
+		static void ToJson(const Rectangle<T>& rect, nlohmann::json& out_json)
+		{
+			out_json["x0"] = rect.x0;
+			out_json["x1"] = rect.x1;
+			out_json["y0"] = rect.y0;
+			out_json["y1"] = rect.y1;
+		}
+	};
+
+	template <class T, class K>
+	bool Visit(T& out_obj, const nlohmann::json& json, K&& key, bool isOptional = false)
+		requires(std::convertible_to<decltype(Converter<T>::FromJson(out_obj, json[key])), bool>)
+	{
+		const auto it = json.find(std::forward<K>(key));
+		if (it == json.end())
+			return isOptional;
+		return Converter<T>::FromJson(out_obj, *it);
+	}
 } // namespace brk::json
+
+namespace glm{
+	template<int L, class T>
+	void to_json(nlohmann::json& out_json, const vec<L, T>& v)
+	{
+		brk::json::Converter<vec<L, T>>::ToJson(v, out_json);
+	}
+}
+
+namespace brk{
+	template<class T>
+	void to_json(nlohmann::json& out_json, const Rectangle<T>& rect)
+	{
+		brk::json::Converter<Rectangle<T>>::ToJson(rect, out_json);
+	}
+}
