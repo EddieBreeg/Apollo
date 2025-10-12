@@ -38,7 +38,9 @@ extern "C" void* alloca(size_t);
 #ifdef BRK_DEV
 #define DEBUG_CHECK(expr) if (!(expr)) [[unlikely]]
 #else
-#define DEBUG_CHECK(expr) (void)(expr)
+#define DEBUG_CHECK(expr)                                                                          \
+	(void)(expr);                                                                                  \
+	if constexpr (false)
 #endif
 
 #ifndef BIT

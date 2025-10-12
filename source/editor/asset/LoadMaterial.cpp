@@ -9,6 +9,7 @@
 #include <rendering/Material.hpp>
 
 namespace {
+#ifdef BRK_DEV
 	const char* GetStageName(brk::rdr::EShaderStage stage)
 	{
 		switch (stage)
@@ -18,6 +19,7 @@ namespace {
 		default: return "Invalid";
 		};
 	}
+#endif
 
 	brk::EAssetLoadResult ValidateShaderStates(
 		const brk::rdr::Shader* vShader,

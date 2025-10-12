@@ -10,7 +10,6 @@ namespace {
 #define HAS_NO_BITS(flags, mask) (!((flags) & (mask)))
 #define HAS_ANY_BIT(flags, mask) (((flags) & (mask)) != static_cast<decltype(flags)>(0))
 
-#ifdef BRK_DEV
 	bool ValidateSettings(const brk::rdr::TextureSettings& settings)
 	{
 		if (!settings.m_Width)
@@ -53,7 +52,7 @@ namespace {
 		}
 		return true;
 	}
-#endif
+
 	constexpr SDL_GPUTextureFormat g_Formats[]{
 		SDL_GPU_TEXTUREFORMAT_R8_UNORM,		  SDL_GPU_TEXTUREFORMAT_R8G8_UNORM,
 		SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM, SDL_GPU_TEXTUREFORMAT_R8_SNORM,

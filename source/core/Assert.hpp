@@ -43,6 +43,6 @@ namespace brk {
 	}
 
 #else
-#define BRK_ASSBRK_ASSERT(expr, ...) (void)(expr)
-#define DEBUG_BDEBUG_BREAK()		 (void)0
+#define BRK_ASSERT(expr, ...) (void)(expr)
+#define DEBUG_BREAK()		 (void)0
 #endif

@@ -9,7 +9,7 @@
 #ifdef BRK_VULKAN
 #include <spirv_reflect.h>
 namespace {
-	const char* GetSpirvReflectErrorMsg(SpvReflectResult code)
+	[[maybe_unused]] const char* GetSpirvReflectErrorMsg(SpvReflectResult code)
 	{
 		constexpr const char* msg[] = {
 			"Success",
