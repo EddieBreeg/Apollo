@@ -94,36 +94,19 @@ the lazy dog.)";
 			m_Font = assetManager->GetAsset<brk::rdr::txt::FontAtlas>(
 				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
 			m_TextRenderer.SetFont(m_Font);
+
+			assetManager->GetAssetLoader().RegisterCallback(
+				[this]()
+				{
+					OnLoadingFinished();
+				});
 		}
 
-		void DisplayUi()
+		void OnLoadingFinished()
 		{
-			ImGui::Begin("Settings");
-			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
-			if (ImGui::SliderFloat("Scale", &m_Scale, 0, 1))
-			{
-				m_ModelMatrix[0].x = m_ModelMatrix[1].y = m_ModelMatrix[2].z = m_Scale;
-			}
-
-			m_GeometryReady &= !ImGui::SliderFloat(
-				"Outline Thickness",
-				&m_TextRenderer.m_Style.m_OutlineThickness,
-				0,
-				0.5f);
-			m_GeometryReady &= !ImGui::DragFloat("Tracking", &m_TextRenderer.m_Style.m_Tracking, 0.001f);
-			ImGui::End();
-		}
-
-		void Update(entt::registry& world, const brk::GameTime&)
-		{
-			if (!m_Window) [[unlikely]]
-				return;
-
-			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
-			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
 			const auto& device = m_Renderer.GetDevice();
-
-			if (!m_TextRenderer.IsInitialized() && m_Material->GetState() == EAssetState::Loaded)
+			BRK_LOG_TRACE("Loading complete");
+			if (m_Font->GetState() == EAssetState::Loaded)
 			{
 				m_TextRenderer.Init(
 					device,
@@ -150,6 +133,37 @@ the lazy dog.)";
 					},
 					128);
 			}
+		}
+
+		void DisplayUi()
+		{
+			ImGui::Begin("Settings");
+			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
+			if (ImGui::SliderFloat("Scale", &m_Scale, 0, 1))
+			{
+				m_ModelMatrix[0].x = m_ModelMatrix[1].y = m_ModelMatrix[2].z = m_Scale;
+			}
+
+			m_GeometryReady &= !ImGui::SliderFloat(
+				"Outline Thickness",
+				&m_TextRenderer.m_Style.m_OutlineThickness,
+				0,
+				0.5f);
+			m_GeometryReady &= !ImGui::DragFloat(
+				"Tracking",
+				&m_TextRenderer.m_Style.m_Tracking,
+				0.001f);
+			ImGui::End();
+		}
+
+		void Update(entt::registry& world, const brk::GameTime&)
+		{
+			if (!m_Window) [[unlikely]]
+				return;
+
+			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
+			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
+
 			if (!swapchainTexture || !m_Font || m_Font->GetState() != EAssetState::Loaded)
 				return;
 

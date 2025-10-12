@@ -71,6 +71,8 @@ namespace brk {
 		BRK_API void Update();
 		const std::filesystem::path& GetAssetPath() const noexcept { return m_AssetsPath; }
 
+		[[nodiscard]] AssetLoader& GetAssetLoader() noexcept { return m_Loader; }
+
 	private:
 		BRK_API AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
 		friend class Singleton<AssetManager>;

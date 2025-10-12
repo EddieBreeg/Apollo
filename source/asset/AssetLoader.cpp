@@ -88,5 +88,14 @@ namespace brk {
 		g_CopyPass = nullptr;
 		SDL_SubmitGPUCommandBuffer(g_CommandBuffer);
 		g_CommandBuffer = nullptr;
+		DispatchCallbacks();
+	}
+
+	void AssetLoader::DispatchCallbacks()
+	{
+		for (auto& cbk : m_LoadCallbacks)
+		{
+			cbk();
+		}
 	}
 } // namespace brk

@@ -5,6 +5,7 @@
 #include "AssetFunctions.hpp"
 #include "AssetRef.hpp"
 #include <core/Queue.hpp>
+#include <core/UniqueFunction.hpp>
 
 struct SDL_GPUCommandBuffer;
 struct SDL_GPUCopyPass;
@@ -42,10 +43,19 @@ namespace brk {
 		static BRK_API SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
 		static BRK_API SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
 
+		template <class F>
+		void RegisterCallback(F&& cbk)
+		{
+			m_LoadCallbacks.emplace_back(std::forward<F>(cbk));
+		}
+
 		~AssetLoader() = default;
 
 	private:
+		void DispatchCallbacks();
+
 		rdr::GPUDevice& m_Device;
 		Queue<AssetLoadRequest> m_Requests;
+		std::vector<UniqueFunction<void()>> m_LoadCallbacks;
 	};
 } // namespace brk
