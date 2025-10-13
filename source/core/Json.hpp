@@ -53,12 +53,6 @@ namespace brk::json {
 			static constexpr auto Type = nlohmann::json::value_t::array;
 		};
 
-		template <>
-		struct ValueType<bool>
-		{
-			static constexpr auto Type = nlohmann::json::value_t::boolean;
-		};
-
 		template <class T, class K, class Hasher, class KeyEq, class Alloc>
 		struct ValueType<std::unordered_map<T, K, Hasher, KeyEq, Alloc>>
 		{
@@ -90,7 +84,20 @@ namespace brk::json {
 		if (it == j.end())
 			return optional;
 
-		if constexpr (!std::is_arithmetic_v<T>)
+		if constexpr (std::is_enum_v<T>)
+		{
+			if (!it->is_number_integer() && !it->is_string())
+				return false;
+
+			it->get_to(out_obj);
+			return true;
+		}
+		else if constexpr(std::is_same_v<T, bool>)
+		{
+			if (!it->is_boolean() && !it->is_number_integer())
+				return false;
+		}
+		else if constexpr (!std::is_arithmetic_v<T>)
 		{
 			if (it->type() != _internal::ValueType<T>::Type)
 				return false;
@@ -282,18 +289,18 @@ namespace brk::json {
 	}
 } // namespace brk::json
 
-namespace glm{
-	template<int L, class T>
+namespace glm {
+	template <int L, class T>
 	void to_json(nlohmann::json& out_json, const vec<L, T>& v)
 	{
 		brk::json::Converter<vec<L, T>>::ToJson(v, out_json);
 	}
-}
+} // namespace glm
 
-namespace brk{
-	template<class T>
+namespace brk {
+	template <class T>
 	void to_json(nlohmann::json& out_json, const Rectangle<T>& rect)
 	{
 		brk::json::Converter<Rectangle<T>>::ToJson(rect, out_json);
 	}
-}
+} // namespace brk
