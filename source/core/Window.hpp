@@ -12,6 +12,7 @@ namespace brk {
 		uint32 m_Width = 1280;
 		uint32 m_Height = 720;
 		bool m_Resizeable = false;
+		bool m_Hidden = false;
 	};
 
 	class BRK_API Window

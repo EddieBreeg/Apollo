@@ -10,6 +10,8 @@ namespace brk {
 		int32 flags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
 		if (settings.m_Resizeable)
 			flags |= SDL_WINDOW_RESIZABLE;
+		if (settings.m_Hidden)
+			flags |= SDL_WINDOW_HIDDEN;
 
 		m_Handle = SDL_CreateWindow(
 			settings.m_Title,
