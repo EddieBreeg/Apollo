@@ -3,12 +3,14 @@ file(GLOB RENDERING_HEADERS *.h *.hpp)
 target_sources(${PROJECT_NAME}Runtime PRIVATE
 	Buffer.cpp
 	Device.cpp
+	Pipeline.cpp
 	Renderer.cpp
 	Texture.cpp
 	text/AtlasGenerator.cpp
 	text/FontAtlas.cpp
 	text/BatchRenderer.cpp
 	Shader.cpp
+	VertexTypes.cpp
 	${RENDERING_HEADERS}
 )
 

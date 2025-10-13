@@ -4,6 +4,7 @@
 #include <asset/Asset.hpp>
 
 #include "HandleWrapper.hpp"
+#include "Pixel.hpp"
 
 struct SDL_GPUTexture;
 
@@ -16,22 +17,6 @@ namespace brk::editor {
 }
 
 namespace brk::rdr {
-	enum class EPixelFormat : int8
-	{
-		Invalid = -1,
-
-		// unsigned 8-bit formats
-		R8_UNorm,
-		RG8_UNorm,
-		RGBA8_UNorm,
-
-		// signed 8-bit formats
-		R8_SNorm,
-		RG8_SNorm,
-		RGBA8_SNorm,
-
-		NFormats
-	};
 
 	enum class ETextureUsageFlags
 	{

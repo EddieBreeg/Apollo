@@ -4,6 +4,7 @@ AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	BitmapTests.cpp
 	EnumTests.cpp
+	GraphicsPipelineTests.cpp
 	HashTests.cpp
 	JsonTests.cpp
 	QueueTests.cpp
@@ -15,7 +16,8 @@ SOURCES
 	TypeInfoTests.cpp
 	ULIDTests.cpp
 	UniqueFunctionTests.cpp
-LINK PRIVATE Breakout::Runtime Catch2::Catch2WithMain
+	VertexTests.cpp
+LINK PRIVATE Breakout::Runtime Catch2::Catch2WithMain SDL3::SDL3
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 )
@@ -32,3 +34,4 @@ AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
 AddTest("Multi-Threading Tests" "${PROJECT_NAME}Tests" FILTERS "[mt]")
 AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
 AddTest("Util Tests" "${PROJECT_NAME}Tests" FILTERS "[util]")
+AddTest("Rendering Tests" "${PROJECT_NAME}Tests" FILTERS "[rdr]")

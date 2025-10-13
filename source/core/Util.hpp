@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace brk {
 	[[nodiscard]] constexpr auto Min(auto&& a, auto&& b) noexcept(noexcept(a < b))
 	{
@@ -24,5 +26,21 @@ namespace brk {
 		if (v > max)
 			return max;
 		return v;
+	}
+
+	[[nodiscard]] constexpr bool IsPowerOfTwo(auto&& val) noexcept
+	{
+		return (val & (~val + 1)) == val;
+	}
+
+	[[nodiscard]] constexpr uint32_t Padding(uint32_t offset, uint32_t alignment) noexcept
+	{
+		const uint32_t mask = alignment - 1;
+		return (alignment - (offset & mask)) & mask;
+	}
+
+	[[nodiscard]] constexpr uint32_t Align(uint32_t offset, uint32_t alignment) noexcept
+	{
+		return offset + Padding(offset, alignment);
 	}
 } // namespace brk

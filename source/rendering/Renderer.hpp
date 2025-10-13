@@ -22,6 +22,7 @@ namespace brk::rdr {
 		float4 m_ClearColor{};
 
 		GPUDevice& GetDevice() noexcept { return m_Device; }
+		Window& GetWindow() noexcept { return m_Window; }
 
 		// Creates the main command buffer, and acquires the swapchain texture
 		BRK_API void BeginFrame();
@@ -41,7 +42,7 @@ namespace brk::rdr {
 		BRK_API void EndFrame();
 
 	private:
-		Renderer(EBackend backend, Window& window, bool gpuDebug = false, bool vSync = false);
+		BRK_API Renderer(EBackend backend, Window& window, bool gpuDebug = false, bool vSync = false);
 		friend class Singleton<Renderer>;
 
 		static BRK_API std::unique_ptr<Renderer> s_Instance;

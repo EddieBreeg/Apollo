@@ -80,9 +80,27 @@ namespace brk::rdr {
 		return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
 	}
 
-	template<class T, uint32 N>
+	template <class T, uint32 N>
 	[[nodiscard]] constexpr bool operator!=(const Pixel<T, N> a, const Pixel<T, N> b)
 	{
 		return !(a == b);
 	}
+
+	enum class EPixelFormat : int8
+	{
+		Invalid = -1,
+
+		// unsigned 8-bit formats
+		R8_UNorm,
+		RG8_UNorm,
+		RGBA8_UNorm,
+
+		// signed 8-bit formats
+		R8_SNorm,
+		RG8_SNorm,
+		RGBA8_SNorm,
+
+		NFormats
+	};
+
 } // namespace brk::rdr
