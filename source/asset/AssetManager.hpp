@@ -93,4 +93,32 @@ namespace brk {
 		static BRK_API std::unique_ptr<AssetManager> s_Instance;
 		friend class Singleton<AssetManager>;
 	};
+
 } // namespace brk
+
+namespace brk::json {
+	BRK_API bool Visit(
+		AssetRef<IAsset>& out_ref,
+		EAssetType type,
+		const nlohmann::json& json,
+		std::string_view key,
+		bool isOptional = false);
+
+	template <class A>
+	bool Visit(
+		AssetRef<A>& out_ref,
+		const nlohmann::json& json,
+		std::string_view key,
+		bool isOptional = false)
+		requires(
+			std::is_base_of_v<IAsset, A>&& A::AssetType > EAssetType::Invalid &&
+			A::AssetType < EAssetType::NTypes)
+	{
+		AssetRef<IAsset> ref;
+		if (!Visit(ref, A::AssetType, json, key, isOptional))
+			return false;
+
+		out_ref = StaticPointerCast<A>(std::move(ref));
+		return true;
+	}
+} // namespace brk::json

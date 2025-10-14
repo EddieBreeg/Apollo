@@ -101,39 +101,14 @@ namespace {
 		if (!Converter<SDL_GPUGraphicsPipelineCreateInfo>::FromJson(desc, j))
 			return EAssetLoadResult::Failure;
 
-		ULID vShaderId, fShaderId;
-		if (!json::Visit(vShaderId, j, "vertexShader") || !vShaderId)
+		if (!json::Visit(out_vShader, j, "vertexShader"))
 		{
-			BRK_LOG_ERROR(
-				"Failed to load material {}({}) from JSON: missing/invalid vertex shader ID",
-				metadata.m_Name,
-				metadata.m_Id);
+			BRK_LOG_ERROR("Failed to get vertex shader");
 			return EAssetLoadResult::Failure;
 		}
-		if (!json::Visit(fShaderId, j, "fragmentShader") || !fShaderId)
+		if (!json::Visit(out_fShader, j, "fragmentShader"))
 		{
-			BRK_LOG_ERROR(
-				"Failed to load material {}({}) from JSON: missing/invalid fragment shader ID",
-				metadata.m_Name,
-				metadata.m_Id);
-			return EAssetLoadResult::Failure;
-		}
-		if (!(out_vShader = manager->GetAsset<rdr::Shader>(vShaderId)))
-		{
-			BRK_LOG_ERROR(
-				"Failed to load material {}({}): vertex shader {} was not found",
-				metadata.m_Name,
-				metadata.m_Id,
-				vShaderId);
-			return EAssetLoadResult::Failure;
-		}
-		if (!(out_fShader = manager->GetAsset<rdr::Shader>(fShaderId)))
-		{
-			BRK_LOG_ERROR(
-				"Failed to load material {}({}): fragment shader {} was not found",
-				metadata.m_Name,
-				metadata.m_Id,
-				fShaderId);
+			BRK_LOG_ERROR("Failed to get fragment shader");
 			return EAssetLoadResult::Failure;
 		}
 		const EAssetLoadResult result = ValidateShaderStates(out_vShader.Get(), out_fShader.Get());

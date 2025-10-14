@@ -3,6 +3,7 @@
 #include <core/Log.hpp>
 #include <core/ULIDFormatter.hpp>
 
+#include <core/Json.hpp>
 #include <rendering/Material.hpp>
 #include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
@@ -141,5 +142,25 @@ namespace brk {
 	{
 		m_Loader.ProcessRequests();
 		ProcessUnloadRequests(m_UnloadQueue, m_Cache);
+	}
+
+	bool json::Visit(
+		AssetRef<IAsset>& out_ref,
+		EAssetType type,
+		const nlohmann::json& json,
+		std::string_view key,
+		bool isOptional)
+	{
+		auto* assetManager = AssetManager::GetInstance();
+		BRK_ASSERT(assetManager, "Asset manager has not been initialized");
+		ULID id;
+		const auto it = json.find(key);
+
+		if (it == json.end())
+			return isOptional;
+		if (!id.FromJson(*it))
+			return false;
+
+		return (out_ref = assetManager->GetAsset(id, type));
 	}
 } // namespace brk

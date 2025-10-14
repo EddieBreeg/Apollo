@@ -157,6 +157,18 @@ namespace brk {
 		T* m_Ptr = nullptr;
 	};
 
+	template <class To, class From, class Traits>
+	RetainPtr<To, Traits> StaticPointerCast(RetainPtr<From, Traits> ptr) noexcept
+	{
+		return RetainPtr<To, Traits>{ static_cast<To*>(ptr.Release()), s_Adopt };
+	}
+
+	template <class To, class From, class Traits>
+	RetainPtr<To, Traits> DynamicPointerCast(RetainPtr<From, Traits> ptr) noexcept
+	{
+		return RetainPtr<To, Traits>{ dynamic_cast<To*>(ptr.Release()), s_Adopt };
+	}
+
 	template <class T, RetainTraits<T> Traits>
 	inline RetainPtr<T, Traits>::RetainPtr(T* ptr, Adopt_t)
 		: m_Ptr{ ptr }
