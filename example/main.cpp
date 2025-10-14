@@ -25,7 +25,6 @@
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
-
 }
 
 namespace brk::demo {
@@ -108,30 +107,7 @@ the lazy dog.)";
 			BRK_LOG_TRACE("Loading complete");
 			if (m_Font->GetState() == EAssetState::Loaded)
 			{
-				m_TextRenderer.Init(
-					device,
-					*m_Material->GetVertexShader(),
-					*m_Material->GetFragmentShader(),
-					SDL_GPUColorTargetDescription{
-						.format = SDL_GetGPUSwapchainTextureFormat(
-							device.GetHandle(),
-							m_Window.GetHandle()),
-						.blend_state =
-							SDL_GPUColorTargetBlendState{
-								.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA,
-								.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
-								.color_blend_op = SDL_GPU_BLENDOP_ADD,
-								.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
-								.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO,
-								.alpha_blend_op = SDL_GPU_BLENDOP_ADD,
-								.color_write_mask = SDL_GPU_COLORCOMPONENT_R |
-													SDL_GPU_COLORCOMPONENT_G |
-													SDL_GPU_COLORCOMPONENT_B |
-													SDL_GPU_COLORCOMPONENT_A,
-								.enable_blend = true,
-							},
-					},
-					128);
+				m_TextRenderer.Init(device, m_Material, 128);
 			}
 		}
 

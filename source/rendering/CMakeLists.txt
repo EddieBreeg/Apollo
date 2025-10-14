@@ -3,6 +3,7 @@ file(GLOB RENDERING_HEADERS *.h *.hpp)
 target_sources(${PROJECT_NAME}Runtime PRIVATE
 	Buffer.cpp
 	Device.cpp
+	Material.cpp
 	Pipeline.cpp
 	Renderer.cpp
 	Texture.cpp

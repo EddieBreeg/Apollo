@@ -31,14 +31,15 @@ namespace brk::rdr::txt {
 		Renderer2d() = default;
 		BRK_API void Init(
 			const rdr::GPUDevice& device,
-			const Shader& vertexShader,
-			const Shader& fragmentShader,
-			const SDL_GPUColorTargetDescription& targetDesc,
+			AssetRef<Material> material,
 			uint32 batchSize);
 
 		void SetFont(AssetRef<FontAtlas> font) noexcept { m_Font = std::move(font); }
 
-		[[nodiscard]] bool IsInitialized() const noexcept { return m_Pipeline; }
+		[[nodiscard]] bool IsInitialized() const noexcept
+		{
+			return m_Material->GetState() == EAssetState::Loaded;
+		}
 
 		TextStyle m_Style;
 
@@ -82,7 +83,6 @@ namespace brk::rdr::txt {
 		uint32 m_BatchSize;
 		AssetRef<Material> m_Material;
 		const GPUDevice* m_Device = nullptr;
-		SDL_GPUGraphicsPipeline* m_Pipeline = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 	};
 } // namespace brk::rdr::txt

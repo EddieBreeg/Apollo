@@ -1,4 +1,21 @@
 {
 	"vertexShader": "01K65F71RK1WNJ6D7XDNTNPVX4",
-	"fragmentShader": "01K6G8959Y1A6BM730HAQSS9PC"
+	"fragmentShader": "01K6G8959Y1A6BM730HAQSS9PC",
+	"primitiveType": "triangleStrip",
+	"rasterizer": {
+		"cullMode": "back"
+	},
+	"colorTargets": [
+		{
+			"blending": {
+				"srcColorBlendFactor": "srcAlpha",
+				"dstColorBlendFactor": "oneMinusSrcAlpha",
+				"colorBlendOp": "add",
+				"srcAlphaBlendFactor": "one",
+				"dstAlphaBlendFactor": "zero",
+				"alphaBlendOp": "add",
+				"enableBlend": true
+			}
+		}
+	]
 }

@@ -5,63 +5,25 @@
 #include <core/Utf8.hpp>
 #include <rendering/Device.hpp>
 
-namespace {
-	SDL_GPUGraphicsPipeline* CreatePipeline(
-		const brk::rdr::GPUDevice& device,
-		const brk::rdr::Shader& vShader,
-		const brk::rdr::Shader& fShader,
-		const SDL_GPUColorTargetDescription& target)
-	{
-		const SDL_GPUGraphicsPipelineCreateInfo desc{
-			.vertex_shader = vShader.GetHandle(),
-			.fragment_shader = fShader.GetHandle(),
-			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLESTRIP,
-			.rasterizer_state =
-				SDL_GPURasterizerState{
-					.fill_mode = SDL_GPU_FILLMODE_FILL,
-					.cull_mode = SDL_GPU_CULLMODE_BACK,
-					.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE,
-				},
-			.target_info =
-				SDL_GPUGraphicsPipelineTargetInfo{
-					.color_target_descriptions = &target,
-					.num_color_targets = 1,
-				},
-		};
-		return SDL_CreateGPUGraphicsPipeline(device.GetHandle(), &desc);
-	}
-} // namespace
-
 namespace brk::rdr::txt {
 	Renderer2d::~Renderer2d()
 	{
-		if (m_Pipeline) [[likely]]
-			SDL_ReleaseGPUGraphicsPipeline(m_Device->GetHandle(), m_Pipeline);
 		if (m_Sampler) [[likely]]
 			SDL_ReleaseGPUSampler(m_Device->GetHandle(), m_Sampler);
 	}
 
 	void Renderer2d::Init(
 		const rdr::GPUDevice& device,
-		const Shader& vertexShader,
-		const Shader& fragmentShader,
-		const SDL_GPUColorTargetDescription& targetDesc,
+		AssetRef<Material> material,
 		uint32 batchSize)
 	{
+		DEBUG_CHECK(material->GetState() != EAssetState::Invalid)
+		{
+			BRK_LOG_ERROR("Invalid material passed to txt::Renderer2d::Init");
+			return;
+		}
+		m_Material = std::move(material);
 		m_Device = &device;
-		BRK_ASSERT(
-			vertexShader.GetState() == EAssetState::Loaded,
-			"Text renderer init failed: vertex shader is not loaded");
-		BRK_ASSERT(
-			fragmentShader.GetState() == EAssetState::Loaded,
-			"Text renderer init failed: fragment shader is not loaded");
-		BRK_ASSERT(
-			vertexShader.GetStage() == EShaderStage::Vertex,
-			"Text renderer init failed: vertex shader is not a vertex shader");
-		BRK_ASSERT(
-			fragmentShader.GetStage() == EShaderStage::Fragment,
-			"Text renderer init failed: fragment shader is not a vertex shader");
-		m_Pipeline = CreatePipeline(device, vertexShader, fragmentShader, targetDesc);
 		m_BatchSize = batchSize;
 		m_Quads.reserve(m_BatchSize);
 
@@ -179,7 +141,6 @@ namespace brk::rdr::txt {
 
 	void Renderer2d::StartRender()
 	{
-		BRK_ASSERT(IsInitialized(), "Called EndFrame on uninitialised text renderer");
 		if (m_Dirty)
 		{
 			Upload();
@@ -191,8 +152,8 @@ namespace brk::rdr::txt {
 
 	void Renderer2d::Render(SDL_GPURenderPass* renderPass)
 	{
-		BRK_ASSERT(IsInitialized(), "Called EndFrame on uninitialised text renderer");
-		if (m_Quads.empty() || !m_Font || m_Font->GetState() != EAssetState::Loaded)
+		if (m_Quads.empty() || !m_Font || m_Font->GetState() != EAssetState::Loaded ||
+			!m_Material || m_Material->GetState() != EAssetState::Loaded)
 			return;
 
 		const SDL_GPUTextureSamplerBinding samplerBinding{
@@ -200,7 +161,9 @@ namespace brk::rdr::txt {
 			.sampler = m_Sampler,
 		};
 
-		SDL_BindGPUGraphicsPipeline(renderPass, m_Pipeline);
+		SDL_BindGPUGraphicsPipeline(
+			renderPass,
+			static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetHandle()));
 		SDL_GPUBuffer* const temp = m_Buffer.GetHandle();
 		SDL_BindGPUFragmentSamplers(renderPass, 0, &samplerBinding, 1);
 		SDL_BindGPUVertexStorageBuffers(renderPass, 0, &temp, 1);
