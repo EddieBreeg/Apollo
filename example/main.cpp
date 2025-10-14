@@ -46,9 +46,8 @@ the lazy dog.)";
 		brk::AssetRef<brk::rdr::Material> m_Material;
 		brk::AssetRef<brk::rdr::txt::FontAtlas> m_Font;
 		brk::rdr::txt::Renderer2d m_TextRenderer;
+		glm::uvec2 m_WinSize;
 		bool m_GeometryReady = false;
-
-		float m_Scale = 1.0f;
 
 		float m_AntiAliasing = 1.0f;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
@@ -63,13 +62,15 @@ the lazy dog.)";
 				return;
 
 			const WindowResizeEventComponent& eventData = *view->begin();
+			m_WinSize = {eventData.m_Width, eventData.m_Height};
 
-			m_CamMatrix = GetProjMatrix(uint32(eventData.m_Width), uint32(eventData.m_Height));
+			m_CamMatrix = GetProjMatrix(eventData.m_Width, eventData.m_Height);
 		}
 
 		TestSystem(brk::Window& window, brk::rdr::Renderer& renderer, std::string_view text)
 			: m_Window(window)
 			, m_Renderer(renderer)
+			, m_WinSize(m_Window.GetSize())
 			, m_Text(text)
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
@@ -115,10 +116,7 @@ the lazy dog.)";
 		{
 			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
-			if (ImGui::SliderFloat("Scale", &m_Scale, 0, 1))
-			{
-				m_ModelMatrix[0].x = m_ModelMatrix[1].y = m_ModelMatrix[2].z = m_Scale;
-			}
+			m_GeometryReady &= !ImGui::SliderFloat("Scale", &m_TextRenderer.m_Style.m_Size, 0, 1);
 
 			m_GeometryReady &= !ImGui::SliderFloat(
 				"Outline Thickness",
@@ -149,7 +147,10 @@ the lazy dog.)";
 			if (!m_GeometryReady)
 			{
 				m_TextRenderer.Clear();
-				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::Center);
+				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::TopLeft);
+				const auto& style = m_TextRenderer.m_Style;
+				float2 size = m_Font->MeasureText(m_Text, style.m_Size, style.m_Tracking);
+				BRK_LOG_TRACE("Text size: ({}, {})", size.x, size.y);
 				m_GeometryReady = true;
 			}
 

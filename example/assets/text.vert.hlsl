@@ -18,7 +18,8 @@ cbuffer Transform: register(b0, space1)
 struct Fragment
 {
 	float4 Pos: SV_POSITION;
-	float2 Uv: TEXCOORD;
+	float2 Uv: TEXCOORD0;
+	float2 Uv2: TEXCOORD1;
 	float4 Color;
 	float4 OutlineColor;
 	float OutlineThickness;
@@ -50,6 +51,7 @@ Fragment main(uint instance: SV_INSTANCEID, uint index: SV_VERTEXID)
 		1
 	)));
 	frag.Uv = uvQuad.xy + uvQuad.zw * g_UvOffsets[index];
+	frag.Uv2 = g_UvOffsets[index];
 	frag.Color = g_Quads[instance].m_MainColor;
 	frag.OutlineColor = g_Quads[instance].m_OutlineColor;
 	frag.OutlineThickness = g_Quads[instance].m_OutlineThickness;

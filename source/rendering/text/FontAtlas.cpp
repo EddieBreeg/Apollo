@@ -1,4 +1,5 @@
 #include "FontAtlas.hpp"
+#include <core/Utf8.hpp>
 #include <freetype/freetype.h>
 
 namespace brk::rdr::txt {
@@ -51,6 +52,62 @@ namespace brk::rdr::txt {
 		return {
 			scale * vec.x,
 			scale * vec.y,
+		};
+	}
+
+	float2 FontAtlas::MeasureText(std::string_view txt, float size, float tracking, char32_t fallback)
+		const noexcept
+	{
+		RectF bounds{ 0, 0, 0, 0 };
+		const float scale = 1.0f / m_PixelSize;
+		const Glyph* prev = nullptr;
+		utf8::Decoder decoder{ txt };
+		float2 pos = {};
+
+		while (char32_t cp = decoder.DecodeNext())
+		{
+			if (cp == utf8::g_InvalidCodePoint)
+				cp = fallback;
+
+			const Glyph* glyph = GetGlyph(cp, fallback);
+			if (!glyph) [[unlikely]]
+				continue;
+			const uint32 width = glyph->m_Uv.GetWidth(), height = glyph->m_Uv.GetHeight();
+			if (cp == '\n')
+			{
+				pos = float2{ 0, pos.y - size };
+				continue;
+			}
+			else if (!(width && height))
+			{
+				pos.x += size * tracking * glyph->m_Advance;
+				continue;
+			}
+			if (prev)
+				pos += size * GetKerning(*prev, *glyph);
+
+			const float2 glyphSize{
+				scale * width,
+				scale * height,
+			};
+			const float4 rect{
+				pos + size * glyph->m_Offset,
+				size * glyphSize,
+			};
+
+			bounds += RectF{
+				rect.x,
+				rect.y,
+				rect.x + rect.z,
+				rect.y + rect.w,
+			};
+			pos.x += size * tracking * glyph->m_Advance;
+			prev = glyph;
+		}
+
+		return float2{
+			bounds.x1 - bounds.x0,
+			bounds.y1 - bounds.y0,
 		};
 	}
 } // namespace brk::rdr::txt

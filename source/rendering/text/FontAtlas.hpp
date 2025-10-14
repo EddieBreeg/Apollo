@@ -117,6 +117,12 @@ namespace brk::rdr::txt {
 		[[nodiscard]] BRK_API float2
 		GetKerning(const Glyph& left, const Glyph& right) const noexcept;
 
+		[[nodiscard]] BRK_API float2 MeasureText(
+			std::string_view txt,
+			float emScale = 1.0f,
+			float tracking = 1.0f,
+			char32_t fallback = U' ') const noexcept;
+
 		GET_ASSET_TYPE_IMPL(EAssetType::FontAtlas);
 
 	private:

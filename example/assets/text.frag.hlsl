@@ -1,7 +1,8 @@
 struct Fragment
 {
 	float4 Pos: SV_POSITION;
-	float2 Uv: TEXCOORD;
+	float2 Uv: TEXCOORD0;
+	float2 Uv2: TEXCOORD1;
 	float4 Color;
 	float4 OutlineColor;
 	float OutlineThickness;
@@ -32,5 +33,11 @@ float4 main(Fragment frag): SV_TARGET
 	float outline = Outline(d, w, innerThreshold, outerThreshold);
 	float fill = smoothstep(innerThreshold - w, innerThreshold + w, d);
 
-	return fill * frag.Color + outline * frag.OutlineColor;
+	float2 a = abs(frag.Uv2 - 0.5);
+	float d2 = max(a.x, a.y);
+	float d2w = 3 * fwidth(d2);
+
+	float borderFac = smoothstep(0.5 - d2w, 0.5, d2);
+
+	return fill * frag.Color + outline * frag.OutlineColor + borderFac;
 }
