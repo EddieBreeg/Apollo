@@ -9,7 +9,7 @@
  * \namespace json
  * Contains all json-related code for converting objects to/from json
  */
-namespace brk::json {
+namespace apollo::json {
 	/**
 	 * Represents a JSON structure field
 	 */
@@ -74,4 +74,4 @@ namespace brk::json {
 		{ Converter<T>::FromJson(a, j1) }->std::convertible_to<bool>;
 		{ Converter<T>::ToJson(b, j2) };
 	};
-} // namespace brk::json
+} // namespace apollo::json

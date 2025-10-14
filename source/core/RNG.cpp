@@ -15,19 +15,19 @@ namespace {
 
 } // namespace
 
-brk::RNG::RNG()
+apollo::RNG::RNG()
 {
 	std::random_device rd;
 	uint64 s = (uint64{ rd() } << 32) | rd();
 	Seed(s);
 }
 
-brk::RNG::RNG(const uint64 seed)
+apollo::RNG::RNG(const uint64 seed)
 {
 	Seed(seed);
 }
 
-void brk::RNG::Seed(uint64 s)
+void apollo::RNG::Seed(uint64 s)
 {
 	m_State[0] = splitmix64(s);
 	m_State[1] = splitmix64(s);
@@ -35,7 +35,7 @@ void brk::RNG::Seed(uint64 s)
 	m_State[3] = splitmix64(s);
 }
 
-uint64 brk::RNG::operator()(void)
+uint64 apollo::RNG::operator()(void)
 {
 	const uint64 result = rotl(m_State[1] * 5, 7) * 9;
 

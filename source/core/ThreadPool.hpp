@@ -11,7 +11,7 @@
 #include <thread>
 #include <vector>
 
-namespace brk::mt {
+namespace apollo::mt {
 	class ThreadPool
 	{
 	public:
@@ -178,4 +178,4 @@ namespace brk::mt {
 		return future;
 	}
 
-} // namespace brk::mt
+} // namespace apollo::mt

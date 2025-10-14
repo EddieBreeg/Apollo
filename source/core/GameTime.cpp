@@ -1,6 +1,6 @@
 #include "GameTime.hpp"
 
-namespace brk {
+namespace apollo {
 	GameTime::GameTime()
 		: m_StartTime(ClockType::now())
 		, m_LastUpdate(m_StartTime)
@@ -20,4 +20,4 @@ namespace brk {
 		m_Delta = Duration{};
 		m_UpdateCount = 0;
 	}
-} // namespace brk
+} // namespace apollo

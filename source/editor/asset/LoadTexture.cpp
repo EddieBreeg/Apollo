@@ -8,7 +8,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace brk::editor {
+namespace apollo::editor {
 	EAssetLoadResult LoadTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
 	{
 		const auto pathStr = metadata.m_FilePath.string();
@@ -17,7 +17,7 @@ namespace brk::editor {
 		uint8* data = stbi_load(pathStr.c_str(), &width, &height, &numChannels, 0);
 		if (!data)
 		{
-			BRK_LOG_ERROR("Failed to load texture from {}: {}", pathStr, stbi_failure_reason());
+			APOLLO_LOG_ERROR("Failed to load texture from {}: {}", pathStr, stbi_failure_reason());
 			return EAssetLoadResult::Failure;
 		}
 
@@ -64,7 +64,7 @@ namespace brk::editor {
 		SDL_GPUTransferBuffer* transferBuffer = SDL_CreateGPUTransferBuffer(
 			device.GetHandle(),
 			&transferBufferInfo);
-		BRK_ASSERT(transferBuffer, "Failed to create transfer buffer: {}", SDL_GetError());
+		APOLLO_ASSERT(transferBuffer, "Failed to create transfer buffer: {}", SDL_GetError());
 		void* bufMem = SDL_MapGPUTransferBuffer(device.GetHandle(), transferBuffer, false);
 
 		if (numChannels != 3)
@@ -113,4 +113,4 @@ namespace brk::editor {
 
 		return EAssetLoadResult::Success;
 	}
-} // namespace brk::editor
+} // namespace apollo::editor

@@ -4,11 +4,11 @@
 #include <nlohmann/json.hpp>
 
 namespace {
-	thread_local brk::RNG g_Generator;
+	thread_local apollo::RNG g_Generator;
 }
 
-namespace brk {
-	brk::ULID brk::ULID::Generate()
+namespace apollo {
+	apollo::ULID apollo::ULID::Generate()
 	{
 		std::timespec ts;
 		std::timespec_get(&ts, TIME_UTC);
@@ -40,4 +40,4 @@ namespace brk {
 		ToChars(buf);
 		out_j = std::string_view{ buf, 26 };
 	}
-} // namespace brk
+} // namespace apollo

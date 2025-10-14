@@ -1,5 +1,3 @@
 #include "Log.hpp"
 
-namespace brk
-{
-}
+namespace apollo {}

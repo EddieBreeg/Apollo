@@ -12,46 +12,46 @@
 #include <rendering/Renderer.hpp>
 
 namespace {
-#ifdef BRK_DEV
-	const char* GetStageName(brk::rdr::EShaderStage stage)
+#ifdef APOLLO_DEV
+	const char* GetStageName(apollo::rdr::EShaderStage stage)
 	{
 		switch (stage)
 		{
-		case brk::rdr::EShaderStage::Fragment: return "Fragment";
-		case brk::rdr::EShaderStage::Vertex: return "Vertex";
+		case apollo::rdr::EShaderStage::Fragment: return "Fragment";
+		case apollo::rdr::EShaderStage::Vertex: return "Vertex";
 		default: return "Invalid";
 		};
 	}
 #endif
 
-	brk::EAssetLoadResult ValidateShaderStates(
-		const brk::rdr::Shader* vShader,
-		const brk::rdr::Shader* fShader)
+	apollo::EAssetLoadResult ValidateShaderStates(
+		const apollo::rdr::Shader* vShader,
+		const apollo::rdr::Shader* fShader)
 	{
-		const brk::EAssetState s1 = vShader->GetState(), s2 = fShader->GetState();
-		if (s1 == brk::EAssetState::Invalid || s2 == brk::EAssetState::Invalid)
-			return brk::EAssetLoadResult::Failure;
+		const apollo::EAssetState s1 = vShader->GetState(), s2 = fShader->GetState();
+		if (s1 == apollo::EAssetState::Invalid || s2 == apollo::EAssetState::Invalid)
+			return apollo::EAssetLoadResult::Failure;
 
-		if (s1 == brk::EAssetState::Loaded && s2 == brk::EAssetState::Loaded)
-			return brk::EAssetLoadResult::Success;
+		if (s1 == apollo::EAssetState::Loaded && s2 == apollo::EAssetState::Loaded)
+			return apollo::EAssetLoadResult::Success;
 
-		return brk::EAssetLoadResult::TryAgain;
+		return apollo::EAssetLoadResult::TryAgain;
 	}
 
-	bool ValidateShaderStages(const brk::rdr::Shader* vShader, const brk::rdr::Shader* fShader)
+	bool ValidateShaderStages(const apollo::rdr::Shader* vShader, const apollo::rdr::Shader* fShader)
 	{
-		brk::rdr::EShaderStage stage = vShader->GetStage();
-		if (stage != brk::rdr::EShaderStage::Vertex)
+		apollo::rdr::EShaderStage stage = vShader->GetStage();
+		if (stage != apollo::rdr::EShaderStage::Vertex)
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Shader {} has stage {}, expected Vertex",
 				vShader->GetId(),
 				GetStageName(stage));
 			return false;
 		}
-		if ((stage = fShader->GetStage()) != brk::rdr::EShaderStage::Fragment)
+		if ((stage = fShader->GetStage()) != apollo::rdr::EShaderStage::Fragment)
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Shader {} has stage {}, expected Fragment",
 				fShader->GetId(),
 				GetStageName(stage));
@@ -60,25 +60,26 @@ namespace {
 		return true;
 	}
 
-	brk::EAssetLoadResult LoadMaterialJson(
-		const brk::AssetMetadata& metadata,
-		brk::AssetRef<brk::rdr::Shader>& out_vShader,
-		brk::AssetRef<brk::rdr::Shader>& out_fShader,
+	apollo::EAssetLoadResult LoadMaterialJson(
+		const apollo::AssetMetadata& metadata,
+		apollo::AssetRef<apollo::rdr::Shader>& out_vShader,
+		apollo::AssetRef<apollo::rdr::Shader>& out_fShader,
 		void*& out_handle)
 	{
-		using brk::json::Converter;
-		using namespace brk;
+		using apollo::json::Converter;
+		using namespace apollo;
 		auto* manager = AssetManager::GetInstance();
 		DEBUG_CHECK(manager)
 		{
-			BRK_LOG_CRITICAL("Tried to load material but asset manager has not been initialised");
+			APOLLO_LOG_CRITICAL(
+				"Tried to load material but asset manager has not been initialised");
 			return EAssetLoadResult::Failure;
 		}
 
 		std::ifstream file{ metadata.m_FilePath, std::ios::binary };
 		if (!file.is_open())
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to load material {}({}) from {}: {}",
 				metadata.m_Name,
 				metadata.m_Id,
@@ -89,7 +90,7 @@ namespace {
 		const nlohmann::json j = nlohmann::json::parse(file, nullptr, false);
 		if (j.is_discarded())
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to load material {}({}) from JSON",
 				metadata.m_Name,
 				metadata.m_Id);
@@ -103,19 +104,19 @@ namespace {
 
 		if (!json::Visit(out_vShader, j, "vertexShader"))
 		{
-			BRK_LOG_ERROR("Failed to get vertex shader");
+			APOLLO_LOG_ERROR("Failed to get vertex shader");
 			return EAssetLoadResult::Failure;
 		}
 		if (!json::Visit(out_fShader, j, "fragmentShader"))
 		{
-			BRK_LOG_ERROR("Failed to get fragment shader");
+			APOLLO_LOG_ERROR("Failed to get fragment shader");
 			return EAssetLoadResult::Failure;
 		}
 		const EAssetLoadResult result = ValidateShaderStates(out_vShader.Get(), out_fShader.Get());
 		switch (result)
 		{
-		case brk::EAssetLoadResult::Failure: return result;
-		case brk::EAssetLoadResult::TryAgain:
+		case apollo::EAssetLoadResult::Failure: return result;
+		case apollo::EAssetLoadResult::TryAgain:
 			// #hack: temporary store the graphics pipeline description, we'll need it later
 			out_handle = new SDL_GPUGraphicsPipelineCreateInfo{ desc };
 			return result;
@@ -132,14 +133,14 @@ namespace {
 		out_handle = SDL_CreateGPUGraphicsPipeline(device.GetHandle(), &desc);
 		if (!out_handle)
 		{
-			BRK_LOG_ERROR("Failed to create graphics pipeline: {}", SDL_GetError());
+			APOLLO_LOG_ERROR("Failed to create graphics pipeline: {}", SDL_GetError());
 			return EAssetLoadResult::Failure;
 		}
 		return EAssetLoadResult::Success;
 	}
 } // namespace
 
-namespace brk::editor {
+namespace apollo::editor {
 	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		auto& mat = dynamic_cast<rdr::Material&>(out_asset);
@@ -166,9 +167,9 @@ namespace brk::editor {
 		mat.m_Handle = SDL_CreateGPUGraphicsPipeline(device.GetHandle(), info.get());
 		if (!mat.m_Handle)
 		{
-			BRK_LOG_ERROR("Failed to create graphics pipeline: {}", SDL_GetError());
+			APOLLO_LOG_ERROR("Failed to create graphics pipeline: {}", SDL_GetError());
 			return EAssetLoadResult::Failure;
 		}
 		return EAssetLoadResult::Success;
 	}
-} // namespace brk::editor
+} // namespace apollo::editor

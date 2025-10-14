@@ -1,8 +1,8 @@
-#include <core/Enum.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <core/Enum.hpp>
 
 namespace {
-	enum class E: int32
+	enum class E : int32
 	{
 		Val0 = 0,
 		Val1 = 1,
@@ -10,7 +10,7 @@ namespace {
 		Val3 = 3,
 	};
 
-	using namespace brk::enum_operators;
+	using namespace apollo::enum_operators;
 
 	static_assert(E::Val0 < E::Val1);
 	static_assert(E::Val0 <= E::Val1);
@@ -43,4 +43,4 @@ namespace {
 		val |= E::Val2;
 		CHECK(val == E::Val3);
 	}
-}
+} // namespace

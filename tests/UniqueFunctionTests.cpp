@@ -3,7 +3,7 @@
 
 #define UF_TEST(name) TEST_CASE(name, "[poly][unique_function]")
 
-namespace brk::poly::ut {
+namespace apollo::poly::ut {
 	struct F1
 	{
 		static inline int32 s_DestructionCount = 0;
@@ -181,4 +181,4 @@ namespace brk::poly::ut {
 			}
 		}
 	}
-} // namespace brk::poly::ut
+} // namespace apollo::poly::ut

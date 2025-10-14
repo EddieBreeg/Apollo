@@ -2,10 +2,10 @@
 
 #include <PCH.hpp>
 
-namespace brk {
+namespace apollo {
 	/** A fast and reliable PRNG, using xoshiro256ss.
 	 */
-	class BRK_API RNG
+	class APOLLO_API RNG
 	{
 	public:
 		using result_type = uint64;
@@ -32,4 +32,4 @@ namespace brk {
 	private:
 		uint64 m_State[4];
 	};
-} // namespace brk
+} // namespace apollo

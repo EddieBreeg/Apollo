@@ -4,7 +4,7 @@ namespace {
 	uint32 g_SystemIndex = 0;
 }
 
-namespace brk::ecs {
+namespace apollo::ecs {
 	std::unique_ptr<Manager> Manager::s_Instance;
 
 	uint32 Manager::IndexGen::GetNext() noexcept
@@ -25,4 +25,4 @@ namespace brk::ecs {
 			s.Update(m_World, time);
 		}
 	}
-} // namespace brk::ecs
+} // namespace apollo::ecs

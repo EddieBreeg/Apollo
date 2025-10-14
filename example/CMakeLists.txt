@@ -1,6 +1,6 @@
 include(Shaders)
 
-option(BRK_EXAMPLE_MULTITHREADED "Whether to allow multiple threads to rasterize glyphs" ON)
+option(APOLLO_EXAMPLE_MULTITHREADED "Whether to allow multiple threads to rasterize glyphs" ON)
 
 AddShader(TextVertShader
 	vertex "assets/text.vert.hlsl" ".brk/_assetCache/text.vert"
@@ -18,8 +18,8 @@ OPTIONS PRIVATE ${COMPILER_ARGS}
 PROPERTIES ${COMMON_PROPERTIES}
 )
 
-if(${BRK_EXAMPLE_MULTITHREADED})
+if(${APOLLO_EXAMPLE_MULTITHREADED})
 	target_compile_definitions(${PROJECT_NAME}Example PRIVATE USE_MULTITHREADING=1)
-endif(${BRK_EXAMPLE_MULTITHREADED})
+endif(${APOLLO_EXAMPLE_MULTITHREADED})
 
 add_dependencies(${PROJECT_NAME}Example TextVertShader TextFragShader)

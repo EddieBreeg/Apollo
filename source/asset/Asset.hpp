@@ -6,7 +6,7 @@
 #include <core/RetainPtr.hpp>
 #include <core/ULID.hpp>
 
-namespace brk {
+namespace apollo {
 
 	struct AssetMetadata;
 
@@ -29,26 +29,26 @@ namespace brk {
 		Unloaded = BIT(3),
 	};
 
-	[[nodiscard]] BRK_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
+	[[nodiscard]] APOLLO_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
 
 	class IAsset
 	{
 	public:
-		BRK_API IAsset();
+		APOLLO_API IAsset();
 		IAsset(const ULID& id)
 			: m_Id{ id }
 		{}
 		virtual ~IAsset() = default;
 
-		[[nodiscard]] brk::ULID GetId() const noexcept { return m_Id; }
+		[[nodiscard]] apollo::ULID GetId() const noexcept { return m_Id; }
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
 		void SetState(EAssetState state) noexcept { m_State = state; }
 
-		[[nodiscard]] virtual BRK_API EAssetType GetType() const noexcept = 0;
-		[[nodiscard]] BRK_API std::string_view GetTypeName() const noexcept;
+		[[nodiscard]] virtual APOLLO_API EAssetType GetType() const noexcept = 0;
+		[[nodiscard]] APOLLO_API std::string_view GetTypeName() const noexcept;
 
 	protected:
-		brk::ULID m_Id;
+		apollo::ULID m_Id;
 		std::atomic<EAssetState> m_State = EAssetState::Invalid;
 		std::atomic_uint32_t m_RefCount = 0;
 
@@ -69,4 +69,4 @@ namespace brk {
 	{
 		return static_cast<IAsset*>(new A{ id });
 	};
-} // namespace brk
+} // namespace apollo

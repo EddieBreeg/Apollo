@@ -2,7 +2,7 @@
 #include <core/Utf8.hpp>
 #include <freetype/freetype.h>
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	FontAtlas::FontAtlas(
 		FT_FaceRec_* face,
 		uint32 size,
@@ -55,8 +55,11 @@ namespace brk::rdr::txt {
 		};
 	}
 
-	float2 FontAtlas::MeasureText(std::string_view txt, float size, float tracking, char32_t fallback)
-		const noexcept
+	float2 FontAtlas::MeasureText(
+		std::string_view txt,
+		float size,
+		float tracking,
+		char32_t fallback) const noexcept
 	{
 		RectF bounds{ 0, 0, 0, 0 };
 		const float scale = 1.0f / m_PixelSize;
@@ -110,4 +113,4 @@ namespace brk::rdr::txt {
 			bounds.y1 - bounds.y0,
 		};
 	}
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt

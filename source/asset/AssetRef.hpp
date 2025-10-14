@@ -4,10 +4,10 @@
 
 #include <core/RetainPtr.hpp>
 
-namespace brk {
+namespace apollo {
 	class IAsset;
 
-	struct BRK_API AssetRetainTraits
+	struct APOLLO_API AssetRetainTraits
 	{
 		static void Increment(IAsset* ptr) noexcept;
 		static void Decrement(IAsset* ptr) noexcept;
@@ -18,4 +18,4 @@ namespace brk {
 
 	template <class A>
 	using AssetRef = RetainPtr<A, AssetRetainTraits>;
-} // namespace brk
+} // namespace apollo

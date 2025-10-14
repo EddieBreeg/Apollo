@@ -5,17 +5,17 @@
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 
-namespace brk::editor {
+namespace apollo::editor {
 	Editor::Editor(std::span<const char*> args)
 	{
-		BRK_LOG_INFO("Initializing editor");
+		APOLLO_LOG_INFO("Initializing editor");
 		if (args.size() < 2)
 			return;
 
 		m_ProjectPath = args[1];
 		std::filesystem::current_path(m_ProjectPath);
 		auto* assetManager = AssetManager::GetInstance();
-		BRK_ASSERT(assetManager, "Asset manager isn't initialized");
+		APOLLO_ASSERT(assetManager, "Asset manager isn't initialized");
 		assetManager->ImportMetadataBank();
 	}
 
@@ -27,4 +27,4 @@ namespace brk::editor {
 	}
 
 	void Editor::Update(entt::registry&, const GameTime&) {}
-} // namespace brk::editor
+} // namespace apollo::editor

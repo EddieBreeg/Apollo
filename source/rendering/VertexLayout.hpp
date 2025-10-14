@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	struct VertexAttribute
 	{
 		enum EType : int8
@@ -132,4 +132,4 @@ namespace brk::rdr {
 	{
 		return VertexAttribute::UInt4;
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

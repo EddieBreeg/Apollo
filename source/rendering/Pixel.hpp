@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	template <class T, uint32 N>
 	struct Pixel;
 
@@ -103,4 +103,4 @@ namespace brk::rdr {
 		NFormats
 	};
 
-} // namespace brk::rdr
+} // namespace apollo::rdr

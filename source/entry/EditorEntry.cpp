@@ -5,41 +5,41 @@
 
 #include <filesystem>
 
-#include <editor/asset/AssetLoaders.hpp>
 #include <editor/Editor.hpp>
+#include <editor/asset/AssetLoaders.hpp>
 
 int main(int argc, const char** argv)
 {
-	brk::AssetManagerSettings assetManagerSettings{
+	apollo::AssetManagerSettings assetManagerSettings{
 		.m_AssetPath = argc > 1 ? std::filesystem::absolute(argv[1])
 								: std::filesystem::current_path(),
 	};
-	assetManagerSettings.m_MetadataImportFunc = &brk::editor::ImporteAssetMetadata;
+	assetManagerSettings.m_MetadataImportFunc = &apollo::editor::ImporteAssetMetadata;
 
-	assetManagerSettings.m_LoadTexture2d = brk::editor::LoadTexture2d;
-	assetManagerSettings.m_LoadShader = brk::editor::LoadShader;
-	assetManagerSettings.m_LoadMaterial = &brk::editor::LoadMaterial;
-	assetManagerSettings.m_LoadFont = &brk::editor::LoadFont;
+	assetManagerSettings.m_LoadTexture2d = apollo::editor::LoadTexture2d;
+	assetManagerSettings.m_LoadShader = apollo::editor::LoadShader;
+	assetManagerSettings.m_LoadMaterial = &apollo::editor::LoadMaterial;
+	assetManagerSettings.m_LoadFont = &apollo::editor::LoadFont;
 
-	brk::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
-	brk::GetEntryPoint(entry);
+	apollo::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
+	apollo::GetEntryPoint(entry);
 	entry.m_Args = std::span{ argv, size_t(argc) };
 
-	auto& app = brk::App::Init(entry);
+	auto& app = apollo::App::Init(entry);
 
-	brk::EAppResult res = app.GetResultCode();
+	apollo::EAppResult res = app.GetResultCode();
 
-	if (res != brk::EAppResult::Continue) [[unlikely]]
+	if (res != apollo::EAppResult::Continue) [[unlikely]]
 		goto APP_END;
 
-	brk::editor::Editor::Init(entry, app);
+	apollo::editor::Editor::Init(entry, app);
 
 	res = app.Run();
 
 APP_END:
 	switch (res)
 	{
-	case brk::EAppResult::Success: brk::App::Shutdown(); return 0;
-	default: brk::App::Shutdown(); return 1;
+	case apollo::EAppResult::Success: apollo::App::Shutdown(); return 0;
+	default: apollo::App::Shutdown(); return 1;
 	}
 }

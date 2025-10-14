@@ -4,8 +4,8 @@
 
 #include "Log.hpp"
 
-#ifdef BRK_DEV
-namespace brk {
+#ifdef APOLLO_DEV
+namespace apollo {
 	namespace _internal {
 		struct BreakException
 		{
@@ -28,21 +28,21 @@ namespace brk {
 			throw _internal::BreakException{ loc.filename, loc.funcname, loc.line };
 		}
 	} // namespace _internal
-} // namespace brk
+} // namespace apollo
 
-#define BRK_ASSERT(expr, ...)                                                                      \
-	brk::_internal::AssertImpl(                                                                    \
+#define APOLLO_ASSERT(expr, ...)                                                                   \
+	apollo::_internal::AssertImpl(                                                                 \
 		!!(expr),                                                                                  \
 		spdlog::source_loc{ __FILE__, __LINE__, __func__ },                                        \
 		__VA_ARGS__)
 
 #define DEBUG_BREAK()                                                                              \
-	throw brk::_internal::BreakException                                                           \
+	throw apollo::_internal::BreakException                                                        \
 	{                                                                                              \
 		__FILE__, __func__, __LINE__                                                               \
 	}
 
 #else
-#define BRK_ASSERT(expr, ...) (void)(expr)
-#define DEBUG_BREAK()		 (void)0
+#define APOLLO_ASSERT(expr, ...) (void)(expr)
+#define DEBUG_BREAK()			 (void)0
 #endif

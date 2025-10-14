@@ -7,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace brk {
+namespace apollo {
 	template <class T, class Alloc = std::allocator<T>>
 	struct Queue
 	{
@@ -419,4 +419,4 @@ namespace brk {
 		return;
 	}
 
-} // namespace brk
+} // namespace apollo

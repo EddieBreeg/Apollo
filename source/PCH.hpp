@@ -1,6 +1,6 @@
 #pragma once
 
-#include <BreakoutRuntimeExport.h>
+#include <ApolloRuntimeExport.h>
 
 #include "core/Rectangle.hpp"
 #include <concepts>
@@ -35,7 +35,7 @@ extern "C" void* alloca(size_t);
 
 #define Alloca(Type, n) static_cast<Type*>(alloca((n) * sizeof(Type)))
 
-#ifdef BRK_DEV
+#ifdef APOLLO_DEV
 #define DEBUG_CHECK(expr) if (!(expr)) [[unlikely]]
 #else
 #define DEBUG_CHECK(expr)                                                                          \
@@ -49,6 +49,6 @@ extern "C" void* alloca(size_t);
 
 #define STATIC_ARRAY_SIZE(arr) std::extent_v<decltype(arr)>
 
-using RectF = brk::Rectangle<float>;
-using RectI32 = brk::Rectangle<int32>;
-using RectU32 = brk::Rectangle<uint32>;
+using RectF = apollo::Rectangle<float>;
+using RectI32 = apollo::Rectangle<int32>;
+using RectU32 = apollo::Rectangle<uint32>;

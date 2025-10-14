@@ -7,7 +7,7 @@
 #include <backends/imgui_impl_sdlgpu3.h>
 #include <imgui.h>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	std::unique_ptr<Renderer> Renderer::s_Instance;
 
 	Renderer::Renderer(EBackend backend, Window& window, bool gpuDebug, bool vSync)
@@ -23,7 +23,7 @@ namespace brk::rdr {
 
 		DEBUG_CHECK(m_Device.ClaimWindow(window))
 		{
-			BRK_LOG_CRITICAL("Failed to claim window for GPU device: {}", SDL_GetError());
+			APOLLO_LOG_CRITICAL("Failed to claim window for GPU device: {}", SDL_GetError());
 		}
 
 		SDL_SetGPUSwapchainParameters(
@@ -38,7 +38,7 @@ namespace brk::rdr {
 		m_MainCommandBuffer = SDL_AcquireGPUCommandBuffer(m_Device.GetHandle());
 		DEBUG_CHECK(m_MainCommandBuffer)
 		{
-			BRK_LOG_ERROR("Failed to acquire command buffer: {}", SDL_GetError());
+			APOLLO_LOG_ERROR("Failed to acquire command buffer: {}", SDL_GetError());
 			return;
 		}
 		if (!m_Window) [[unlikely]]
@@ -51,7 +51,7 @@ namespace brk::rdr {
 			nullptr,
 			nullptr))
 		{
-			BRK_LOG_ERROR("Failed to acquire swapchain texture: {}", SDL_GetError());
+			APOLLO_LOG_ERROR("Failed to acquire swapchain texture: {}", SDL_GetError());
 			return;
 		}
 	}
@@ -101,4 +101,4 @@ namespace brk::rdr {
 			m_MainCommandBuffer = nullptr;
 		}
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

@@ -7,7 +7,7 @@ namespace std::filesystem {
 	class path;
 }
 
-namespace brk {
+namespace apollo {
 	class IAsset;
 
 	struct AssetMetadata;
@@ -24,4 +24,4 @@ namespace brk {
 
 	using AssetImportFunc = EAssetLoadResult(IAsset& out_asset, const AssetMetadata& metadata);
 	using AssetConstructor = IAsset*(const ULID& id);
-} // namespace brk
+} // namespace apollo

@@ -2,7 +2,7 @@
 #include "Renderer.hpp"
 #include <SDL3/SDL_gpu.h>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	Material::~Material()
 	{
 		if (m_Handle)
@@ -12,4 +12,4 @@ namespace brk::rdr {
 				static_cast<SDL_GPUGraphicsPipeline*>(m_Handle));
 		}
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

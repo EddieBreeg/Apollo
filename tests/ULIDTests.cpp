@@ -9,12 +9,12 @@ namespace {
 	constexpr std::string_view g_InvalidStrId1{ "01HWPC5Y8GZZ3A6AQVX4PYRXH$" };
 	constexpr std::string_view g_InvalidStrId2{ "01HWPC5Y8GZZ3A6AQVX4" };
 
-	constexpr brk::ULID g_Id1{ 0x018f2cc2f910, 0xffc6, 0xa32afbe92dec762c };
+	constexpr apollo::ULID g_Id1{ 0x018f2cc2f910, 0xffc6, 0xa32afbe92dec762c };
 
-	static_assert(brk::json::JsonEnabledType<brk::ULID>);
+	static_assert(apollo::json::JsonEnabledType<apollo::ULID>);
 } // namespace
 
-namespace brk::ulid::ut {
+namespace apollo::ulid::ut {
 	ULID_TEST("Null ULID")
 	{
 		constexpr ULID id{ 0, 0, 0 };
@@ -24,13 +24,13 @@ namespace brk::ulid::ut {
 
 	ULID_TEST("Conversion from string")
 	{
-		constexpr ULID id = brk::ULID::FromString(g_StrId1);
+		constexpr ULID id = apollo::ULID::FromString(g_StrId1);
 		static_assert(id == g_Id1);
 	}
 
 	ULID_TEST("Conversion from malformed string")
 	{
-		constexpr ULID id = brk::ULID::FromString(g_InvalidStrId1);
+		constexpr ULID id = apollo::ULID::FromString(g_InvalidStrId1);
 		static_assert(!id);
 	}
 
@@ -82,6 +82,6 @@ namespace brk::ulid::ut {
 		CHECK_FALSE(id.FromJson(j));
 		CHECK_FALSE(id);
 	}
-} // namespace brk::ulid::ut
+} // namespace apollo::ulid::ut
 
 #undef ULID_TEST

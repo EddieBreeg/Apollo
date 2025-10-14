@@ -3,9 +3,9 @@
 #include <PCH.hpp>
 #include <memory>
 
-namespace brk {
+namespace apollo {
 	/**
-	* Singleton class helper. T must declare a static s_Instance of type std::unique_ptr<T>
+	 * Singleton class helper. T must declare a static s_Instance of type std::unique_ptr<T>
 	 */
 	template <class T>
 	class Singleton
@@ -30,4 +30,4 @@ namespace brk {
 		Singleton(Singleton&&) = delete;
 		~Singleton() = default;
 	};
-} // namespace brk
+} // namespace apollo

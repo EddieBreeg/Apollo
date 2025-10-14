@@ -3,7 +3,7 @@
 
 namespace {
 	uint32 g_IntIndex;
-	const brk::TypeInfo* g_IntInfo = &brk::TypeInfo::Get<int>();
+	const apollo::TypeInfo* g_IntInfo = &apollo::TypeInfo::Get<int>();
 
 	struct Gen
 	{
@@ -12,13 +12,13 @@ namespace {
 	};
 
 	template <class T>
-	using TypeIndexT = brk::TypeIndex<T, Gen>;
+	using TypeIndexT = apollo::TypeIndex<T, Gen>;
 } // namespace
 
 TEST_CASE("Sequential index", "[rtti]")
 {
-	const uint32 i0 = brk::TypeIndex<int>{};
-	const uint32 i1 = brk::TypeIndex<unsigned int>{};
+	const uint32 i0 = apollo::TypeIndex<int>{};
+	const uint32 i1 = apollo::TypeIndex<unsigned int>{};
 
 	CHECK(i1 == (i0 + 1));
 
@@ -40,6 +40,6 @@ TEST_CASE("Type info test", "[rtti]")
 
 TEST_CASE("Type info consistency", "[rtti]")
 {
-	const brk::TypeInfo& info = brk::TypeInfo::Get<int>();
+	const apollo::TypeInfo& info = apollo::TypeInfo::Get<int>();
 	CHECK(info == *g_IntInfo);
 }

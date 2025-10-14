@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	enum class EShaderStage : int8
 	{
 		Invalid = -1,
@@ -20,6 +20,6 @@ namespace brk::rdr {
 		const char* m_EntryPoint = "main";
 		EShaderStage m_Stage = EShaderStage::Invalid;
 
-		[[nodiscard]] BRK_API static ShaderInfo GetFromByteCode(const void* code, size_t len);
+		[[nodiscard]] APOLLO_API static ShaderInfo GetFromByteCode(const void* code, size_t len);
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

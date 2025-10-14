@@ -4,11 +4,11 @@
 #include <core/TypeInfo.hpp>
 #include <entt/entity/fwd.hpp>
 
-namespace brk {
+namespace apollo {
 	class GameTime;
 }
 
-namespace brk::ecs {
+namespace apollo::ecs {
 	template <class S>
 	concept System = requires(S & instance, entt::registry& world, const GameTime& time)
 	{
@@ -23,7 +23,7 @@ namespace brk::ecs {
 		};
 	} // namespace _internal
 
-	class BRK_API SystemInstance
+	class APOLLO_API SystemInstance
 	{
 		using UpdateFunc = void(void*, entt::registry&, const GameTime&);
 
@@ -108,4 +108,4 @@ namespace brk::ecs {
 		void* m_Ptr = nullptr;
 		VTable m_Impl;
 	};
-} // namespace brk::ecs
+} // namespace apollo::ecs

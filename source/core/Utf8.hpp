@@ -3,7 +3,7 @@
 #include <PCH.hpp>
 #include <string_view>
 
-namespace brk::utf8 {
+namespace apollo::utf8 {
 	static constexpr char32_t g_InvalidCodePoint = 0xffffffff;
 
 	[[nodiscard]] constexpr bool IsWhitespace(char32_t ch) noexcept
@@ -122,4 +122,4 @@ namespace brk::utf8 {
 
 		return state == s_Accept ? cp : g_InvalidCodePoint;
 	}
-} // namespace brk::utf8
+} // namespace apollo::utf8

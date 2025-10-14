@@ -2,10 +2,10 @@
 #include <core/Hash.hpp>
 #include <core/StringHash.hpp>
 
-namespace brk::hash::ut {
-	static_assert(brk::Hasher<brk::Hash<int>, int>);
-	static_assert(brk::Hashable<brk::StringHash>);
-	static_assert(brk::Hasher<brk::Hash<brk::StringHash>, brk::StringHash>);
+namespace apollo::hash::ut {
+	static_assert(apollo::Hasher<apollo::Hash<int>, int>);
+	static_assert(apollo::Hashable<apollo::StringHash>);
+	static_assert(apollo::Hasher<apollo::Hash<apollo::StringHash>, apollo::StringHash>);
 
 	template <std::integral Int>
 	consteval bool IntHashTest(Int x)
@@ -49,4 +49,4 @@ namespace brk::hash::ut {
 		constexpr Hash<int32> hasher;
 		static_assert(HashCombine(0, hasher, 1, 2, 3) == Combine(Combine(Combine(0, 1), 2), 3));
 	}
-} // namespace brk::hash::ut
+} // namespace apollo::hash::ut

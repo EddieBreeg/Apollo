@@ -4,7 +4,7 @@
 
 #include <string_view>
 
-namespace brk {
+namespace apollo {
 	template <class T>
 	struct Hash;
 
@@ -60,4 +60,4 @@ namespace brk {
 			return StringHash{ str };
 		}
 	} // namespace string_hash_literals
-} // namespace brk
+} // namespace apollo

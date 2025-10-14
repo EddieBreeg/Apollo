@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk {
+namespace apollo {
 	/**
 	 * Retain action: specifies the reference count should be increment when storing a
 	 * new pointer
@@ -246,11 +246,11 @@ namespace brk {
 	}
 
 	template <class T, RetainTraits<T> Traits>
-	inline RetainPtr<T, Traits>::CounterType brk::RetainPtr<T, Traits>::GetCount() const
+	inline RetainPtr<T, Traits>::CounterType apollo::RetainPtr<T, Traits>::GetCount() const
 	{
 		using TRes = decltype(Traits::GetCount(m_Ptr));
 		if (!m_Ptr)
 			return TRes{ 0 };
 		return Traits::GetCount(m_Ptr);
 	}
-} // namespace brk
+} // namespace apollo

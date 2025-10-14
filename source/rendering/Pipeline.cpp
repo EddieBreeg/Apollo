@@ -7,10 +7,10 @@
 #include <core/Window.hpp>
 
 namespace {
-	thread_local SDL_GPUColorTargetDescription g_ColorTargets[brk::rdr::MaxColorTargets];
+	thread_local SDL_GPUColorTargetDescription g_ColorTargets[apollo::rdr::MaxColorTargets];
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	NLOHMANN_JSON_SERIALIZE_ENUM(
 		EStandardVertexType,
 		{
@@ -18,7 +18,7 @@ namespace brk::rdr {
 			{ EStandardVertexType::Vertex2d, "vertex2d" },
 			{ EStandardVertexType::Vertex3d, "vertex3d" },
 		});
-} // namespace brk::rdr
+} // namespace apollo::rdr
 
 NLOHMANN_JSON_SERIALIZE_ENUM(
 	SDL_GPUPrimitiveType,
@@ -149,7 +149,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
 	});
 
 template <>
-struct brk::json::Converter<SDL_GPUVertexInputState>
+struct apollo::json::Converter<SDL_GPUVertexInputState>
 {
 	static bool FromJson(SDL_GPUVertexInputState& out_state, const nlohmann::json& json) noexcept
 	{
@@ -165,7 +165,7 @@ struct brk::json::Converter<SDL_GPUVertexInputState>
 };
 
 template <>
-struct brk::json::Converter<SDL_GPUColorTargetBlendState>
+struct apollo::json::Converter<SDL_GPUColorTargetBlendState>
 {
 	static bool FromJson(SDL_GPUColorTargetBlendState& out_state, const nlohmann::json& json) noexcept
 	{
@@ -215,7 +215,7 @@ struct brk::json::Converter<SDL_GPUColorTargetBlendState>
 };
 
 template <>
-struct brk::json::Converter<SDL_GPUColorTargetDescription>
+struct apollo::json::Converter<SDL_GPUColorTargetDescription>
 {
 	static bool FromJson(SDL_GPUColorTargetDescription& out_desc, const nlohmann::json& json) noexcept
 	{
@@ -253,7 +253,7 @@ struct brk::json::Converter<SDL_GPUColorTargetDescription>
 };
 
 template <>
-struct brk::json::Converter<SDL_GPURasterizerState>
+struct apollo::json::Converter<SDL_GPURasterizerState>
 {
 	static bool FromJson(SDL_GPURasterizerState& out_state, const nlohmann::json& json) noexcept
 	{
@@ -286,7 +286,7 @@ struct brk::json::Converter<SDL_GPURasterizerState>
 };
 
 template <>
-struct brk::json::Converter<SDL_GPUStencilOpState>
+struct apollo::json::Converter<SDL_GPUStencilOpState>
 {
 	static bool FromJson(SDL_GPUStencilOpState& out_state, const nlohmann::json& json) noexcept
 	{
@@ -306,7 +306,7 @@ struct brk::json::Converter<SDL_GPUStencilOpState>
 };
 
 template <>
-struct brk::json::Converter<SDL_GPUDepthStencilState>
+struct apollo::json::Converter<SDL_GPUDepthStencilState>
 {
 	static bool FromJson(SDL_GPUDepthStencilState& out_state, const nlohmann::json& json) noexcept
 	{
@@ -344,7 +344,7 @@ struct brk::json::Converter<SDL_GPUDepthStencilState>
 	}
 };
 
-namespace brk::json {
+namespace apollo::json {
 	bool Converter<SDL_GPUGraphicsPipelineCreateInfo>::FromJson(
 		SDL_GPUGraphicsPipelineCreateInfo& out_info,
 		const nlohmann::json& json) noexcept
@@ -353,7 +353,7 @@ namespace brk::json {
 
 		if (!Visit(out_info.vertex_input_state, json, "input", true))
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid input state");
 			return false;
 		}
@@ -361,14 +361,14 @@ namespace brk::json {
 		if (!Visit(out_info.primitive_type, json, "primitiveType", true) ||
 			out_info.primitive_type == (SDL_GPUPrimitiveType)-1)
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid primitive type");
 			return false;
 		}
 
 		if (!Visit(out_info.rasterizer_state, json, "rasterizer", true))
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid rasterizer "
 				"description");
 			return false;
@@ -376,7 +376,7 @@ namespace brk::json {
 		if (!Visit(out_info.multisample_state.sample_count, json, "sampleCount", true) ||
 			out_info.multisample_state.sample_count == (SDL_GPUSampleCount)-1)
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid sample "
 				"count");
 
@@ -384,7 +384,7 @@ namespace brk::json {
 		}
 		if (!Visit(out_info.depth_stencil_state, json, "depthStencil", true))
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid depth/stencil "
 				"description");
 
@@ -397,7 +397,7 @@ namespace brk::json {
 				"hasDepthStencilTarget",
 				true))
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid value for "
 				"'hasDepthStencilTarget'");
 
@@ -414,7 +414,7 @@ namespace brk::json {
 				out_info.target_info.depth_stencil_format < SDL_GPU_TEXTUREFORMAT_D16_UNORM ||
 				out_info.target_info.depth_stencil_format > SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT)
 			{
-				BRK_LOG_ERROR(
+				APOLLO_LOG_ERROR(
 					"Failed to parse graphics pipeline description from JSON: missing/invalid "
 					"depth/stencil format");
 				return false;
@@ -447,14 +447,14 @@ namespace brk::json {
 		}
 		if (!it->is_array())
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: 'colorTargets' is not an "
 				"array");
 			return false;
 		}
 		if (it->size() > rdr::MaxColorTargets)
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: too many color targets "
 				"(maximum is {})",
 				rdr::MaxColorTargets);
@@ -468,7 +468,7 @@ namespace brk::json {
 					g_ColorTargets[targetIndex],
 					targetJson))
 			{
-				BRK_LOG_ERROR(
+				APOLLO_LOG_ERROR(
 					"Failed to parse graphics pipeline description from JSON: colorTargets[{}] "
 					"is not a valid color target description",
 					targetIndex);
@@ -480,4 +480,4 @@ namespace brk::json {
 
 		return true;
 	}
-} // namespace brk::json
+} // namespace apollo::json

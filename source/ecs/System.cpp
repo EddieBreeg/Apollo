@@ -1,6 +1,6 @@
 #include "System.hpp"
 
-namespace brk::ecs {
+namespace apollo::ecs {
 	SystemInstance::SystemInstance(const VTable& impl, void* ptr)
 		: m_Ptr(ptr)
 		, m_Impl(impl)
@@ -46,4 +46,4 @@ namespace brk::ecs {
 		if (m_Ptr && m_Impl.m_PostInit)
 			m_Impl.m_PostInit(m_Ptr);
 	}
-} // namespace brk::ecs
+} // namespace apollo::ecs

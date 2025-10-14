@@ -14,11 +14,11 @@ struct SDL_GPUGraphicsPipeline;
 struct SDL_GPURenderPass;
 struct SDL_GPUSampler;
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	class GPUDevice;
 }
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	class Renderer2d
 	{
 	public:
@@ -29,7 +29,7 @@ namespace brk::rdr::txt {
 		};
 
 		Renderer2d() = default;
-		BRK_API void Init(
+		APOLLO_API void Init(
 			const rdr::GPUDevice& device,
 			AssetRef<Material> material,
 			uint32 batchSize);
@@ -49,17 +49,17 @@ namespace brk::rdr::txt {
 			m_Dirty = false;
 		}
 
-		BRK_API void StartFrame(SDL_GPUCommandBuffer* cmdBuffer);
-		BRK_API void AddText(
+		APOLLO_API void StartFrame(SDL_GPUCommandBuffer* cmdBuffer);
+		APOLLO_API void AddText(
 			std::string_view str,
 			float2 pos,
 			EAnchorPoint anchor = EAnchorPoint::Center);
 
 		// Uploads data to the GPU if necessary
-		BRK_API void StartRender();
-		BRK_API void Render(SDL_GPURenderPass* renderPass);
+		APOLLO_API void StartRender();
+		APOLLO_API void Render(SDL_GPURenderPass* renderPass);
 
-		BRK_API ~Renderer2d();
+		APOLLO_API ~Renderer2d();
 
 	private:
 		void Upload();
@@ -85,4 +85,4 @@ namespace brk::rdr::txt {
 		const GPUDevice* m_Device = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 	};
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt

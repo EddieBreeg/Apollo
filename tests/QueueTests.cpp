@@ -3,7 +3,7 @@
 
 #define QUEUE_TEST_CASE(name) TEST_CASE(name, "[queue][containers]")
 
-namespace brk::containers::ut {
+namespace apollo::containers::ut {
 	QUEUE_TEST_CASE("Empty Queue")
 	{
 		const Queue<int> q;
@@ -204,6 +204,6 @@ namespace brk::containers::ut {
 		CHECK(q1.GetFront() == 2);
 		CHECK(q2.GetFront() == 1);
 	}
-} // namespace brk::containers::ut
+} // namespace apollo::containers::ut
 
 #undef QUEUE_TEST_CASE

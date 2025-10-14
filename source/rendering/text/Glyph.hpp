@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	struct GlyphRange
 	{
 		char32_t m_First = ' ';
@@ -23,4 +23,4 @@ namespace brk::rdr::txt {
 		float2 m_Offset;
 		RectU32 m_Uv;
 	};
-}
+} // namespace apollo::rdr::txt

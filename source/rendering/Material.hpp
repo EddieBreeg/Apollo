@@ -10,16 +10,16 @@
 struct SDL_GPUGraphicsPipeline;
 struct SDL_GPUGraphicsPipelineCreateInfo;
 
-namespace brk {
+namespace apollo {
 	struct AssetMetadata;
 	enum class EAssetLoadResult : int8;
-} // namespace brk
+} // namespace apollo
 
-namespace brk::editor {
+namespace apollo::editor {
 	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata);
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	class Material : public IAsset, public _internal::HandleWrapper<void*>
 	{
 	public:
@@ -31,7 +31,7 @@ namespace brk::rdr {
 			, m_VertShader(std::move(other.m_VertShader))
 			, m_FragShader(std::move(other.m_FragShader))
 		{}
-		BRK_API ~Material();
+		APOLLO_API ~Material();
 
 		void Swap(Material& other) noexcept
 		{
@@ -63,4 +63,4 @@ namespace brk::rdr {
 		AssetRef<Shader> m_VertShader;
 		AssetRef<Shader> m_FragShader;
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

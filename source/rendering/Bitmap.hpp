@@ -4,7 +4,7 @@
 
 #include "Pixel.hpp"
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	/**
 	 * A utility class to represent a view over bitmap data. Useful for bitmap operations such as
 	 * copying, especially when dealing with subregions
@@ -147,4 +147,4 @@ namespace brk::rdr {
 			}
 		}
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

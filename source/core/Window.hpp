@@ -5,7 +5,7 @@
 struct SDL_Window;
 union SDL_Event;
 
-namespace brk {
+namespace apollo {
 	struct WindowSettings
 	{
 		const char* m_Title = "";
@@ -15,7 +15,7 @@ namespace brk {
 		bool m_Hidden = false;
 	};
 
-	class BRK_API Window
+	class APOLLO_API Window
 	{
 	public:
 		Window() = default;
@@ -46,4 +46,4 @@ namespace brk {
 	private:
 		SDL_Window* m_Handle = nullptr;
 	};
-} // namespace brk
+} // namespace apollo

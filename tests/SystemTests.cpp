@@ -8,18 +8,18 @@ namespace {
 	{
 		int32 value = 0;
 
-		void Update(entt::registry&, const brk::GameTime&) { ++value; }
+		void Update(entt::registry&, const apollo::GameTime&) { ++value; }
 	};
 
 	struct S2
 	{
 		uint32& m_OnDelete;
 		~S2() { ++m_OnDelete; }
-		void Update(entt::registry&, const brk::GameTime&) {}
+		void Update(entt::registry&, const apollo::GameTime&) {}
 	};
 } // namespace
 
-namespace brk::ecs::ut {
+namespace apollo::ecs::ut {
 	TEST_CASE("Create system instance", "[ecs]")
 	{
 		SystemInstance system = SystemInstance::Create<S1>();
@@ -32,7 +32,7 @@ namespace brk::ecs::ut {
 		REQUIRE(system.GetAs<const S1>()->value == 0);
 
 		entt::registry world;
-		brk::GameTime time;
+		apollo::GameTime time;
 		system.Update(world, time);
 		CHECK(system.GetAs<const S1>()->value == 1);
 	}
@@ -67,4 +67,4 @@ namespace brk::ecs::ut {
 		}
 		CHECK(deleteCount == 2);
 	}
-} // namespace brk::ecs::ut
+} // namespace apollo::ecs::ut

@@ -8,7 +8,7 @@
 
 struct SDL_GPUShader;
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	class Shader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
 	{
 	public:
@@ -24,8 +24,8 @@ namespace brk::rdr {
 			other.m_Stage = EShaderStage::Invalid;
 		}
 
-		BRK_API Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen);
-		BRK_API Shader(const ShaderInfo& info, const void* code, size_t codeLen);
+		APOLLO_API Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen);
+		APOLLO_API Shader(const ShaderInfo& info, const void* code, size_t codeLen);
 
 		void Swap(Shader& other) noexcept
 		{
@@ -39,7 +39,7 @@ namespace brk::rdr {
 			return *this;
 		}
 
-		BRK_API ~Shader();
+		APOLLO_API ~Shader();
 
 		[[nodiscard]] EShaderStage GetStage() const noexcept { return m_Stage; }
 
@@ -48,4 +48,4 @@ namespace brk::rdr {
 	private:
 		EShaderStage m_Stage = EShaderStage::Invalid;
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

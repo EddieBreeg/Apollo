@@ -17,7 +17,7 @@ SOURCES
 	ULIDTests.cpp
 	UniqueFunctionTests.cpp
 	VertexTests.cpp
-LINK PRIVATE Breakout::Runtime Catch2::Catch2WithMain SDL3::SDL3
+LINK PRIVATE Apollo::Runtime Catch2::Catch2WithMain SDL3::SDL3
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 )

@@ -6,26 +6,25 @@
 
 struct SDL_GPUDevice;
 
-namespace brk
-{
+namespace apollo {
 	class Window;
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	enum class EBackend : int8
 	{
 		Invalid = -1,
 		Vulkan = 0,
 		D3D12,
 		NBackends,
-#ifdef BRK_VULKAN
+#ifdef APOLLO_VULKAN
 		Default = Vulkan
-#elif defined(BRK_D3D12)
+#elif defined(APOLLO_D3D12)
 		Default = D3D12
 #endif
 	};
 
-	class BRK_API GPUDevice : public _internal::HandleWrapper<SDL_GPUDevice*>
+	class APOLLO_API GPUDevice : public _internal::HandleWrapper<SDL_GPUDevice*>
 	{
 	public:
 		using BaseType::BaseType;
@@ -43,4 +42,4 @@ namespace brk::rdr {
 
 		~GPUDevice();
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

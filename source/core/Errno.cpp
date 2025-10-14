@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-namespace brk {
+namespace apollo {
 	const char* GetErrnoMessage(int32 code)
 	{
 #ifdef _WIN32
@@ -13,4 +13,4 @@ namespace brk {
 		return strerror(code);
 #endif
 	}
-} // namespace brk
+} // namespace apollo

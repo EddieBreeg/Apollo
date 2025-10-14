@@ -8,15 +8,15 @@
 
 struct SDL_GPUTexture;
 
-namespace brk {
+namespace apollo {
 	enum class EAssetLoadResult : int8;
 }
 
-namespace brk::editor {
+namespace apollo::editor {
 	EAssetLoadResult LoadTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 
 	enum class ETextureUsageFlags
 	{
@@ -47,7 +47,7 @@ namespace brk::rdr {
 			: BaseType::BaseType()
 		{}
 
-		BRK_API Texture2D(const ULID& id, const TextureSettings& settings);
+		APOLLO_API Texture2D(const ULID& id, const TextureSettings& settings);
 		Texture2D(const TextureSettings& settings)
 			: Texture2D(ULID::Generate(), settings)
 		{}
@@ -71,7 +71,7 @@ namespace brk::rdr {
 			std::swap(m_Settings, other.m_Settings);
 		}
 
-		BRK_API ~Texture2D();
+		APOLLO_API ~Texture2D();
 
 		[[nodiscard]] const TextureSettings& GetSettings() const noexcept { return m_Settings; }
 
@@ -79,6 +79,6 @@ namespace brk::rdr {
 
 	private:
 		TextureSettings m_Settings;
-		friend EAssetLoadResult brk::editor::LoadTexture2d(IAsset&, const AssetMetadata&);
+		friend EAssetLoadResult apollo::editor::LoadTexture2d(IAsset&, const AssetMetadata&);
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

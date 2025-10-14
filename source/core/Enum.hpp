@@ -6,7 +6,7 @@
 
 #include <PCH.hpp>
 
-namespace brk {
+namespace apollo {
 	/*
 	 * Converts an enum value to its underlying integer type
 	 */
@@ -152,4 +152,4 @@ namespace brk {
 		 */
 		constexpr void Flip(E mask) noexcept { m_Value ^= mask; }
 	};
-} // namespace brk
+} // namespace apollo

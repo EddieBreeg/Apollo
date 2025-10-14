@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk::meta {
+namespace apollo::meta {
 	/*
 	 * Helper class to provide information about struct members
 	 * \tparam FieldType: The type that will be stored in the list
@@ -28,4 +28,4 @@ namespace brk::meta {
 
 	template <class T, auto... M>
 	using BasicFieldList = FieldList<BasicField, M...>;
-} // namespace brk::meta
+} // namespace apollo::meta

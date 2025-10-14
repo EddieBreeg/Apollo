@@ -2,7 +2,7 @@
 
 #include "Util.hpp"
 
-namespace brk {
+namespace apollo {
 	template <class T>
 	struct Rectangle
 	{
@@ -38,4 +38,4 @@ namespace brk {
 	{
 		return a += b;
 	}
-}; // namespace brk
+}; // namespace apollo

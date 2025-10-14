@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL_video.h>
 
-namespace brk {
+namespace apollo {
 	Window::Window(const WindowSettings& settings)
 	{
 		int32 flags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
@@ -21,7 +21,7 @@ namespace brk {
 
 		DEBUG_CHECK(m_Handle)
 		{
-			BRK_LOG_CRITICAL("Failed to create window: {}", SDL_GetError());
+			APOLLO_LOG_CRITICAL("Failed to create window: {}", SDL_GetError());
 			return;
 		}
 	}
@@ -31,7 +31,7 @@ namespace brk {
 		glm::uvec2 size;
 		DEBUG_CHECK(m_Handle)
 		{
-			BRK_LOG_ERROR("Called GetSize on null window");
+			APOLLO_LOG_ERROR("Called GetSize on null window");
 			return size;
 		}
 		SDL_GetWindowSize(
@@ -46,4 +46,4 @@ namespace brk {
 		if (m_Handle)
 			SDL_DestroyWindow(m_Handle);
 	}
-} // namespace brk
+} // namespace apollo

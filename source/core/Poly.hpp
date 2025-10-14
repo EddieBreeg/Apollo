@@ -3,10 +3,10 @@
 #include <PCH.hpp>
 
 /**
- * \namespace brk::poly
+ * \namespace apollo::poly
  * Type-erasure support
  */
-namespace brk::poly {
+namespace apollo::poly {
 	/**
 	 * Type-erased destructor
 	 */
@@ -39,4 +39,4 @@ namespace brk::poly {
 	{
 		return (*static_cast<F*>(ptr))(std::forward<Args>(args)...);
 	}
-} // namespace brk::poly
+} // namespace apollo::poly

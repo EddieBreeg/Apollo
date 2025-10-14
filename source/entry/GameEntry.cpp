@@ -7,30 +7,30 @@
 
 int main(int argc, const char** argv)
 {
-	brk::AssetManagerSettings assetManagerSettings{
+	apollo::AssetManagerSettings assetManagerSettings{
 		.m_AssetPath = std::filesystem::path(argv[0]).parent_path(),
 	};
 
-	brk::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
-	brk::GetEntryPoint(entry);
+	apollo::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
+	apollo::GetEntryPoint(entry);
 	entry.m_Args = std::span{ argv, size_t(argc) };
 
-	auto& app = brk::App::Init(entry);
+	auto& app = apollo::App::Init(entry);
 
-	brk::EAppResult res = app.GetResultCode();
+	apollo::EAppResult res = app.GetResultCode();
 
-	if (res != brk::EAppResult::Continue) [[unlikely]]
+	if (res != apollo::EAppResult::Continue) [[unlikely]]
 		goto APP_END;
 
 	// not implemented yet
-	// brk::AssetManager::GetInstance()->ImportMetadataBank();
+	// apollo::AssetManager::GetInstance()->ImportMetadataBank();
 
 	res = app.Run();
 
 APP_END:
 	switch (res)
 	{
-	case brk::EAppResult::Success: brk::App::Shutdown(); return 0;
-	default: brk::App::Shutdown(); return 1;
+	case apollo::EAppResult::Success: apollo::App::Shutdown(); return 0;
+	default: apollo::App::Shutdown(); return 1;
 	}
 }

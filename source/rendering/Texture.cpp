@@ -5,30 +5,30 @@
 #include <core/Log.hpp>
 
 namespace {
-	using namespace brk::enum_operators;
+	using namespace apollo::enum_operators;
 
 #define HAS_NO_BITS(flags, mask) (!((flags) & (mask)))
 #define HAS_ANY_BIT(flags, mask) (((flags) & (mask)) != static_cast<decltype(flags)>(0))
 
-	bool ValidateSettings(const brk::rdr::TextureSettings& settings)
+	bool ValidateSettings(const apollo::rdr::TextureSettings& settings)
 	{
 		if (!settings.m_Width)
 		{
-			BRK_LOG_ERROR("Invalid texture settings: width cannot be 0");
+			APOLLO_LOG_ERROR("Invalid texture settings: width cannot be 0");
 			return false;
 		}
 		if (!settings.m_Height)
 		{
-			BRK_LOG_ERROR("Invalid texture settings: height cannot be 0");
+			APOLLO_LOG_ERROR("Invalid texture settings: height cannot be 0");
 			return false;
 		}
-		using brk::rdr::EPixelFormat;
-		using brk::rdr::ETextureUsageFlags;
+		using apollo::rdr::EPixelFormat;
+		using apollo::rdr::ETextureUsageFlags;
 		constexpr ETextureUsageFlags allUsageFlags = ETextureUsageFlags(127);
 
 		if (HAS_NO_BITS(settings.m_Usage, allUsageFlags))
 		{
-			BRK_LOG_ERROR("Invalid texture settings: no usage flag provided");
+			APOLLO_LOG_ERROR("Invalid texture settings: no usage flag provided");
 			return false;
 		}
 		else if (
@@ -38,7 +38,7 @@ namespace {
 				ETextureUsageFlags::ComputeShaderRead | ETextureUsageFlags::GraphicsShaderRead |
 					ETextureUsageFlags::ComputeShaderReadWrite))
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Invalid texture settings: ETextureUsageFlags::Sampled cannot be used along with "
 				"other Read/Write flags");
 			return false;
@@ -47,7 +47,9 @@ namespace {
 		if (settings.m_Format <= EPixelFormat::Invalid ||
 			settings.m_Format >= EPixelFormat::NFormats)
 		{
-			BRK_LOG_ERROR("Invalid texture settings: invalid format {}", int32(settings.m_Format));
+			APOLLO_LOG_ERROR(
+				"Invalid texture settings: invalid format {}",
+				int32(settings.m_Format));
 			return false;
 		}
 		return true;
@@ -60,7 +62,7 @@ namespace {
 	};
 } // namespace
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	Texture2D::Texture2D(const ULID& id, const TextureSettings& settings)
 		: IAsset(id)
 		, m_Settings(settings)
@@ -83,7 +85,7 @@ namespace brk::rdr {
 		m_Handle = SDL_CreateGPUTexture(device, &info);
 		DEBUG_CHECK(m_Handle)
 		{
-			BRK_LOG_ERROR("Failed to create texture: {}", SDL_GetError());
+			APOLLO_LOG_ERROR("Failed to create texture: {}", SDL_GetError());
 		}
 	}
 
@@ -92,4 +94,4 @@ namespace brk::rdr {
 		if (m_Handle)
 			SDL_ReleaseGPUTexture(Renderer::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

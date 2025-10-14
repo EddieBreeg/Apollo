@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 #define JSON_TEST(name) TEST_CASE(name, "[json]")
-namespace brk::json::ut {
+namespace apollo::json::ut {
 	struct S1
 	{
 		int val1 = 0;
@@ -212,7 +212,7 @@ namespace brk::json::ut {
 			const nlohmann::json j{
 				{ "x0", 1 },
 				{ "x1", 2 },
-				{ "y0", 3 },				
+				{ "y0", 3 },
 			};
 			RectU32 r = { 0, 0, 0, 0 };
 			CHECK_FALSE(Converter<RectU32>::FromJson(r, j));
@@ -223,8 +223,8 @@ namespace brk::json::ut {
 	static_assert(std::is_convertible_v<glm::vec2, nlohmann::json>);
 	static_assert(std::is_convertible_v<glm::vec3, nlohmann::json>);
 	static_assert(std::is_convertible_v<glm::vec4, nlohmann::json>);
-	static_assert(std::is_convertible_v<brk::Rectangle<float>, nlohmann::json>);
-	static_assert(std::is_convertible_v<brk::Rectangle<uint32>, nlohmann::json>);
-} // namespace brk::json::ut
+	static_assert(std::is_convertible_v<apollo::Rectangle<float>, nlohmann::json>);
+	static_assert(std::is_convertible_v<apollo::Rectangle<uint32>, nlohmann::json>);
+} // namespace apollo::json::ut
 
 #undef JSON_TEST

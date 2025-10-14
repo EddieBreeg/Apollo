@@ -22,7 +22,7 @@ namespace {
 			if (m_Handle) [[likely]]
 				return m_Handle;
 			const FT_Error err = FT_Init_FreeType(&m_Handle);
-			BRK_ASSERT(err == FT_Err_Ok, "Failed to init Freetype: {}", FT_Error_String(err));
+			APOLLO_ASSERT(err == FT_Err_Ok, "Failed to init Freetype: {}", FT_Error_String(err));
 			return m_Handle;
 		}
 		~FreetypeContext()
@@ -38,8 +38,8 @@ namespace {
 	thread_local FreetypeContext g_Freetype;
 } // namespace
 
-namespace brk::json {
-	bool Visit(brk::rdr::txt::GlyphRange& out_range, const nlohmann::json& json, const char* key)
+namespace apollo::json {
+	bool Visit(apollo::rdr::txt::GlyphRange& out_range, const nlohmann::json& json, const char* key)
 	{
 		const auto node = json.find(key);
 		if (node == json.end())
@@ -61,25 +61,25 @@ namespace brk::json {
 				   Visit(out_glyph.m_Index, json, "index");
 		}
 	};
-} // namespace brk::json
+} // namespace apollo::json
 
 namespace {
 	bool LoadGlyphs(
 		const nlohmann::json& json,
-		const brk::rdr::txt::GlyphRange& range,
-		std::vector<brk::rdr::txt::Glyph>& out_glyphs,
+		const apollo::rdr::txt::GlyphRange& range,
+		std::vector<apollo::rdr::txt::Glyph>& out_glyphs,
 		std::vector<uint32>& out_indices)
 	{
 		const auto it = json.find("glyphs");
 		if (it == json.end() || !it->is_array())
 			return false;
 
-		using brk::rdr::txt::Glyph;
+		using apollo::rdr::txt::Glyph;
 
 		Glyph glyph;
 		for (const auto& j : *it)
 		{
-			if (!brk::json::Converter<Glyph>::FromJson(glyph, j))
+			if (!apollo::json::Converter<Glyph>::FromJson(glyph, j))
 				continue;
 
 			out_indices[range.GetIndex(glyph.m_Char)] = (uint32)out_glyphs.size();
@@ -89,7 +89,7 @@ namespace {
 	}
 } // namespace
 
-namespace brk::editor {
+namespace apollo::editor {
 	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		using namespace rdr::txt;
@@ -97,7 +97,7 @@ namespace brk::editor {
 		std::ifstream jsonFile{ metadata.m_FilePath, std::ios::binary };
 		if (!jsonFile.is_open())
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to open {}: {}",
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
@@ -106,18 +106,18 @@ namespace brk::editor {
 		const auto json = nlohmann::json::parse(jsonFile, nullptr, false);
 		if (json.is_discarded())
 		{
-			BRK_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
+			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
 			return EAssetLoadResult::Failure;
 		}
 
 		if (!json::Visit(atlas.m_Range, json, "range"))
 		{
-			BRK_LOG_ERROR("Failed to parse glyph range from JSON");
+			APOLLO_LOG_ERROR("Failed to parse glyph range from JSON");
 			return EAssetLoadResult::Failure;
 		}
 		if (atlas.m_Range.m_Last < atlas.m_Range.m_First)
 		{
-			BRK_LOG_WARN(
+			APOLLO_LOG_WARN(
 				"Glyph range has invalid bounds {}:{}",
 				uint32(atlas.m_Range.m_First),
 				uint32(atlas.m_Range.m_Last));
@@ -125,18 +125,18 @@ namespace brk::editor {
 		}
 
 		if (!json::Visit(atlas.m_PixelSize, json, "pixelSize", true))
-			BRK_LOG_WARN("Failed to parse pixel size from JSON");
+			APOLLO_LOG_WARN("Failed to parse pixel size from JSON");
 
 		std::string_view fontPath;
 		if (!json::Visit(fontPath, json, "fontFile"))
 		{
-			BRK_LOG_ERROR("Failed to get font file path from JSON");
+			APOLLO_LOG_ERROR("Failed to get font file path from JSON");
 			return EAssetLoadResult::Failure;
 		}
 		FT_Error err = FT_New_Face(g_Freetype, fontPath.data(), 0, &atlas.m_FaceHandle);
 		if (err)
 		{
-			BRK_LOG_ERROR("Failed to load font file {}: {}", fontPath, FT_Error_String(err));
+			APOLLO_LOG_ERROR("Failed to load font file {}: {}", fontPath, FT_Error_String(err));
 			return EAssetLoadResult::Failure;
 		}
 
@@ -189,7 +189,7 @@ namespace brk::editor {
 
 		SDL_GPUTransferBuffer* transferBuf = SDL_CreateGPUTransferBuffer(device, &tBufferInfo);
 		auto* buf = (rdr::RGBAPixel<uint8>*)SDL_MapGPUTransferBuffer(device, transferBuf, true);
-		BRK_ASSERT(buf, "Failed to map transfer buffer: {}", SDL_GetError());
+		APOLLO_ASSERT(buf, "Failed to map transfer buffer: {}", SDL_GetError());
 
 		auto& threadPool = App::GetInstance()->GetThreadPool();
 
@@ -216,4 +216,4 @@ namespace brk::editor {
 
 		return EAssetLoadResult::Success;
 	}
-} // namespace brk::editor
+} // namespace apollo::editor

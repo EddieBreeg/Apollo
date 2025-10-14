@@ -13,9 +13,9 @@ namespace {
 		SDL_GPU_VERTEXELEMENTFORMAT_UINT3,	SDL_GPU_VERTEXELEMENTFORMAT_UINT4,
 	};
 
-	static_assert(STATIC_ARRAY_SIZE(g_ElementFormats) == brk::rdr::VertexAttribute::NTypes);
+	static_assert(STATIC_ARRAY_SIZE(g_ElementFormats) == apollo::rdr::VertexAttribute::NTypes);
 
-	template <brk::rdr::StandardVertexType V>
+	template <apollo::rdr::StandardVertexType V>
 	consteval auto StandardAttr()
 	{
 		std::array<SDL_GPUVertexAttribute, V::Attributes.Size> arr = {};
@@ -32,31 +32,33 @@ namespace {
 		return arr;
 	}
 
-	constexpr auto g_Vertex2dAttributes = StandardAttr<brk::rdr::Vertex2d>();
-	constexpr auto g_Vertex3dAttributes = StandardAttr<brk::rdr::Vertex3d>();
+	constexpr auto g_Vertex2dAttributes = StandardAttr<apollo::rdr::Vertex2d>();
+	constexpr auto g_Vertex3dAttributes = StandardAttr<apollo::rdr::Vertex3d>();
 
 	constexpr std::span<const SDL_GPUVertexAttribute> g_StandardAttributes[] = {
 		{ g_Vertex2dAttributes },
 		{ g_Vertex3dAttributes },
 	};
 	static_assert(
-		STATIC_ARRAY_SIZE(g_StandardAttributes) == (uint32)brk::rdr::EStandardVertexType::NTypes);
+		STATIC_ARRAY_SIZE(g_StandardAttributes) ==
+		(uint32)apollo::rdr::EStandardVertexType::NTypes);
 
 	constexpr SDL_GPUVertexBufferDescription g_StandardBufferDesc[] = {
 		SDL_GPUVertexBufferDescription{
 			.slot = 0,
-			.pitch = sizeof(brk::rdr::Vertex2d),
+			.pitch = sizeof(apollo::rdr::Vertex2d),
 			.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
 		},
 		SDL_GPUVertexBufferDescription{
 			.slot = 0,
-			.pitch = sizeof(brk::rdr::Vertex3d),
+			.pitch = sizeof(apollo::rdr::Vertex3d),
 			.input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
 		}
 	};
 
 	static_assert(
-		STATIC_ARRAY_SIZE(g_StandardBufferDesc) == (uint32)brk::rdr::EStandardVertexType::NTypes);
+		STATIC_ARRAY_SIZE(g_StandardBufferDesc) ==
+		(uint32)apollo::rdr::EStandardVertexType::NTypes);
 
 	constexpr SDL_GPUVertexInputState g_StandardInputStates[] = {
 		SDL_GPUVertexInputState{
@@ -74,13 +76,14 @@ namespace {
 	};
 
 	static_assert(
-		STATIC_ARRAY_SIZE(g_StandardInputStates) == (uint32)brk::rdr::EStandardVertexType::NTypes);
+		STATIC_ARRAY_SIZE(g_StandardInputStates) ==
+		(uint32)apollo::rdr::EStandardVertexType::NTypes);
 } // namespace
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	std::span<const SDL_GPUVertexAttribute> GetStandardVertexAttributes(EStandardVertexType type)
 	{
-		BRK_ASSERT(
+		APOLLO_ASSERT(
 			type > EStandardVertexType::Invalid && type < EStandardVertexType::NTypes,
 			"Invalid standard vertex type {}",
 			int32(type));
@@ -89,11 +92,11 @@ namespace brk::rdr {
 
 	const SDL_GPUVertexInputState& GetStandardVertexInputState(EStandardVertexType type)
 	{
-		BRK_ASSERT(
+		APOLLO_ASSERT(
 			type > EStandardVertexType::Invalid && type < EStandardVertexType::NTypes,
 			"Invalid standard vertex type {}",
 			int32(type));
 
 		return g_StandardInputStates[int8(type)];
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

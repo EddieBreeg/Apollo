@@ -10,11 +10,11 @@
 struct SDL_GPUCommandBuffer;
 struct SDL_GPUCopyPass;
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	class GPUDevice;
 }
 
-namespace brk {
+namespace apollo {
 	class IAsset;
 
 	struct AssetLoadRequest
@@ -33,15 +33,15 @@ namespace brk {
 			: m_Device(device)
 		{}
 
-		BRK_API void AddRequest(
+		APOLLO_API void AddRequest(
 			AssetRef<IAsset> asset,
 			AssetImportFunc* importFunc,
 			const AssetMetadata& metadata);
 
-		BRK_API void ProcessRequests();
+		APOLLO_API void ProcessRequests();
 
-		static BRK_API SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
-		static BRK_API SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
+		static APOLLO_API SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
+		static APOLLO_API SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
 
 		template <class F>
 		void RegisterCallback(F&& cbk)
@@ -58,4 +58,4 @@ namespace brk {
 		Queue<AssetLoadRequest> m_Requests;
 		std::vector<UniqueFunction<void()>> m_LoadCallbacks;
 	};
-} // namespace brk
+} // namespace apollo

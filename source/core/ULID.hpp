@@ -6,12 +6,12 @@
 #include "JsonFwd.hpp"
 #include <string_view>
 
-namespace brk {
+namespace apollo {
 	/**
 	 * Unique lexographically sortable identifier. The spec for this format can
 	 * be found here: https://github.com/ulid/spec
 	 */
-	class BRK_API ULID
+	class APOLLO_API ULID
 	{
 	public:
 		/**
@@ -76,7 +76,7 @@ namespace brk {
 		}
 	};
 
-	inline constexpr brk::ULID::ULID(
+	inline constexpr apollo::ULID::ULID(
 		const uint64 timestamp,
 		const uint16 rand1,
 		const uint64 rand2) noexcept
@@ -85,7 +85,7 @@ namespace brk {
 	{}
 
 	template <uint32 N, uint32 Offset>
-	inline constexpr char* brk::ULID::ToChars(char (&out_buf)[N]) const noexcept
+	inline constexpr char* apollo::ULID::ToChars(char (&out_buf)[N]) const noexcept
 	{
 		static_assert(N >= (26 + Offset), "Buffer is too small");
 		constexpr char alphabet[] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -120,7 +120,7 @@ namespace brk {
 		return out_buf + 26;
 	}
 
-	inline constexpr brk::ULID brk::ULID::FromString(const std::string_view str) noexcept
+	inline constexpr apollo::ULID apollo::ULID::FromString(const std::string_view str) noexcept
 	{
 		if (str.length() < 26)
 			return {};
@@ -134,7 +134,7 @@ namespace brk {
 			255, 10,  11,  12,	13,	 14,  15,  16,	17,	 255, 18,  19,	255, 20,  21,  255,
 			22,	 23,  24,  25,	26,	 255, 27,  28,	29,	 30,  31,  255, 255, 255, 255, 255,
 		};
-		brk::ULID res;
+		apollo::ULID res;
 
 		uint8 n = 0;
 		for (uint8 i = 0; i < 13; ++i)
@@ -159,12 +159,12 @@ namespace brk {
 		return res;
 	}
 
-	inline constexpr bool brk::ULID::operator==(const ULID other) const noexcept
+	inline constexpr bool apollo::ULID::operator==(const ULID other) const noexcept
 	{
 		return m_Left == other.m_Left && m_Right == other.m_Right;
 	}
 
-	inline constexpr bool brk::ULID::operator!=(const ULID other) const noexcept
+	inline constexpr bool apollo::ULID::operator!=(const ULID other) const noexcept
 	{
 		return m_Left != other.m_Left || m_Right != other.m_Right;
 	}
@@ -176,4 +176,4 @@ namespace brk {
 		}
 	} // namespace ulid_literal
 	using namespace ulid_literal;
-} // namespace brk
+} // namespace apollo

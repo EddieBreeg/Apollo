@@ -11,7 +11,7 @@ namespace {
 	thread_local SDL_GPUCopyPass* g_CopyPass = nullptr;
 } // namespace
 
-namespace brk {
+namespace apollo {
 	EAssetLoadResult AssetLoadRequest::operator()()
 	{
 		DEBUG_CHECK(m_Asset && m_Import && m_Metadata)
@@ -57,7 +57,7 @@ namespace brk {
 				[[unlikely]]
 				continue;
 
-			BRK_LOG_TRACE(
+			APOLLO_LOG_TRACE(
 				"Loading asset {}({})",
 				request.m_Metadata->m_Name,
 				request.m_Metadata->m_Id);
@@ -65,19 +65,19 @@ namespace brk {
 
 			switch (result)
 			{
-			case brk::EAssetLoadResult::Success:
+			case apollo::EAssetLoadResult::Success:
 				request.m_Asset->SetState(EAssetState::Loaded);
-				BRK_LOG_TRACE(
+				APOLLO_LOG_TRACE(
 					"Asset {}({}) loaded successfully!",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
 				continue;
-			case brk::EAssetLoadResult::TryAgain:
+			case apollo::EAssetLoadResult::TryAgain:
 				m_Requests.AddEmplace(std::move(request));
 				continue;
 			default:
 				request.m_Asset->SetState(EAssetState::Invalid);
-				BRK_LOG_ERROR(
+				APOLLO_LOG_ERROR(
 					"Asset {}({}) failed to load",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
@@ -98,4 +98,4 @@ namespace brk {
 			cbk();
 		}
 	}
-} // namespace brk
+} // namespace apollo

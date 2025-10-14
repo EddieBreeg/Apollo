@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <rendering/Bitmap.hpp>
 
-namespace brk::rdr::bitmap_ut {
+namespace apollo::rdr::bitmap_ut {
 #define BITMAP_TEST(name) TEST_CASE(name, "[bitmap]")
 
 	using RGBA8Pixel = RGBAPixel<uint8>;
@@ -93,4 +93,4 @@ namespace brk::rdr::bitmap_ut {
 			}
 		}
 	}
-} // namespace brk::rdr::bitmap_ut
+} // namespace apollo::rdr::bitmap_ut

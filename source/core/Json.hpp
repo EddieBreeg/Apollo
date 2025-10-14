@@ -7,7 +7,7 @@
 #include <glm/detail/qualifier.hpp>
 #include <nlohmann/json.hpp>
 
-namespace brk::json {
+namespace apollo::json {
 	template <class T>
 	concept NativeJsonType = requires(T a, const T& b, nlohmann::json j)
 	{
@@ -92,7 +92,7 @@ namespace brk::json {
 			it->get_to(out_obj);
 			return true;
 		}
-		else if constexpr(std::is_same_v<T, bool>)
+		else if constexpr (std::is_same_v<T, bool>)
 		{
 			if (!it->is_boolean() && !it->is_number_integer())
 				return false;
@@ -287,20 +287,20 @@ namespace brk::json {
 			return isOptional;
 		return Converter<T>::FromJson(out_obj, *it);
 	}
-} // namespace brk::json
+} // namespace apollo::json
 
 namespace glm {
 	template <int L, class T>
 	void to_json(nlohmann::json& out_json, const vec<L, T>& v)
 	{
-		brk::json::Converter<vec<L, T>>::ToJson(v, out_json);
+		apollo::json::Converter<vec<L, T>>::ToJson(v, out_json);
 	}
 } // namespace glm
 
-namespace brk {
+namespace apollo {
 	template <class T>
 	void to_json(nlohmann::json& out_json, const Rectangle<T>& rect)
 	{
-		brk::json::Converter<Rectangle<T>>::ToJson(rect, out_json);
+		apollo::json::Converter<Rectangle<T>>::ToJson(rect, out_json);
 	}
-} // namespace brk
+} // namespace apollo

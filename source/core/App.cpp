@@ -42,7 +42,7 @@ namespace {
 	}
 } // namespace
 
-namespace brk {
+namespace apollo {
 	std::unique_ptr<App> App::s_Instance;
 
 	void RegisterCoreSystems(App& app, ecs::Manager& manager);
@@ -53,23 +53,23 @@ namespace brk {
 	{
 		DEBUG_CHECK(SDL_Init(SDL_INIT_VIDEO))
 		{
-			BRK_LOG_CRITICAL("Failed to init SDL: {}", SDL_GetError());
+			APOLLO_LOG_CRITICAL("Failed to init SDL: {}", SDL_GetError());
 			return;
 		}
 
 		spdlog::set_level(spdlog::level::trace);
-		BRK_LOG_INFO(
-			"Starting Breakout version {}.{}.{}",
-			BRK_VERSION_MAJOR,
-			BRK_VERSION_MINOR,
-			BRK_VERSION_PATCH);
+		APOLLO_LOG_INFO(
+			"Starting Apollo version {}.{}.{}",
+			APOLLO_VERSION_MAJOR,
+			APOLLO_VERSION_MINOR,
+			APOLLO_VERSION_PATCH);
 
 		WindowSettings winSettings{
 			.m_Title = entry.m_AppName,
 			.m_Width = entry.m_WindowWidth,
 			.m_Height = entry.m_WindowHeight,
 		};
-#ifdef BRK_DEV
+#ifdef APOLLO_DEV
 		winSettings.m_Resizeable = true;
 #endif
 
@@ -79,7 +79,7 @@ namespace brk {
 			return;
 		}
 
-#ifdef BRK_DEV
+#ifdef APOLLO_DEV
 		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, true);
 #else
 		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, false);
@@ -146,11 +146,11 @@ namespace brk {
 
 	App::~App()
 	{
-		BRK_LOG_INFO("Shutting down...");
+		APOLLO_LOG_INFO("Shutting down...");
 		ShutdownImGui();
 		ecs::Manager::Shutdown();
 		AssetManager::Shutdown();
 		rdr::Renderer::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}
-} // namespace brk
+} // namespace apollo

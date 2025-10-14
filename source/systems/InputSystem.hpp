@@ -3,13 +3,13 @@
 #include <PCH.hpp>
 #include <entt/entity/fwd.hpp>
 
-namespace brk {
+namespace apollo {
 	class GameTime;
 	class App;
-} // namespace brk
+} // namespace apollo
 
-namespace brk::inputs {
-	class BRK_API System
+namespace apollo::inputs {
+	class APOLLO_API System
 	{
 	public:
 		System(App& app);
@@ -20,4 +20,4 @@ namespace brk::inputs {
 	private:
 		App& m_App;
 	};
-} // namespace brk::inputs
+} // namespace apollo::inputs

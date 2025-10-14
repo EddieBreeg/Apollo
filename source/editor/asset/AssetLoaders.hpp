@@ -2,11 +2,11 @@
 
 #include <asset/AssetFunctions.hpp>
 
-namespace brk {
+namespace apollo {
 	struct AssetManagerSettings;
 }
 
-namespace brk::editor {
+namespace apollo::editor {
 	bool ImporteAssetMetadata(
 		const std::filesystem::path& assetRootPath,
 		ULIDMap<AssetMetadata>& out_metadata);
@@ -15,4 +15,4 @@ namespace brk::editor {
 	EAssetLoadResult LoadShader(IAsset& out_shader, const AssetMetadata& metadata);
 	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata);
 	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata);
-} // namespace brk::editor
+} // namespace apollo::editor

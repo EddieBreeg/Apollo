@@ -3,14 +3,14 @@
 #include <PCH.hpp>
 #include <chrono>
 
-namespace brk {
+namespace apollo {
 	/**
 	 * Time management class. Provides information about both frame-times and execution time
 	 */
 	class GameTime
 	{
 	public:
-		BRK_API GameTime();
+		APOLLO_API GameTime();
 		~GameTime() = default;
 
 		using ClockType = std::chrono::steady_clock;
@@ -20,11 +20,11 @@ namespace brk {
 		/**
 		 * Called at the end of a frame to compute the delta
 		 */
-		BRK_API void Update();
+		APOLLO_API void Update();
 		/**
 		 * Restarts the timer. After this call, GetElapsed() returns 0
 		 */
-		BRK_API void Reset();
+		APOLLO_API void Reset();
 
 		/**
 		 * Returns the delta between the two last updates. This corresponds to the duration of the
@@ -62,4 +62,4 @@ namespace brk {
 		Duration m_Delta;
 		uint64 m_UpdateCount = 0;
 	};
-} // namespace brk
+} // namespace apollo

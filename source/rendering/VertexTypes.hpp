@@ -4,7 +4,7 @@
 struct SDL_GPUVertexAttribute;
 struct SDL_GPUVertexInputState;
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	enum class EStandardVertexType : int8
 	{
 		Invalid = -1,
@@ -39,8 +39,8 @@ namespace brk::rdr {
 	concept StandardVertexType = VertexType<V> &&
 								 std::is_same_v<decltype(V::Type), const EStandardVertexType>;
 
-	BRK_API std::span<const SDL_GPUVertexAttribute> GetStandardVertexAttributes(
+	APOLLO_API std::span<const SDL_GPUVertexAttribute> GetStandardVertexAttributes(
 		EStandardVertexType type);
 
-	BRK_API const SDL_GPUVertexInputState& GetStandardVertexInputState(EStandardVertexType type);
-} // namespace brk::rdr
+	APOLLO_API const SDL_GPUVertexInputState& GetStandardVertexInputState(EStandardVertexType type);
+} // namespace apollo::rdr

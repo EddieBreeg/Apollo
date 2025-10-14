@@ -13,11 +13,11 @@
 #include <memory>
 #include <string>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	class GPUDevice;
 }
 
-namespace brk {
+namespace apollo {
 	struct AssetTypeInfo
 	{
 		AssetConstructor* m_Create = nullptr;
@@ -51,8 +51,8 @@ namespace brk {
 	class AssetManager : public Singleton<AssetManager>
 	{
 	public:
-		BRK_API ~AssetManager();
-		BRK_API bool ImportMetadataBank();
+		APOLLO_API ~AssetManager();
+		APOLLO_API bool ImportMetadataBank();
 
 		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type)
 		{
@@ -68,18 +68,18 @@ namespace brk {
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 
-		BRK_API void Update();
+		APOLLO_API void Update();
 		const std::filesystem::path& GetAssetPath() const noexcept { return m_AssetsPath; }
 
 		[[nodiscard]] AssetLoader& GetAssetLoader() noexcept { return m_Loader; }
 
 	private:
-		BRK_API AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
+		APOLLO_API AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
 		friend class Singleton<AssetManager>;
 		friend struct AssetRetainTraits;
 
-		BRK_API IAsset* GetAssetImpl(const ULID& id, EAssetType type);
-		BRK_API void RequestUnload(IAsset* res);
+		APOLLO_API IAsset* GetAssetImpl(const ULID& id, EAssetType type);
+		APOLLO_API void RequestUnload(IAsset* res);
 
 		ULIDMap<AssetMetadata> m_MetadataBank;
 		AssetBankImportFunc* m_ImportBank = nullptr;
@@ -90,14 +90,14 @@ namespace brk {
 		AssetLoader m_Loader;
 		Queue<IAsset*> m_UnloadQueue;
 
-		static BRK_API std::unique_ptr<AssetManager> s_Instance;
+		static APOLLO_API std::unique_ptr<AssetManager> s_Instance;
 		friend class Singleton<AssetManager>;
 	};
 
-} // namespace brk
+} // namespace apollo
 
-namespace brk::json {
-	BRK_API bool Visit(
+namespace apollo::json {
+	APOLLO_API bool Visit(
 		AssetRef<IAsset>& out_ref,
 		EAssetType type,
 		const nlohmann::json& json,
@@ -121,4 +121,4 @@ namespace brk::json {
 		out_ref = StaticPointerCast<A>(std::move(ref));
 		return true;
 	}
-} // namespace brk::json
+} // namespace apollo::json

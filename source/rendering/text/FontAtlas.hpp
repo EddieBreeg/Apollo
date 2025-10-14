@@ -14,31 +14,31 @@ namespace msdfgen {
 	class Shape;
 } // namespace msdfgen
 
-namespace brk::editor {
+namespace apollo::editor {
 	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata);
 }
 
-namespace brk::mt {
+namespace apollo::mt {
 	class ThreadPool;
 }
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	class AtlasGenerator
 	{
 	public:
-		BRK_API AtlasGenerator(
+		APOLLO_API AtlasGenerator(
 			FT_FaceRec_* face,
 			uint32 maxWidth = 1024,
 			uint32 resolution = 64,
 			double emPadding = 1.0 / 64);
 
-		BRK_API bool LoadGlyph(Glyph& inout_glyph, msdfgen::Shape& out_shape);
+		APOLLO_API bool LoadGlyph(Glyph& inout_glyph, msdfgen::Shape& out_shape);
 
 		/*
 		 * Loads a range of glyphs, decomposes their shapes, packs them and returns the total atlas
 		 * size
 		 */
-		BRK_API glm::uvec2 LoadGlyphRange(
+		APOLLO_API glm::uvec2 LoadGlyphRange(
 			GlyphRange range,
 			std::vector<Glyph>& out_glyphs,
 			std::vector<msdfgen::Shape>& out_shapes,
@@ -48,7 +48,7 @@ namespace brk::rdr::txt {
 		 * Generates MSDF data. This assumes the glyphs and shapes have been previously loaded using
 		 * LoadGlyphRange, and that the output bitmap is big enough
 		 */
-		BRK_API void Rasterize(
+		APOLLO_API void Rasterize(
 			double pxRange,
 			const std::vector<Glyph>& glyphs,
 			const std::vector<msdfgen::Shape>& shapes,
@@ -68,7 +68,7 @@ namespace brk::rdr::txt {
 	public:
 		using IAsset::IAsset;
 
-		BRK_API FontAtlas(
+		APOLLO_API FontAtlas(
 			FT_FaceRec_* faceHandle,
 			uint32 pixelSize,
 			GlyphRange range,
@@ -103,7 +103,7 @@ namespace brk::rdr::txt {
 			std::swap(m_PixelSize, other.m_PixelSize);
 		}
 
-		BRK_API ~FontAtlas();
+		APOLLO_API ~FontAtlas();
 
 		[[nodiscard]] const rdr::Texture2D& GetTexture() const noexcept { return m_Texture; }
 		[[nodiscard]] const Glyph* GetGlyph(char32_t ch, char32_t fallback = U' ') const noexcept
@@ -114,10 +114,10 @@ namespace brk::rdr::txt {
 		}
 		[[nodiscard]] uint32 GetPixelSize() const noexcept { return m_PixelSize; }
 
-		[[nodiscard]] BRK_API float2
+		[[nodiscard]] APOLLO_API float2
 		GetKerning(const Glyph& left, const Glyph& right) const noexcept;
 
-		[[nodiscard]] BRK_API float2 MeasureText(
+		[[nodiscard]] APOLLO_API float2 MeasureText(
 			std::string_view txt,
 			float emScale = 1.0f,
 			float tracking = 1.0f,
@@ -126,7 +126,7 @@ namespace brk::rdr::txt {
 		GET_ASSET_TYPE_IMPL(EAssetType::FontAtlas);
 
 	private:
-		BRK_API const Glyph* FindGlyph(char32_t ch) const noexcept;
+		APOLLO_API const Glyph* FindGlyph(char32_t ch) const noexcept;
 
 		FT_FaceRec_* m_FaceHandle = nullptr;
 		GlyphRange m_Range;
@@ -135,8 +135,8 @@ namespace brk::rdr::txt {
 		std::vector<uint32> m_Indices;
 		uint32 m_PixelSize = 64;
 
-		friend EAssetLoadResult brk::editor::LoadFont(
+		friend EAssetLoadResult apollo::editor::LoadFont(
 			IAsset& out_asset,
 			const AssetMetadata& metadata);
 	};
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt

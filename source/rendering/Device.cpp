@@ -12,10 +12,10 @@ namespace {
 	};
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	GPUDevice::GPUDevice(EBackend backend, bool debugMode)
 	{
-		BRK_ASSERT(
+		APOLLO_ASSERT(
 			(backend > EBackend::Invalid && backend < EBackend::NBackends),
 			"Invalid backend: {}",
 			ToUnderlying(backend));
@@ -25,14 +25,14 @@ namespace brk::rdr {
 			nullptr);
 		DEBUG_CHECK(m_Handle)
 		{
-			BRK_LOG_CRITICAL("Failed to create GPU device: {}", SDL_GetError());
+			APOLLO_LOG_CRITICAL("Failed to create GPU device: {}", SDL_GetError());
 			return;
 		}
 	}
 
 	GPUDevice::~GPUDevice()
 	{
-		BRK_LOG_TRACE("Cleaning up GPU device");
+		APOLLO_LOG_TRACE("Cleaning up GPU device");
 		if (m_Handle)
 			SDL_DestroyGPUDevice(m_Handle);
 	}
@@ -41,4 +41,4 @@ namespace brk::rdr {
 	{
 		return SDL_ClaimWindowForGPUDevice(m_Handle, win.GetHandle());
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

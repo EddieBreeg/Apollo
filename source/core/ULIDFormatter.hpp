@@ -4,9 +4,9 @@
 #include <spdlog/fmt/bundled/core.h>
 
 template <>
-struct fmt::formatter<brk::ULID> : public fmt::formatter<fmt::basic_string_view<char>>
+struct fmt::formatter<apollo::ULID> : public fmt::formatter<fmt::basic_string_view<char>>
 {
-	fmt::appender format(const brk::ULID id, format_context& ctx) const
+	fmt::appender format(const apollo::ULID id, format_context& ctx) const
 	{
 		using Base = fmt::formatter<fmt::basic_string_view<char>>;
 		char str[26];

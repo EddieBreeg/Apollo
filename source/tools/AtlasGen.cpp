@@ -39,7 +39,7 @@ namespace {
 			if ((bool)result.ec)
 				return false;
 		}
-		else if constexpr (std::is_same_v<T, brk::rdr::txt::GlyphRange>)
+		else if constexpr (std::is_same_v<T, apollo::rdr::txt::GlyphRange>)
 		{
 			if (inout_args.size() < 2)
 				return false;
@@ -68,7 +68,7 @@ namespace {
 		const char* m_InputPath;
 		std::filesystem::path m_BaseOutputPath = std::filesystem::current_path() / "out";
 		uint32 m_Resolution = 64;
-		brk::rdr::txt::GlyphRange m_Range;
+		apollo::rdr::txt::GlyphRange m_Range;
 		double m_Padding = 1.0 / 64;
 		bool m_HelpMessage = false;
 		bool m_PaddingSpecified = false;
@@ -173,8 +173,8 @@ sizes will depend on the glyphs themselves. The default is 64.
 	};
 } // namespace
 
-namespace brk::rdr::txt {
-	void to_json(nlohmann::json& out_json, const brk::rdr::txt::Glyph& glyph)
+namespace apollo::rdr::txt {
+	void to_json(nlohmann::json& out_json, const apollo::rdr::txt::Glyph& glyph)
 	{
 		out_json = {
 			{ "codepoint", uint32(glyph.m_Char) },
@@ -184,7 +184,7 @@ namespace brk::rdr::txt {
 			{ "uv", glyph.m_Uv },
 		};
 	}
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt
 
 int main(int argc, const char** argv)
 {
@@ -215,7 +215,7 @@ int main(int argc, const char** argv)
 	if (!atlasFile.is_open())
 	{
 		std::cout << "Failed to open " << atlasPath
-				  << "for writing: " << brk::GetErrnoMessage(errno) << '\n';
+				  << "for writing: " << apollo::GetErrnoMessage(errno) << '\n';
 		return 1;
 	}
 
@@ -237,20 +237,20 @@ int main(int argc, const char** argv)
 		return 1;
 	}
 
-	brk::mt::ThreadPool threadPool;
-	brk::rdr::txt::AtlasGenerator generator{
+	apollo::mt::ThreadPool threadPool;
+	apollo::rdr::txt::AtlasGenerator generator{
 		face,
 		settings.m_Resolution * 16,
 		settings.m_Resolution,
 		settings.m_Padding,
 	};
-	std::vector<brk::rdr::txt::Glyph> glyphs;
+	std::vector<apollo::rdr::txt::Glyph> glyphs;
 	std::vector<msdfgen::Shape> shapes;
 	std::vector<uint32> indices;
 	const glm::uvec2 atlasSize = generator.LoadGlyphRange(settings.m_Range, glyphs, shapes, indices);
-	using Pixel = brk::rdr::RGBAPixel<uint8>;
+	using Pixel = apollo::rdr::RGBAPixel<uint8>;
 	auto buffer = std::make_unique<Pixel[]>(atlasSize.x * atlasSize.y);
-	brk::rdr::BitmapView bitmapView{ buffer.get(), atlasSize.x, atlasSize.y };
+	apollo::rdr::BitmapView bitmapView{ buffer.get(), atlasSize.x, atlasSize.y };
 	generator.Rasterize(settings.m_PixelRange, glyphs, shapes, bitmapView, threadPool);
 
 	const std::string pngPath = settings.m_BaseOutputPath.string() + ".png";

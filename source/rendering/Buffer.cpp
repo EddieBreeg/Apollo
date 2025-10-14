@@ -3,12 +3,12 @@
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	Buffer::Buffer(EnumFlags<EBufferFlags> usage, uint32 size)
 		: m_Flags(usage)
 		, m_Size(size)
 	{
-		BRK_ASSERT(m_Flags.m_Value, "At least one buffer usage flag must be set");
+		APOLLO_ASSERT(m_Flags.m_Value, "At least one buffer usage flag must be set");
 
 		static constexpr EBufferFlags vertexIndexBits = EBufferFlags::Vertex | EBufferFlags::Index;
 		static constexpr EBufferFlags storageBits = EBufferFlags::GraphicsStorage |
@@ -16,18 +16,18 @@ namespace brk::rdr {
 													EBufferFlags::ComputeStorageWrite;
 		DEBUG_CHECK(!m_Flags.HasAll(vertexIndexBits))
 		{
-			BRK_LOG_ERROR("EBufferFlags::Vertex and EBufferFlags::Index are incompatible");
+			APOLLO_LOG_ERROR("EBufferFlags::Vertex and EBufferFlags::Index are incompatible");
 			m_Flags = EBufferFlags::None;
 			return;
 		}
 		DEBUG_CHECK(!(m_Flags.HasAny(storageBits) && m_Flags.HasAny(vertexIndexBits)))
 		{
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"EBufferFlags::Vertex/EBufferFlags::Index buffer flags are incompatible with "
 				"EBufferFlags::GraphicsStorage/EBufferFlags::ComputeStorage");
 		}
 
-		BRK_ASSERT(m_Size, "Buffer size may not be 0");
+		APOLLO_ASSERT(m_Size, "Buffer size may not be 0");
 
 		SDL_GPUBufferCreateInfo info{ .size = m_Size };
 		info.usage |= m_Flags.HasAny(EBufferFlags::Vertex) * SDL_GPU_BUFFERUSAGE_VERTEX;
@@ -49,7 +49,7 @@ namespace brk::rdr {
 
 	void Buffer::UploadData(SDL_GPUCopyPass* copyPass, const void* data, uint32 size, uint32 offset)
 	{
-		BRK_ASSERT(m_Handle, "Called UploadData on null buffer");
+		APOLLO_ASSERT(m_Handle, "Called UploadData on null buffer");
 
 		GPUDevice& device = Renderer::GetInstance()->GetDevice();
 		const SDL_GPUTransferBufferCreateInfo tBufferInfo{
@@ -59,7 +59,7 @@ namespace brk::rdr {
 		SDL_GPUTransferBuffer* transferBuffer = SDL_CreateGPUTransferBuffer(
 			device.GetHandle(),
 			&tBufferInfo);
-		BRK_ASSERT(transferBuffer, "Failed to create transfer buffer: {}", SDL_GetError());
+		APOLLO_ASSERT(transferBuffer, "Failed to create transfer buffer: {}", SDL_GetError());
 		void* dest = SDL_MapGPUTransferBuffer(device.GetHandle(), transferBuffer, false);
 		memcpy(dest, data, size);
 		SDL_UnmapGPUTransferBuffer(device.GetHandle(), transferBuffer);
@@ -73,4 +73,4 @@ namespace brk::rdr {
 		SDL_UploadToGPUBuffer(copyPass, &location, &destRegion, false);
 		SDL_ReleaseGPUTransferBuffer(device.GetHandle(), transferBuffer);
 	}
-} // namespace brk::rdr
+} // namespace apollo::rdr

@@ -10,28 +10,30 @@
 #include <rendering/text/FontAtlas.hpp>
 
 namespace {
-	void ProcessUnloadRequests(brk::Queue<brk::IAsset*> queue, brk::ULIDMap<brk::IAsset*> cache)
+	void ProcessUnloadRequests(
+		apollo::Queue<apollo::IAsset*> queue,
+		apollo::ULIDMap<apollo::IAsset*> cache)
 	{
 		while (queue.GetSize())
 		{
-			brk::IAsset* ptr = queue.PopAndGetFront();
-			if (ptr->GetState() != brk::EAssetState::Unloading)
+			apollo::IAsset* ptr = queue.PopAndGetFront();
+			if (ptr->GetState() != apollo::EAssetState::Unloading)
 				continue;
 
-			const brk::ULID& id = ptr->GetId();
+			const apollo::ULID& id = ptr->GetId();
 			DEBUG_CHECK(cache.erase(id))
 			{
-				BRK_LOG_WARN(
+				APOLLO_LOG_WARN(
 					"Asset {} was marked for unload but wasn't found in asset cache",
 					ptr->GetId());
 			}
-			BRK_LOG_TRACE("Unloading asset {}", id);
+			APOLLO_LOG_TRACE("Unloading asset {}", id);
 			delete ptr;
 		}
 	}
 } // namespace
 
-namespace brk {
+namespace apollo {
 	std::unique_ptr<AssetManager> AssetManager::s_Instance;
 
 	AssetManager::~AssetManager()
@@ -49,7 +51,7 @@ namespace brk {
 
 				const auto [id, asset] = *it;
 				it = m_Cache.erase(it);
-				BRK_LOG_TRACE("Unloading asset {}", id);
+				APOLLO_LOG_TRACE("Unloading asset {}", id);
 				delete asset;
 			}
 		}
@@ -71,25 +73,25 @@ namespace brk {
 	{
 		DEBUG_CHECK(m_ImportBank)
 		{
-			BRK_LOG_CRITICAL(
+			APOLLO_LOG_CRITICAL(
 				"Called ImportMetadataBank on asset manager but bank import function is nullptr");
 			return false;
 		}
 		DEBUG_CHECK(!m_AssetsPath.empty())
 		{
-			BRK_LOG_CRITICAL(
+			APOLLO_LOG_CRITICAL(
 				"Called ImportMetadataBank on asset manager but asset folder path is empty");
 			return false;
 		}
 
-		BRK_LOG_INFO("Loading project assets metadata from {}", m_AssetsPath.string());
+		APOLLO_LOG_INFO("Loading project assets metadata from {}", m_AssetsPath.string());
 		m_ImportBank(m_AssetsPath, m_MetadataBank);
 		return true;
 	}
 
 	IAsset* AssetManager::GetAssetImpl(const ULID& id, EAssetType type)
 	{
-		BRK_ASSERT(
+		APOLLO_ASSERT(
 			type < EAssetType::NTypes && type > EAssetType::Invalid,
 			"Invalid asset type {}",
 			int32(type));
@@ -100,7 +102,7 @@ namespace brk {
 				const EAssetType actualType = it->second->GetType();
 				DEBUG_CHECK(actualType == type)
 				{
-					BRK_LOG_ERROR(
+					APOLLO_LOG_ERROR(
 						"Asset {} has type {} instead of the expected {}",
 						id,
 						GetAssetTypeName(actualType),
@@ -115,13 +117,13 @@ namespace brk {
 
 		DEBUG_CHECK(info)
 		{
-			BRK_LOG_CRITICAL("Asset type {} is not implemented!", int32(type));
+			APOLLO_LOG_CRITICAL("Asset type {} is not implemented!", int32(type));
 			return nullptr;
 		}
 		const auto it = m_MetadataBank.find(id);
 		if (it == m_MetadataBank.end())
 		{
-			BRK_LOG_ERROR("No asset found for id {}", id);
+			APOLLO_LOG_ERROR("No asset found for id {}", id);
 			return nullptr;
 		}
 		auto ptr = info.m_Create(it->second.m_Id);
@@ -152,7 +154,7 @@ namespace brk {
 		bool isOptional)
 	{
 		auto* assetManager = AssetManager::GetInstance();
-		BRK_ASSERT(assetManager, "Asset manager has not been initialized");
+		APOLLO_ASSERT(assetManager, "Asset manager has not been initialized");
 		ULID id;
 		const auto it = json.find(key);
 
@@ -163,4 +165,4 @@ namespace brk {
 
 		return (out_ref = assetManager->GetAsset(id, type));
 	}
-} // namespace brk
+} // namespace apollo

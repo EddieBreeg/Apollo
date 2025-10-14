@@ -1,6 +1,6 @@
 #pragma once
 
-namespace brk {
+namespace apollo {
 	/*
 	 * Represents an object which doesn't have a "valid" value. Useful for resource handles
 	 */
@@ -15,4 +15,4 @@ namespace brk {
 
 	template <class T>
 	static constexpr T Unassigned = UnassignedT<T>::Value;
-} // namespace brk
+} // namespace apollo

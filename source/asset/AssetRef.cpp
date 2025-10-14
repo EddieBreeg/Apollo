@@ -2,7 +2,7 @@
 #include "Asset.hpp"
 #include "AssetManager.hpp"
 
-namespace brk {
+namespace apollo {
 	void AssetRetainTraits::Increment(IAsset* ptr) noexcept
 	{
 		if (ptr) [[likely]]
@@ -27,4 +27,4 @@ namespace brk {
 			return ptr->m_RefCount;
 		return 0;
 	}
-} // namespace brk
+} // namespace apollo

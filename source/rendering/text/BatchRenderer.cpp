@@ -5,7 +5,7 @@
 #include <core/Utf8.hpp>
 #include <rendering/Device.hpp>
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	Renderer2d::~Renderer2d()
 	{
 		if (m_Sampler) [[likely]]
@@ -19,7 +19,7 @@ namespace brk::rdr::txt {
 	{
 		DEBUG_CHECK(material->GetState() != EAssetState::Invalid)
 		{
-			BRK_LOG_ERROR("Invalid material passed to txt::Renderer2d::Init");
+			APOLLO_LOG_ERROR("Invalid material passed to txt::Renderer2d::Init");
 			return;
 		}
 		m_Material = std::move(material);
@@ -38,7 +38,7 @@ namespace brk::rdr::txt {
 			.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
 		};
 		m_Sampler = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
-		BRK_ASSERT(m_Sampler, "Failed to create sampler");
+		APOLLO_ASSERT(m_Sampler, "Failed to create sampler");
 	}
 
 	void Renderer2d::StartFrame(SDL_GPUCommandBuffer* cmdBuffer)
@@ -50,7 +50,7 @@ namespace brk::rdr::txt {
 	{
 		if (!m_Font || m_Font->GetState() != EAssetState::Loaded)
 		{
-			BRK_LOG_ERROR("Called AddText on text renderer, but font is not ready");
+			APOLLO_LOG_ERROR("Called AddText on text renderer, but font is not ready");
 			return;
 		}
 		m_Dirty = true;
@@ -179,4 +179,4 @@ namespace brk::rdr::txt {
 		}
 		m_Buffer.UploadData(m_CopyPass, m_Quads.data(), uint32(m_Quads.size() * sizeof(GlyphQuad)));
 	}
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt

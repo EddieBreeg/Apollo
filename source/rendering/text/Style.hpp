@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	struct TextStyle
 	{
 		float4 m_FgColor = { 1, 1, 1, 1 };
@@ -11,4 +11,4 @@ namespace brk::rdr::txt {
 		float m_OutlineThickness = 0.0f;
 		float m_Tracking = 1.0f; // Character spacing factor
 	};
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt

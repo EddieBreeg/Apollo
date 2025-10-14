@@ -8,7 +8,7 @@
 struct SDL_GPUBuffer;
 struct SDL_GPUCopyPass;
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	enum class EBufferFlags : int8
 	{
 		None = 0,
@@ -24,8 +24,8 @@ namespace brk::rdr {
 	{
 	public:
 		using BaseType::BaseType;
-		BRK_API Buffer(EnumFlags<EBufferFlags> usage, uint32 size);
-		BRK_API ~Buffer();
+		APOLLO_API Buffer(EnumFlags<EBufferFlags> usage, uint32 size);
+		APOLLO_API ~Buffer();
 		Buffer(Buffer&& other)
 			: BaseType(std::move(other))
 			, m_Flags(other.m_Flags)
@@ -35,7 +35,7 @@ namespace brk::rdr {
 			other.m_Size = 0;
 		}
 
-		BRK_API void UploadData(
+		APOLLO_API void UploadData(
 			SDL_GPUCopyPass* copyPass,
 			const void* data,
 			uint32 size,
@@ -60,4 +60,4 @@ namespace brk::rdr {
 		EnumFlags<EBufferFlags> m_Flags;
 		uint32 m_Size = 0;
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

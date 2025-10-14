@@ -10,36 +10,35 @@
 #include <entt/entity/registry.hpp>
 #include <vector>
 
-namespace brk
-{
+namespace apollo {
 	class GameTime;
 }
 
-namespace brk::ecs {
-	class  Manager : public Singleton<Manager>
+namespace apollo::ecs {
+	class Manager : public Singleton<Manager>
 	{
 		struct IndexGen
 		{
-			BRK_API static uint32 GetNext() noexcept;
+			APOLLO_API static uint32 GetNext() noexcept;
 		};
 		template <System S>
 		using SystemIndex = TypeIndex<S, IndexGen>;
 
 	public:
-		BRK_API ~Manager() = default;
+		APOLLO_API ~Manager() = default;
 
 		template <System S, class... T>
 		S& AddSystem(T&&... args)
 		{
-			BRK_ASSERT(
+			APOLLO_ASSERT(
 				GetSystemIndex<S>() == (uint32)m_Systems.size(),
 				"Trying to add ECS system twice");
 			return *m_Systems.emplace_back(SystemInstance::Create<S>(std::forward<T>(args)...))
 						.template GetAs<S>();
 		}
 
-		BRK_API void PostInit();
-		BRK_API void Update(const GameTime&);
+		APOLLO_API void PostInit();
+		APOLLO_API void Update(const GameTime&);
 
 	private:
 		template <System S>
@@ -51,9 +50,9 @@ namespace brk::ecs {
 
 		friend class Singleton<Manager>;
 		Manager() = default;
-		static BRK_API std::unique_ptr<Manager> s_Instance;
+		static APOLLO_API std::unique_ptr<Manager> s_Instance;
 
 		entt::registry m_World;
 		std::vector<SystemInstance> m_Systems;
 	};
-} // namespace brk::ecs
+} // namespace apollo::ecs

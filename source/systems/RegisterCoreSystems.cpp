@@ -2,10 +2,9 @@
 
 #include <ecs/Manager.hpp>
 
-namespace brk
-{
+namespace apollo {
 	void RegisterCoreSystems(App& app, ecs::Manager& manager)
 	{
 		manager.AddSystem<inputs::System>(app);
 	}
-}
+} // namespace apollo

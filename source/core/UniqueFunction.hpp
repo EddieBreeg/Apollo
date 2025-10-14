@@ -5,7 +5,7 @@
 #include "Poly.hpp"
 #include "StaticStorage.hpp"
 
-namespace brk {
+namespace apollo {
 	template <class F>
 	class UniqueFunction;
 
@@ -142,4 +142,4 @@ namespace brk {
 		m_Storage.Swap(other.m_Storage);
 		std::swap(m_VTable, other.m_VTable);
 	}
-} // namespace brk
+} // namespace apollo

@@ -7,9 +7,9 @@
  * Custom RTTI implementation. Currently, this kinda breaks down when crossing DLL boundaries...
  */
 
-namespace brk {
+namespace apollo {
 	namespace _internal {
-		struct BRK_API DefaultTypeIndexGenerator
+		struct APOLLO_API DefaultTypeIndexGenerator
 		{
 			static uint32 GetNext() noexcept;
 		};
@@ -30,7 +30,7 @@ namespace brk {
 	struct TypeInfo
 	{
 	private:
-		BRK_API TypeInfo(uint32 index, uint32 size, uint32 alignment)
+		APOLLO_API TypeInfo(uint32 index, uint32 size, uint32 alignment)
 			: m_Index(index)
 			, m_Size(size)
 			, m_Alignment(alignment)
@@ -64,4 +64,4 @@ namespace brk {
 	{
 		return a.m_Index != b.m_Index;
 	}
-} // namespace brk
+} // namespace apollo

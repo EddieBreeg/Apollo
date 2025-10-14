@@ -4,7 +4,7 @@
 
 #define VERTEX_TEST(name) TEST_CASE(name, "[vertex][rdr]")
 
-namespace brk::rdr::vertex_ut {
+namespace apollo::rdr::vertex_ut {
 	struct V1
 	{
 		float x;
@@ -103,4 +103,4 @@ namespace brk::rdr::vertex_ut {
 	}
 
 #undef TEST_ATTR
-} // namespace brk::rdr::vertex_ut
+} // namespace apollo::rdr::vertex_ut

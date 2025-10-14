@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 
-namespace brk {
+namespace apollo {
 	/**
 	 * Fixed-size storage utility
 	 */
@@ -35,4 +35,4 @@ namespace brk {
 
 		void Swap(StaticStorage& other) noexcept { std::swap(m_Buf, other.m_Buf); }
 	};
-} // namespace brk
+} // namespace apollo

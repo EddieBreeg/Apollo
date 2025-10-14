@@ -9,7 +9,7 @@
 
 struct ImGuiContext;
 
-namespace brk {
+namespace apollo {
 	class AssetManager;
 
 	namespace ecs {
@@ -31,27 +31,27 @@ namespace brk {
 	class App : public Singleton<App>
 	{
 	public:
-		BRK_API ~App();
+		APOLLO_API ~App();
 		[[nodiscard]] EAppResult GetResultCode() const noexcept { return m_Result; }
 		[[nodiscard]] Window& GetMainWindow() noexcept { return m_Window; }
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 
 		// Main loop. Blocks until the program comes to an end, e.g. after calling RequestAppQuit()
-		BRK_API EAppResult Run();
+		APOLLO_API EAppResult Run();
 
 		// Internally requests program termination. The loop will stop once the current iteration is
 		// done
-		BRK_API void RequestAppQuit() noexcept;
+		APOLLO_API void RequestAppQuit() noexcept;
 
 		[[nodiscard]] mt::ThreadPool& GetThreadPool() noexcept { return m_MainThreadPool; }
 
 	private:
-		BRK_API EAppResult Update();
+		APOLLO_API EAppResult Update();
 
-		BRK_API App(const EntryPoint& entry);
+		APOLLO_API App(const EntryPoint& entry);
 		friend class Singleton<App>;
 
-		static BRK_API std::unique_ptr<App> s_Instance;
+		static APOLLO_API std::unique_ptr<App> s_Instance;
 
 		const EntryPoint& m_EntryPoint;
 		Window m_Window;
@@ -64,4 +64,4 @@ namespace brk {
 		GameTime m_GameTime;
 		mt::ThreadPool m_MainThreadPool;
 	};
-} // namespace brk
+} // namespace apollo

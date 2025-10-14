@@ -3,7 +3,7 @@
 
 #define RETAIN_PTR_TEST(name) TEST_CASE(name, "[retain_ptr]")
 
-namespace brk::retain_ptr::ut {
+namespace apollo::retain_ptr::ut {
 	struct S1
 	{
 		uint32 m_RefCount = 0;
@@ -284,6 +284,6 @@ namespace brk::retain_ptr::ut {
 		CHECK((*ptr).m_RefCount == 1);
 		CHECK_FALSE((*ptr).m_Deleted);
 	}
-} // namespace brk::retain_ptr::ut
+} // namespace apollo::retain_ptr::ut
 
 #undef RETAIN_PTR_TEST

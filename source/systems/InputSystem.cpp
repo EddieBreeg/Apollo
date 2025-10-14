@@ -8,7 +8,7 @@
 #include <entt/entity/registry.hpp>
 
 namespace {
-	brk::EAppResult ProcessEvents(SDL_Window* mainWindow, entt::registry& entityWorld)
+	apollo::EAppResult ProcessEvents(SDL_Window* mainWindow, entt::registry& entityWorld)
 	{
 		SDL_Event evt;
 		const auto mainWindowId = SDL_GetWindowID(mainWindow);
@@ -20,14 +20,14 @@ namespace {
 			{
 			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 				if (evt.window.windowID != mainWindowId)
-					return brk::EAppResult::Continue;
+					return apollo::EAppResult::Continue;
 				[[fallthrough]];
-			case SDL_EVENT_QUIT: return brk::EAppResult::Success;
+			case SDL_EVENT_QUIT: return apollo::EAppResult::Success;
 
 			case SDL_EVENT_WINDOW_RESIZED:
 				if (evt.window.windowID == mainWindowId)
 				{
-					entityWorld.emplace<brk::inputs::WindowResizeEventComponent>(
+					entityWorld.emplace<apollo::inputs::WindowResizeEventComponent>(
 						entityWorld.create(),
 						uint32(evt.window.data1),
 						uint32(evt.window.data2));
@@ -37,11 +37,11 @@ namespace {
 			}
 		}
 
-		return brk::EAppResult::Continue;
+		return apollo::EAppResult::Continue;
 	}
 } // namespace
 
-namespace brk::inputs {
+namespace apollo::inputs {
 	System::System(App& app)
 		: m_App(app)
 	{}
@@ -55,4 +55,4 @@ namespace brk::inputs {
 		if (result != EAppResult::Continue)
 			m_App.RequestAppQuit();
 	}
-} // namespace brk::inputs
+} // namespace apollo::inputs

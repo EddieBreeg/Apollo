@@ -4,7 +4,7 @@
 
 #define THREADPOOL_TEST(name) TEST_CASE(name, "[mt][thread_pool]")
 
-namespace brk::mt::ut {
+namespace apollo::mt::ut {
 	using namespace std::chrono_literals;
 
 	THREADPOOL_TEST("GetThreadCount test")
@@ -141,4 +141,4 @@ namespace brk::mt::ut {
 
 		CHECK_THROWS_AS(result.get(), std::future_error);
 	}
-} // namespace brk::mt::ut
+} // namespace apollo::mt::ut

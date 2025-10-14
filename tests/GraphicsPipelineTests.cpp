@@ -8,13 +8,13 @@
 
 #define PIPELINE_TEST(name) TEST_CASE(name, "[pipeline][rdr]")
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	struct Context
 	{
 		Context()
 			: m_Window{
 				WindowSettings{
-					.m_Title = "Breakout Rendering Tests",
+					.m_Title = "Apollo Rendering Tests",
 					.m_Width = 100,
 					.m_Height = 100,
 					.m_Hidden = true,
@@ -33,7 +33,7 @@ namespace brk::rdr {
 	PIPELINE_TEST("Load Default Pipeline description from JSON")
 	{
 		Context ctx;
-		using ConverterType = brk::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>;
+		using ConverterType = apollo::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>;
 		const nlohmann::json j{};
 		SDL_GPUGraphicsPipelineCreateInfo info = {};
 
@@ -73,7 +73,7 @@ namespace brk::rdr {
 	{
 		Context ctx;
 
-		using ConverterType = brk::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>;
+		using ConverterType = apollo::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>;
 		const nlohmann::json j = nlohmann::json::parse(R"json({
 	"input": "vertex2d",
 	"primitiveType": "pointList",
@@ -206,4 +206,4 @@ namespace brk::rdr {
 		CHECK(colorTarget->blend_state.alpha_blend_op == SDL_GPU_BLENDOP_ADD);
 	}
 
-} // namespace brk::rdr
+} // namespace apollo::rdr

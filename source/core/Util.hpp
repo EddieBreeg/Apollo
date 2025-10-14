@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace brk {
+namespace apollo {
 	[[nodiscard]] constexpr auto Min(auto&& a, auto&& b) noexcept(noexcept(a < b))
 	{
 		if (a < b)
@@ -43,4 +43,4 @@ namespace brk {
 	{
 		return offset + Padding(offset, alignment);
 	}
-} // namespace brk
+} // namespace apollo

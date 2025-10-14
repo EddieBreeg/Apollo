@@ -12,7 +12,7 @@ namespace {
 	};
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	Shader::~Shader()
 	{
 		if (m_Handle)
@@ -23,7 +23,7 @@ namespace brk::rdr {
 		: IAsset(id)
 		, m_Stage(info.m_Stage)
 	{
-		BRK_ASSERT(
+		APOLLO_ASSERT(
 			m_Stage > EShaderStage::Invalid && info.m_Stage < EShaderStage::NStages,
 			"Invalid shader stage {}",
 			int32(info.m_Stage));
@@ -32,7 +32,7 @@ namespace brk::rdr {
 			.code_size = codeLen,
 			.code = static_cast<const uint8*>(code),
 			.entrypoint = info.m_EntryPoint,
-#ifdef BRK_VULKAN
+#ifdef APOLLO_VULKAN
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
 #endif
 			.stage = g_Stages[int32(info.m_Stage)],
@@ -45,11 +45,11 @@ namespace brk::rdr {
 		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
 		if (!m_Handle) [[unlikely]]
 		{
-			BRK_LOG_ERROR("Failed to create shader: {}", SDL_GetError());
+			APOLLO_LOG_ERROR("Failed to create shader: {}", SDL_GetError());
 		}
 	}
 
 	Shader::Shader(const ShaderInfo& info, const void* code, size_t codeLen)
 		: Shader(ULID::Generate(), info, code, codeLen)
 	{}
-} // namespace brk::rdr
+} // namespace apollo::rdr

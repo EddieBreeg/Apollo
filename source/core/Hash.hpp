@@ -3,7 +3,7 @@
 #include <PCH.hpp>
 #include <bit>
 
-namespace brk {
+namespace apollo {
 	/**
 	 * Generic object hasher. This should have a specialisation for any type T which needs to be
 	 * hashed
@@ -93,4 +93,4 @@ namespace brk {
 		 ...);
 		return seed;
 	}
-} // namespace brk
+} // namespace apollo

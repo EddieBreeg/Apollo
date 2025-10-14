@@ -113,8 +113,8 @@ namespace {
 			inout_rect.y1 = m_Pos.y + height;
 
 			m_Pos.x += width + margin;
-			m_Width = brk::Max(m_Width, m_Pos.x);
-			m_RowHeight = brk::Max(m_RowHeight, height + margin);
+			m_Width = apollo::Max(m_Width, m_Pos.x);
+			m_RowHeight = apollo::Max(m_RowHeight, height + margin);
 		}
 
 		glm::uvec2 GetTotalSize() const noexcept { return { m_Width, m_Height + m_RowHeight }; }
@@ -129,10 +129,10 @@ namespace {
 
 	struct RenderJob
 	{
-		using RGBA8Pixel = brk::rdr::RGBAPixel<uint8>;
+		using RGBA8Pixel = apollo::rdr::RGBAPixel<uint8>;
 
 		std::latch& m_Latch;
-		std::span<const brk::rdr::txt::Glyph> m_Glyphs;
+		std::span<const apollo::rdr::txt::Glyph> m_Glyphs;
 		std::span<const msdfgen::Shape> m_Shapes;
 		uint32 m_Size;
 		msdfgen::Range m_DistanceRange;
@@ -164,7 +164,7 @@ namespace {
 			};
 			msdfgen::generateMTSDF(section, shape, transform);
 
-			brk::rdr::BitmapView<RGBA8Pixel> dest{
+			apollo::rdr::BitmapView<RGBA8Pixel> dest{
 				m_OutBuf, bounds.x0, bounds.y0, width, height, m_BufStride,
 			};
 			for (uint32 j = 0; j < height; ++j)
@@ -173,10 +173,10 @@ namespace {
 				{
 					const float* inPx = section(i, j);
 					dest(i, j) = RGBA8Pixel{
-						uint8(255 * brk::Clamp(inPx[0], 0.0f, 1.0f) + 0.5),
-						uint8(255 * brk::Clamp(inPx[1], 0.0f, 1.0f) + 0.5),
-						uint8(255 * brk::Clamp(inPx[2], 0.0f, 1.0f) + 0.5),
-						uint8(255 * brk::Clamp(inPx[3], 0.0f, 1.0f) + 0.5),
+						uint8(255 * apollo::Clamp(inPx[0], 0.0f, 1.0f) + 0.5),
+						uint8(255 * apollo::Clamp(inPx[1], 0.0f, 1.0f) + 0.5),
+						uint8(255 * apollo::Clamp(inPx[2], 0.0f, 1.0f) + 0.5),
+						uint8(255 * apollo::Clamp(inPx[3], 0.0f, 1.0f) + 0.5),
 					};
 				}
 			}
@@ -193,7 +193,7 @@ namespace {
 	};
 } // namespace
 
-namespace brk::rdr::txt {
+namespace apollo::rdr::txt {
 	AtlasGenerator::AtlasGenerator(
 		FT_FaceRec_* face,
 		uint32 maxWidth,
@@ -216,7 +216,7 @@ namespace brk::rdr::txt {
 	{
 		DEBUG_CHECK(m_Face)
 		{
-			BRK_LOG_ERROR("Called LoadGlyph on null face");
+			APOLLO_LOG_ERROR("Called LoadGlyph on null face");
 			return false;
 		}
 		const auto index = FT_Get_Char_Index(m_Face, inout_glyph.m_Char);
@@ -229,7 +229,7 @@ namespace brk::rdr::txt {
 		{
 			char buf[5]{};
 			utf8::Encode(inout_glyph.m_Char, buf);
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"Failed to load glyph {}(U+{:08X}): {}",
 				buf,
 				uint32(inout_glyph.m_Char),
@@ -242,7 +242,7 @@ namespace brk::rdr::txt {
 		err = FT_Outline_Decompose(&m_Face->glyph->outline, &ShapeLoader::s_OutlineFuncs, &ctx);
 		if (err)
 		{
-			BRK_LOG_ERROR("Failed to decompose glyph: {}", FT_Error_String(err));
+			APOLLO_LOG_ERROR("Failed to decompose glyph: {}", FT_Error_String(err));
 			return false;
 		}
 		ctx.FinishContour();
@@ -334,13 +334,13 @@ namespace brk::rdr::txt {
 		const uint32 numThreads = threadPool.GetThreadCount();
 		std::latch latch{ numThreads };
 		const uint32 numGlyphs = (uint32)glyphs.size();
-		BRK_ASSERT(
+		APOLLO_ASSERT(
 			shapes.size() == numGlyphs,
 			"Can't rasterize glyphs: glyphs.size() is {} but shapes.size() is {}",
 			numGlyphs,
 			shapes.size());
 
-		BRK_LOG_TRACE("Running {} threads", numThreads);
+		APOLLO_LOG_TRACE("Running {} threads", numThreads);
 		const uint32 glyphsPerThread = glyphs.size() / numThreads;
 		uint32 jobStartIndex = 0;
 
@@ -365,4 +365,4 @@ namespace brk::rdr::txt {
 		}
 		latch.wait();
 	}
-} // namespace brk::rdr::txt
+} // namespace apollo::rdr::txt

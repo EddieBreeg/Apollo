@@ -2,20 +2,20 @@
 
 #include <PCH.hpp>
 
-#include <span>
-#include <filesystem>
 #include <entt/entity/registry.hpp>
+#include <filesystem>
+#include <span>
 
-namespace brk {
+namespace apollo {
 	enum class EAppResult : int8;
 
 	class App;
 	class GameTime;
 
 	struct EntryPoint;
-} // namespace brk
+} // namespace apollo
 
-namespace brk::editor {
+namespace apollo::editor {
 	class Editor
 	{
 	public:
@@ -29,4 +29,4 @@ namespace brk::editor {
 	private:
 		std::filesystem::path m_ProjectPath;
 	};
-} // namespace brk::editor
+} // namespace apollo::editor

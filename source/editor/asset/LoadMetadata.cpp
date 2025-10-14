@@ -12,11 +12,11 @@
 #include <string_view>
 
 namespace {
-	const brk::StringHashMap<brk::EAssetType> g_AssetTypeMap{
-		{ brk::StringHash{ "texture2d" }, brk::EAssetType::Texture2D },
-		{ brk::StringHash{ "shader" }, brk::EAssetType::Shader },
-		{ brk::StringHash{ "material" }, brk::EAssetType::Material },
-		{ brk::StringHash{ "fontAtlas" }, brk::EAssetType::FontAtlas },
+	const apollo::StringHashMap<apollo::EAssetType> g_AssetTypeMap{
+		{ apollo::StringHash{ "texture2d" }, apollo::EAssetType::Texture2D },
+		{ apollo::StringHash{ "shader" }, apollo::EAssetType::Shader },
+		{ apollo::StringHash{ "material" }, apollo::EAssetType::Material },
+		{ apollo::StringHash{ "fontAtlas" }, apollo::EAssetType::FontAtlas },
 	};
 
 	struct Parser
@@ -37,7 +37,7 @@ namespace {
 				endPos = m_Line.find('"', 1);
 				if (endPos == m_Line.npos)
 				{
-					BRK_LOG_ERROR("CSV sequence is malformed: {}", m_Line);
+					APOLLO_LOG_ERROR("CSV sequence is malformed: {}", m_Line);
 					return (m_Line = {});
 				}
 				if (endPos == (m_Line.length() - 1))
@@ -46,7 +46,7 @@ namespace {
 				}
 				else if (m_Line[endPos + 1] == ',')
 				{
-					BRK_LOG_ERROR("CSV sequence is malformed: {}", m_Line);
+					APOLLO_LOG_ERROR("CSV sequence is malformed: {}", m_Line);
 					return (m_Line = {});
 				}
 				else
@@ -71,27 +71,29 @@ namespace {
 #define CHECK_VAL(val, msg)                                                                        \
 	if ((val).empty())                                                                             \
 	{                                                                                              \
-		BRK_LOG_ERROR("Failed to parse asset metadata: " msg);                                     \
+		APOLLO_LOG_ERROR("Failed to parse asset metadata: " msg);                                  \
 		return false;                                                                              \
 	}
 
-		bool ParseMetadata(brk::AssetMetadata& out_metadata, const std::filesystem::path& assetRoot)
+		bool ParseMetadata(
+			apollo::AssetMetadata& out_metadata,
+			const std::filesystem::path& assetRoot)
 		{
 			std::string_view val = GetNext();
 			CHECK_VAL(val, "missing asset ULID");
-			out_metadata.m_Id = brk::ULID::FromString(val);
+			out_metadata.m_Id = apollo::ULID::FromString(val);
 			if (!out_metadata.m_Id)
 			{
-				BRK_LOG_ERROR("Failed to parse asset metadata: invalid ULID {}", val);
+				APOLLO_LOG_ERROR("Failed to parse asset metadata: invalid ULID {}", val);
 				return false;
 			}
 			val = GetNext();
 			CHECK_VAL(val, "missing asset type");
 			{
-				const auto it = g_AssetTypeMap.find(brk::StringHash{ val });
+				const auto it = g_AssetTypeMap.find(apollo::StringHash{ val });
 				if (it == g_AssetTypeMap.end())
 				{
-					BRK_LOG_ERROR("Failed to parse asset metadata: invalid type {}", val);
+					APOLLO_LOG_ERROR("Failed to parse asset metadata: invalid type {}", val);
 					return false;
 				}
 				out_metadata.m_Type = it->second;
@@ -111,7 +113,7 @@ namespace {
 #undef CHECK_VAL
 } // namespace
 
-namespace brk::editor {
+namespace apollo::editor {
 	bool ImporteAssetMetadata(
 		const std::filesystem::path& assetRootPath,
 		ULIDMap<AssetMetadata>& out_metadata)
@@ -126,7 +128,7 @@ namespace brk::editor {
 		std::string line;
 		if (!inFile.is_open())
 		{
-			BRK_LOG_ERROR("Failed to load {}: {}", filePath.string(), GetErrnoMessage(errno));
+			APOLLO_LOG_ERROR("Failed to load {}: {}", filePath.string(), GetErrnoMessage(errno));
 			return false;
 		}
 		std::getline(inFile, line);
@@ -146,11 +148,11 @@ namespace brk::editor {
 			auto res = out_metadata.try_emplace(metadata.m_Id, std::move(metadata));
 			if (res.second)
 				continue;
-			BRK_LOG_ERROR(
+			APOLLO_LOG_ERROR(
 				"ULID {} is present multiple times in the metadata file. Only the first asset will "
 				"be registered",
 				metadata.m_Id);
 		}
 		return true;
 	}
-} // namespace brk::editor
+} // namespace apollo::editor

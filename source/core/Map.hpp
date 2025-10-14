@@ -6,7 +6,7 @@
  * Just some hashmap shortcuts
  */
 
-namespace brk {
+namespace apollo {
 	class ULID;
 
 	template <class>
@@ -21,4 +21,4 @@ namespace brk {
 
 	template <class T>
 	using StringHashMap = HashMap<StringHash, T>;
-} // namespace brk
+} // namespace apollo

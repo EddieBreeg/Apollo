@@ -9,11 +9,11 @@ struct SDL_Window;
 struct SDL_GPUCommandBuffer;
 struct SDL_GPUTexture;
 
-namespace brk {
+namespace apollo {
 	class Window;
 }
 
-namespace brk::rdr {
+namespace apollo::rdr {
 	class Renderer : public Singleton<Renderer>
 	{
 	public:
@@ -25,7 +25,7 @@ namespace brk::rdr {
 		Window& GetWindow() noexcept { return m_Window; }
 
 		// Creates the main command buffer, and acquires the swapchain texture
-		BRK_API void BeginFrame();
+		APOLLO_API void BeginFrame();
 
 		// Returns null if called outside of BeginFrame/EndFrame
 		[[nodiscard]] SDL_GPUCommandBuffer* GetMainCommandBuffer() noexcept
@@ -36,16 +36,20 @@ namespace brk::rdr {
 		[[nodiscard]] SDL_GPUTexture* GetSwapchainTexture() noexcept { return m_SwapchainTexture; }
 
 		// Renders out ImGui content
-		BRK_API void ImGuiRenderPass();
+		APOLLO_API void ImGuiRenderPass();
 
 		// Submits the main command buffer
-		BRK_API void EndFrame();
+		APOLLO_API void EndFrame();
 
 	private:
-		BRK_API Renderer(EBackend backend, Window& window, bool gpuDebug = false, bool vSync = false);
+		APOLLO_API Renderer(
+			EBackend backend,
+			Window& window,
+			bool gpuDebug = false,
+			bool vSync = false);
 		friend class Singleton<Renderer>;
 
-		static BRK_API std::unique_ptr<Renderer> s_Instance;
+		static APOLLO_API std::unique_ptr<Renderer> s_Instance;
 
 		GPUDevice m_Device;
 		Window& m_Window;
@@ -53,4 +57,4 @@ namespace brk::rdr {
 		SDL_GPUCommandBuffer* m_MainCommandBuffer = nullptr;
 		SDL_GPUTexture* m_SwapchainTexture = nullptr;
 	};
-} // namespace brk::rdr
+} // namespace apollo::rdr

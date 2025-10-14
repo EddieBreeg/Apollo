@@ -2,7 +2,7 @@
 
 #include <core/Unassigned.hpp>
 
-namespace brk::rdr::_internal {
+namespace apollo::rdr::_internal {
 	template <class HandleType>
 	struct HandleWrapper
 	{
@@ -35,4 +35,4 @@ namespace brk::rdr::_internal {
 
 		HandleType m_Handle = Unassigned<HandleType>;
 	};
-} // namespace brk::rdr::_internal
+} // namespace apollo::rdr::_internal

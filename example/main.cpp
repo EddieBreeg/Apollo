@@ -27,7 +27,7 @@ namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
 }
 
-namespace brk::demo {
+namespace apollo::demo {
 	glm::mat4x4 GetProjMatrix(uint32 width, uint32 height)
 	{
 		const float xmax = float(width) / height;
@@ -41,11 +41,11 @@ the lazy dog.)";
 
 	struct TestSystem
 	{
-		brk::Window& m_Window;
-		brk::rdr::Renderer& m_Renderer;
-		brk::AssetRef<brk::rdr::Material> m_Material;
-		brk::AssetRef<brk::rdr::txt::FontAtlas> m_Font;
-		brk::rdr::txt::Renderer2d m_TextRenderer;
+		apollo::Window& m_Window;
+		apollo::rdr::Renderer& m_Renderer;
+		apollo::AssetRef<apollo::rdr::Material> m_Material;
+		apollo::AssetRef<apollo::rdr::txt::FontAtlas> m_Font;
+		apollo::rdr::txt::Renderer2d m_TextRenderer;
 		glm::uvec2 m_WinSize;
 		bool m_GeometryReady = false;
 
@@ -56,18 +56,18 @@ the lazy dog.)";
 
 		void ProcessWindowResize(entt::registry& world)
 		{
-			using namespace brk::inputs;
+			using namespace apollo::inputs;
 			const auto view = world.view<const WindowResizeEventComponent>();
 			if (view->empty())
 				return;
 
 			const WindowResizeEventComponent& eventData = *view->begin();
-			m_WinSize = {eventData.m_Width, eventData.m_Height};
+			m_WinSize = { eventData.m_Width, eventData.m_Height };
 
 			m_CamMatrix = GetProjMatrix(eventData.m_Width, eventData.m_Height);
 		}
 
-		TestSystem(brk::Window& window, brk::rdr::Renderer& renderer, std::string_view text)
+		TestSystem(apollo::Window& window, apollo::rdr::Renderer& renderer, std::string_view text)
 			: m_Window(window)
 			, m_Renderer(renderer)
 			, m_WinSize(m_Window.GetSize())
@@ -85,13 +85,13 @@ the lazy dog.)";
 		{
 			m_TextRenderer.m_Style.m_Size = 0.2f;
 
-			BRK_LOG_TRACE("Example Post-Init");
+			APOLLO_LOG_TRACE("Example Post-Init");
 			auto* assetManager = AssetManager::GetInstance();
-			BRK_ASSERT(assetManager, "Asset manager hasn't been initialized!");
+			APOLLO_ASSERT(assetManager, "Asset manager hasn't been initialized!");
 
-			m_Material = assetManager->GetAsset<brk::rdr::Material>(
+			m_Material = assetManager->GetAsset<apollo::rdr::Material>(
 				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
-			m_Font = assetManager->GetAsset<brk::rdr::txt::FontAtlas>(
+			m_Font = assetManager->GetAsset<apollo::rdr::txt::FontAtlas>(
 				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
 			m_TextRenderer.SetFont(m_Font);
 
@@ -105,7 +105,7 @@ the lazy dog.)";
 		void OnLoadingFinished()
 		{
 			const auto& device = m_Renderer.GetDevice();
-			BRK_LOG_TRACE("Loading complete");
+			APOLLO_LOG_TRACE("Loading complete");
 			if (m_Font->GetState() == EAssetState::Loaded)
 			{
 				m_TextRenderer.Init(device, m_Material, 128);
@@ -130,7 +130,7 @@ the lazy dog.)";
 			ImGui::End();
 		}
 
-		void Update(entt::registry& world, const brk::GameTime&)
+		void Update(entt::registry& world, const apollo::GameTime&)
 		{
 			if (!m_Window) [[unlikely]]
 				return;
@@ -150,7 +150,7 @@ the lazy dog.)";
 				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::TopLeft);
 				const auto& style = m_TextRenderer.m_Style;
 				float2 size = m_Font->MeasureText(m_Text, style.m_Size, style.m_Tracking);
-				BRK_LOG_TRACE("Text size: ({}, {})", size.x, size.y);
+				APOLLO_LOG_TRACE("Text size: ({}, {})", size.x, size.y);
 				m_GeometryReady = true;
 			}
 
@@ -182,23 +182,23 @@ the lazy dog.)";
 		}
 	};
 
-	brk::EAppResult Init(const brk::EntryPoint& entry, brk::App& app)
+	apollo::EAppResult Init(const apollo::EntryPoint& entry, apollo::App& app)
 	{
 		spdlog::set_level(spdlog::level::trace);
 		const std::span args = entry.m_Args;
 
 		const char* text = args.size() > 2 ? args[2] : g_DefaultText;
 
-		auto& renderer = *brk::rdr::Renderer::GetInstance();
+		auto& renderer = *apollo::rdr::Renderer::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
-		auto& manager = *brk::ecs::Manager::GetInstance();
+		auto& manager = *apollo::ecs::Manager::GetInstance();
 		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer, text);
 		return EAppResult::Continue;
 	}
-} // namespace brk::demo
+} // namespace apollo::demo
 
-void brk::GetEntryPoint(EntryPoint& out_entry)
+void apollo::GetEntryPoint(EntryPoint& out_entry)
 {
-	out_entry.m_AppName = "Breakout Example";
-	out_entry.m_OnInit = brk::demo::Init;
+	out_entry.m_AppName = "Apollo Example";
+	out_entry.m_OnInit = apollo::demo::Init;
 }
