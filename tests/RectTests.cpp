@@ -1,7 +1,7 @@
 #include <PCH.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#define RECTANGLE_TEST(name) TEST_CASE(name, "[util][rectangle]")
+#define RECTANGLE_TEST(name) TEST_CASE(name, "[math][rectangle]")
 
 namespace apollo::util_ut {
 	RECTANGLE_TEST("+ operator")

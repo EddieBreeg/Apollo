@@ -7,6 +7,7 @@ SOURCES
 	GraphicsPipelineTests.cpp
 	HashTests.cpp
 	JsonTests.cpp
+	MathTests.cpp
 	QueueTests.cpp
 	RetainPtrTests.cpp
 	RectTests.cpp
@@ -33,5 +34,5 @@ AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
 AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
 AddTest("Multi-Threading Tests" "${PROJECT_NAME}Tests" FILTERS "[mt]")
 AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
-AddTest("Util Tests" "${PROJECT_NAME}Tests" FILTERS "[util]")
+AddTest("Math Tests" "${PROJECT_NAME}Tests" FILTERS "[math]")
 AddTest("Rendering Tests" "${PROJECT_NAME}Tests" FILTERS "[rdr]")

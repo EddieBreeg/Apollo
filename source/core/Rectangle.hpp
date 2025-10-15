@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Util.hpp"
+#include "Math.hpp"
 
 namespace apollo {
 	template <class T>
