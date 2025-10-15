@@ -280,8 +280,6 @@ struct apollo::json::Converter<SDL_GPURasterizerState>
 			return false;
 
 		return Visit(out_state.enable_depth_clip, json, "enableDepthClip", true);
-
-		return true;
 	}
 };
 

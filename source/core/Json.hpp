@@ -88,18 +88,10 @@ namespace apollo::json {
 		{
 			if (!it->is_number_integer() && !it->is_string())
 				return false;
-
-			it->get_to(out_obj);
-			return true;
 		}
 		else if constexpr (std::is_same_v<T, bool>)
 		{
 			if (!it->is_boolean() && !it->is_number_integer())
-				return false;
-		}
-		else if constexpr (!std::is_arithmetic_v<T>)
-		{
-			if (it->type() != _internal::ValueType<T>::Type)
 				return false;
 		}
 		else if constexpr (std::is_integral_v<T>)
@@ -110,6 +102,11 @@ namespace apollo::json {
 		else if constexpr (std::is_floating_point_v<T>)
 		{
 			if (!it->is_number())
+				return false;
+		}
+		else
+		{
+			if (it->type() != _internal::ValueType<T>::Type)
 				return false;
 		}
 

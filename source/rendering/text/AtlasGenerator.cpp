@@ -236,7 +236,7 @@ namespace apollo::rdr::txt {
 				FT_Error_String(err));
 			return false;
 		}
-		inout_glyph.m_Advance = m_Scale * m_Face->glyph->metrics.horiAdvance;
+		inout_glyph.m_Advance = float(m_Scale * m_Face->glyph->metrics.horiAdvance);
 
 		ShapeLoader ctx{ .m_OutShape = out_shape, .m_Scale = m_Scale };
 		err = FT_Outline_Decompose(&m_Face->glyph->outline, &ShapeLoader::s_OutlineFuncs, &ctx);
@@ -341,7 +341,7 @@ namespace apollo::rdr::txt {
 			shapes.size());
 
 		APOLLO_LOG_TRACE("Running {} threads", numThreads);
-		const uint32 glyphsPerThread = glyphs.size() / numThreads;
+		const uint32 glyphsPerThread = (uint32)glyphs.size() / numThreads;
 		uint32 jobStartIndex = 0;
 
 		for (uint32 i = 0; i < numThreads; ++i)

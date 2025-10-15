@@ -63,13 +63,15 @@ namespace apollo::rdr::txt {
 
 	private:
 		void Upload();
-		struct alignas(16) GlyphQuad
+		struct GlyphQuad
 		{
 			float4 m_Rect;
 			float4 m_Uv;
 			float4 m_MainColor;
 			float4 m_OutlineColor;
 			float m_OutlineThickness;
+
+			float3 _padding;
 		};
 
 		SDL_GPUCopyPass* m_CopyPass = nullptr;
