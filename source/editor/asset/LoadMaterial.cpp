@@ -117,9 +117,17 @@ namespace {
 		{
 		case apollo::EAssetLoadResult::Failure: return result;
 		case apollo::EAssetLoadResult::TryAgain:
-			// #hack: temporary store the graphics pipeline description, we'll need it later
-			out_handle = new SDL_GPUGraphicsPipelineCreateInfo{ desc };
-			return result;
+		{ // #hack: temporary store the graphics pipeline description, we'll need it later
+			auto* handle = new SDL_GPUGraphicsPipelineCreateInfo{ desc };
+			auto* targetDesc = new SDL_GPUColorTargetDescription[desc.target_info.num_color_targets];
+			for (uint32 i = 0; i < desc.target_info.num_color_targets; ++i)
+			{
+				targetDesc[i] = desc.target_info.color_target_descriptions[i];
+			}
+			handle->target_info.color_target_descriptions = targetDesc;
+			out_handle = handle;
+		}
+			return EAssetLoadResult::TryAgain;
 		default: break;
 		}
 
@@ -159,6 +167,10 @@ namespace apollo::editor {
 
 		std::unique_ptr<SDL_GPUGraphicsPipelineCreateInfo> info{
 			static_cast<SDL_GPUGraphicsPipelineCreateInfo*>(std::exchange(mat.m_Handle, nullptr)),
+		};
+		// make sure we also delete the target description array
+		std::unique_ptr<const SDL_GPUColorTargetDescription[]> targetDesc{
+			info->target_info.color_target_descriptions,
 		};
 		auto& device = rdr::Renderer::GetInstance()->GetDevice();
 		info->vertex_shader = mat.m_VertShader->GetHandle();
