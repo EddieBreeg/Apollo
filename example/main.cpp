@@ -128,6 +128,8 @@ the lazy dog.)";
 				"Tracking",
 				&m_TextRenderer.m_Style.m_Tracking,
 				0.001f);
+			m_GeometryReady &= !ImGui::ColorEdit4("Foreground Color", &m_TextRenderer.m_Style.m_FgColor.r);
+			m_GeometryReady &= !ImGui::ColorEdit4("Outline COlor", &m_TextRenderer.m_Style.m_OutlineColor.r);
 			ImGui::End();
 		}
 
