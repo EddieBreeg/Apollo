@@ -79,7 +79,7 @@ namespace apollo::rdr::txt {
 			const uint32 width = glyph->m_Uv.GetWidth(), height = glyph->m_Uv.GetHeight();
 			if (c == '\n')
 			{
-				pos = float2{ 0, pos.y - m_Style.m_Size };
+				pos = float2{ 0, pos.y - m_Style.m_Size * m_Style.m_LineSpacing };
 				continue;
 			}
 			else if (!(width && height))
@@ -87,8 +87,8 @@ namespace apollo::rdr::txt {
 				pos.x += m_Style.m_Size * glyph->m_Advance;
 				continue;
 			}
-			if (prev)
-				pos += m_Style.m_Size * m_Font->GetKerning(*prev, *glyph);
+			if (prev && m_Style.m_Kerning)
+				pos += m_Style.m_Size * m_Style.m_Kerning * m_Font->GetKerning(*prev, *glyph);
 
 			const float2 glyphSize{
 				fontScale * width,

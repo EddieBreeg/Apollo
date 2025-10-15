@@ -11,7 +11,6 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 #include <imgui.h>
-#include <msdfgen.h>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Buffer.hpp>
 #include <rendering/Device.hpp>
@@ -116,7 +115,9 @@ the lazy dog.)";
 		{
 			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
-			m_GeometryReady &= !ImGui::SliderFloat("Scale", &m_TextRenderer.m_Style.m_Size, 0, 1);
+			m_GeometryReady &= !ImGui::DragFloat("Size", &m_TextRenderer.m_Style.m_Size, 0.01f);
+			m_GeometryReady &= !ImGui::DragFloat("Line Spacing", &m_TextRenderer.m_Style.m_LineSpacing, 0.01f);
+			m_GeometryReady &= !ImGui::SliderFloat("Kerning", &m_TextRenderer.m_Style.m_Kerning, 0.0f, 1.0f);
 
 			m_GeometryReady &= !ImGui::SliderFloat(
 				"Outline Thickness",
@@ -147,10 +148,14 @@ the lazy dog.)";
 			if (!m_GeometryReady)
 			{
 				m_TextRenderer.Clear();
-				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::TopLeft);
-				const auto& style = m_TextRenderer.m_Style;
-				float2 size = m_Font->MeasureText(m_Text, style.m_Size, style.m_Tracking);
-				APOLLO_LOG_TRACE("Text size: ({}, {})", size.x, size.y);
+				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::Center);
+				float2 size = m_Font->MeasureText(m_Text, m_TextRenderer.m_Style);
+				const float ratio = float(m_WinSize.x) / m_WinSize.y;
+				glm::uvec2 pixelSize = {
+					uint32(0.5f * size.x / ratio * m_WinSize.x),
+					uint32(0.5f * size.y * m_WinSize.y),
+				};
+				APOLLO_LOG_TRACE("Text size: ({}, {})", pixelSize.x, pixelSize.y);
 				m_GeometryReady = true;
 			}
 

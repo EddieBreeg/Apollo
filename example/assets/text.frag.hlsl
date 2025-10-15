@@ -35,9 +35,9 @@ float4 main(Fragment frag): SV_TARGET
 
 	float2 a = abs(frag.Uv2 - 0.5);
 	float d2 = max(a.x, a.y);
-	float d2w = 3 * fwidth(d2);
+	float d2w = fwidth(d2);
 
-	float borderFac = smoothstep(0.5 - d2w, 0.5, d2);
+	float borderFac = smoothstep(0.5 - 2*d2w, 0.5 - d2w, d2);
 
 	return fill * frag.Color + outline * frag.OutlineColor + borderFac;
 }

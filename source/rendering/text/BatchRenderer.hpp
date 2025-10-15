@@ -27,6 +27,16 @@ namespace apollo::rdr::txt {
 			TopLeft,
 			Center,
 		};
+		struct GlyphQuad
+		{
+			float4 m_Rect;
+			float4 m_Uv;
+			float4 m_MainColor;
+			float4 m_OutlineColor;
+			float m_OutlineThickness;
+
+			float3 _padding;
+		};
 
 		Renderer2d() = default;
 		APOLLO_API void Init(
@@ -63,16 +73,6 @@ namespace apollo::rdr::txt {
 
 	private:
 		void Upload();
-		struct GlyphQuad
-		{
-			float4 m_Rect;
-			float4 m_Uv;
-			float4 m_MainColor;
-			float4 m_OutlineColor;
-			float m_OutlineThickness;
-
-			float3 _padding;
-		};
 
 		SDL_GPUCopyPass* m_CopyPass = nullptr;
 

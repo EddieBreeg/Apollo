@@ -23,6 +23,8 @@ namespace apollo::mt {
 }
 
 namespace apollo::rdr::txt {
+	struct TextStyle;
+
 	class AtlasGenerator
 	{
 	public:
@@ -119,8 +121,7 @@ namespace apollo::rdr::txt {
 
 		[[nodiscard]] APOLLO_API float2 MeasureText(
 			std::string_view txt,
-			float emScale = 1.0f,
-			float tracking = 1.0f,
+			const TextStyle& style,
 			char32_t fallback = U' ') const noexcept;
 
 		GET_ASSET_TYPE_IMPL(EAssetType::FontAtlas);

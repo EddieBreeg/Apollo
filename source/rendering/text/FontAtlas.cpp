@@ -1,4 +1,5 @@
 #include "FontAtlas.hpp"
+#include "Style.hpp"
 #include <core/Utf8.hpp>
 #include <freetype/freetype.h>
 
@@ -55,11 +56,8 @@ namespace apollo::rdr::txt {
 		};
 	}
 
-	float2 FontAtlas::MeasureText(
-		std::string_view txt,
-		float size,
-		float tracking,
-		char32_t fallback) const noexcept
+	float2 FontAtlas::MeasureText(std::string_view txt, const TextStyle& style, char32_t fallback)
+		const noexcept
 	{
 		RectF bounds{ 0, 0, 0, 0 };
 		const float scale = 1.0f / m_PixelSize;
@@ -78,24 +76,24 @@ namespace apollo::rdr::txt {
 			const uint32 width = glyph->m_Uv.GetWidth(), height = glyph->m_Uv.GetHeight();
 			if (cp == '\n')
 			{
-				pos = float2{ 0, pos.y - size };
+				pos = float2{ 0, pos.y - style.m_Size * style.m_LineSpacing };
 				continue;
 			}
 			else if (!(width && height))
 			{
-				pos.x += size * tracking * glyph->m_Advance;
+				pos.x += style.m_Size * style.m_Tracking * glyph->m_Advance;
 				continue;
 			}
 			if (prev)
-				pos += size * GetKerning(*prev, *glyph);
+				pos += style.m_Size * style.m_Kerning * GetKerning(*prev, *glyph);
 
 			const float2 glyphSize{
 				scale * width,
 				scale * height,
 			};
 			const float4 rect{
-				pos + size * glyph->m_Offset,
-				size * glyphSize,
+				pos + style.m_Size * glyph->m_Offset,
+				style.m_Size * glyphSize,
 			};
 
 			bounds += RectF{
@@ -104,7 +102,7 @@ namespace apollo::rdr::txt {
 				rect.x + rect.z,
 				rect.y + rect.w,
 			};
-			pos.x += size * tracking * glyph->m_Advance;
+			pos.x += style.m_Size * style.m_Tracking * glyph->m_Advance;
 			prev = glyph;
 		}
 

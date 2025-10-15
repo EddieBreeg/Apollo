@@ -10,5 +10,7 @@ namespace apollo::rdr::txt {
 		float m_Size = 1.0f; // Normalized text size, in clipspace units
 		float m_OutlineThickness = 0.0f;
 		float m_Tracking = 1.0f; // Character spacing factor
+		float m_Kerning = 1.0f;
+		float m_LineSpacing = 1.0f;
 	};
 } // namespace apollo::rdr::txt
