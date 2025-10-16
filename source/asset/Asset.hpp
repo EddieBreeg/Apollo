@@ -42,7 +42,6 @@ namespace apollo {
 
 		[[nodiscard]] apollo::ULID GetId() const noexcept { return m_Id; }
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
-		void SetState(EAssetState state) noexcept { m_State = state; }
 
 		[[nodiscard]] virtual APOLLO_API EAssetType GetType() const noexcept = 0;
 		[[nodiscard]] APOLLO_API std::string_view GetTypeName() const noexcept;
@@ -52,9 +51,12 @@ namespace apollo {
 		std::atomic<EAssetState> m_State = EAssetState::Invalid;
 		std::atomic_uint32_t m_RefCount = 0;
 
-		friend struct AssetRetainTraits;
-
 	private:
+		void SetState(EAssetState state) noexcept { m_State = state; }
+
+		friend class AssetLoader;
+		friend class AssetManager;
+		friend struct AssetRetainTraits;
 	};
 
 #define GET_ASSET_TYPE_IMPL(type)                                                                  \
