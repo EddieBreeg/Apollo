@@ -12,7 +12,7 @@ set(${PROJECT_NAME}_BACKEND Vulkan CACHE STRING "The rendering backend used by t
 set_property(CACHE ${PROJECT_NAME}_BACKEND PROPERTY STRINGS "Vulkan;D3D12")
 
 if(${MSVC})
-	set(COMPILER_ARGS /W4 /wd4201)
+	set(COMPILER_ARGS /W4 /wd4201 /wd4324)
 	set(OPTIMIZE_OFF_MACRO "_Pragma(\"optimize(\\\"\\\", off)\")")
 else()
 	set(COMPILER_ARGS -Wall -Wextra)

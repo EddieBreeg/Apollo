@@ -27,15 +27,13 @@ namespace apollo::rdr::txt {
 			TopLeft,
 			Center,
 		};
-		struct GlyphQuad
+		struct alignas(16) GlyphQuad
 		{
 			float4 m_Rect;
 			float4 m_Uv;
 			float4 m_MainColor;
 			float4 m_OutlineColor;
 			float m_OutlineThickness;
-
-			float3 _padding;
 		};
 
 		Renderer2d() = default;
