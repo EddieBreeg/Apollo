@@ -2,6 +2,7 @@
 #include <SDL3/SDL_gpu.h>
 #include <asset/Asset.hpp>
 #include <asset/AssetManager.hpp>
+#include <core/App.hpp>
 #include <core/Log.hpp>
 #include <core/ULIDFormatter.hpp>
 #include <rendering/Device.hpp>
@@ -27,7 +28,11 @@ namespace apollo {
 		AssetImportFunc* loadFunc,
 		const AssetMetadata& metadata)
 	{
+		std::unique_lock lock{ m_QueueMutex };
 		m_Requests.AddEmplace(std::move(asset), loadFunc, &metadata);
+		// if we are currently processing assets, then add the new request to the current batch
+		if (m_BatchSize)
+			++m_BatchSize;
 	}
 
 	SDL_GPUCommandBuffer* AssetLoader::GetCurrentCommandBuffer() noexcept
@@ -42,17 +47,31 @@ namespace apollo {
 
 	void AssetLoader::ProcessRequests()
 	{
-		if (!m_Requests.GetSize())
+		// if batch size is non-zero, a thread is already processing the assets, we don't need to do
+		// anything else
+		if (!m_Requests.GetSize() || m_BatchSize)
 			return;
 
-		// TODO: Move all of this into separate threads
+		m_BatchSize = m_Requests.GetSize();
+		mt::ThreadPool& tp = App::GetInstance()->GetThreadPool();
+		tp.Enqueue(
+			[this]()
+			{
+				DoProcessRequests();
+			});
+	}
 
+	void AssetLoader::DoProcessRequests()
+	{
 		g_CommandBuffer = SDL_AcquireGPUCommandBuffer(m_Device.GetHandle());
 		g_CopyPass = SDL_BeginGPUCopyPass(g_CommandBuffer);
 
-		while (m_Requests.GetSize())
+		while (m_BatchSize)
 		{
+			std::unique_lock lock{ m_QueueMutex };
 			AssetLoadRequest request = m_Requests.PopAndGetFront();
+			lock.unlock();
+
 			if (!request.m_Asset || request.m_Asset->GetState() != EAssetState::Loading)
 				[[unlikely]]
 				continue;
@@ -71,6 +90,7 @@ namespace apollo {
 					"Asset {}({}) loaded successfully!",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
+				--m_BatchSize;
 				continue;
 			case apollo::EAssetLoadResult::TryAgain:
 				m_Requests.AddEmplace(std::move(request));
@@ -81,6 +101,7 @@ namespace apollo {
 					"Asset {}({}) failed to load",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
+				--m_BatchSize;
 			}
 		}
 
@@ -88,11 +109,13 @@ namespace apollo {
 		g_CopyPass = nullptr;
 		SDL_SubmitGPUCommandBuffer(g_CommandBuffer);
 		g_CommandBuffer = nullptr;
+
 		DispatchCallbacks();
 	}
 
 	void AssetLoader::DispatchCallbacks()
 	{
+		std::unique_lock lock{ m_CallbackMutex };
 		for (auto& cbk : m_LoadCallbacks)
 		{
 			cbk();

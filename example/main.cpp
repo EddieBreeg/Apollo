@@ -47,6 +47,7 @@ the lazy dog.)";
 		apollo::rdr::txt::Renderer2d m_TextRenderer;
 		glm::uvec2 m_WinSize;
 		bool m_GeometryReady = false;
+		std::atomic_bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
@@ -88,27 +89,24 @@ the lazy dog.)";
 			auto* assetManager = AssetManager::GetInstance();
 			APOLLO_ASSERT(assetManager, "Asset manager hasn't been initialized!");
 
-			m_Material = assetManager->GetAsset<apollo::rdr::Material>(
-				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
-			m_Font = assetManager->GetAsset<apollo::rdr::txt::FontAtlas>(
-				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
-			m_TextRenderer.SetFont(m_Font);
-
 			assetManager->GetAssetLoader().RegisterCallback(
 				[this]()
 				{
 					OnLoadingFinished();
 				});
+			m_Material = assetManager->GetAsset<apollo::rdr::Material>(
+				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
+			m_Font = assetManager->GetAsset<apollo::rdr::txt::FontAtlas>(
+				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
+			m_TextRenderer.Init(m_Renderer.GetDevice(), m_Material, 128);
+			m_TextRenderer.SetFont(m_Font);
 		}
 
 		void OnLoadingFinished()
 		{
-			const auto& device = m_Renderer.GetDevice();
 			APOLLO_LOG_TRACE("Loading complete");
-			if (m_Font->GetState() == EAssetState::Loaded)
-			{
-				m_TextRenderer.Init(device, m_Material, 128);
-			}
+			m_AssetsReady = m_Material->GetState() == EAssetState::Loaded &&
+							m_Font->GetState() == EAssetState::Loaded;
 		}
 
 		void DisplayUi()
@@ -116,8 +114,15 @@ the lazy dog.)";
 			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
 			m_GeometryReady &= !ImGui::DragFloat("Size", &m_TextRenderer.m_Style.m_Size, 0.01f);
-			m_GeometryReady &= !ImGui::DragFloat("Line Spacing", &m_TextRenderer.m_Style.m_LineSpacing, 0.01f);
-			m_GeometryReady &= !ImGui::SliderFloat("Kerning", &m_TextRenderer.m_Style.m_Kerning, 0.0f, 1.0f);
+			m_GeometryReady &= !ImGui::DragFloat(
+				"Line Spacing",
+				&m_TextRenderer.m_Style.m_LineSpacing,
+				0.01f);
+			m_GeometryReady &= !ImGui::SliderFloat(
+				"Kerning",
+				&m_TextRenderer.m_Style.m_Kerning,
+				0.0f,
+				1.0f);
 
 			m_GeometryReady &= !ImGui::SliderFloat(
 				"Outline Thickness",
@@ -128,8 +133,12 @@ the lazy dog.)";
 				"Tracking",
 				&m_TextRenderer.m_Style.m_Tracking,
 				0.001f);
-			m_GeometryReady &= !ImGui::ColorEdit4("Foreground Color", &m_TextRenderer.m_Style.m_FgColor.r);
-			m_GeometryReady &= !ImGui::ColorEdit4("Outline COlor", &m_TextRenderer.m_Style.m_OutlineColor.r);
+			m_GeometryReady &= !ImGui::ColorEdit4(
+				"Foreground Color",
+				&m_TextRenderer.m_Style.m_FgColor.r);
+			m_GeometryReady &= !ImGui::ColorEdit4(
+				"Outline COlor",
+				&m_TextRenderer.m_Style.m_OutlineColor.r);
 			ImGui::End();
 		}
 
@@ -141,27 +150,30 @@ the lazy dog.)";
 			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
 			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
 
-			if (!swapchainTexture || !m_Font || m_Font->GetState() != EAssetState::Loaded)
+			if (!swapchainTexture)
 				return;
 
 			ProcessWindowResize(world);
 			DisplayUi();
-			m_TextRenderer.StartFrame(mainCommandBuffer);
-			if (!m_GeometryReady)
+			if (m_AssetsReady)
 			{
-				m_TextRenderer.Clear();
-				m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::Center);
-				float2 size = m_Font->MeasureText(m_Text, m_TextRenderer.m_Style);
-				const float ratio = float(m_WinSize.x) / m_WinSize.y;
-				glm::uvec2 pixelSize = {
-					uint32(0.5f * size.x / ratio * m_WinSize.x),
-					uint32(0.5f * size.y * m_WinSize.y),
-				};
-				APOLLO_LOG_TRACE("Text size: ({}, {})", pixelSize.x, pixelSize.y);
-				m_GeometryReady = true;
-			}
+				m_TextRenderer.StartFrame(mainCommandBuffer);
+				if (!m_GeometryReady)
+				{
+					m_TextRenderer.Clear();
+					m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::Center);
+					float2 size = m_Font->MeasureText(m_Text, m_TextRenderer.m_Style);
+					const float ratio = float(m_WinSize.x) / m_WinSize.y;
+					glm::uvec2 pixelSize = {
+						uint32(0.5f * size.x / ratio * m_WinSize.x),
+						uint32(0.5f * size.y * m_WinSize.y),
+					};
+					APOLLO_LOG_TRACE("Text size: ({}, {})", pixelSize.x, pixelSize.y);
+					m_GeometryReady = true;
+				}
 
-			m_TextRenderer.StartRender();
+				m_TextRenderer.StartRender();
+			}
 
 			const SDL_GPUColorTargetInfo targetInfo{
 				.texture = swapchainTexture,
@@ -183,7 +195,8 @@ the lazy dog.)";
 				&m_CamMatrix,
 				2 * sizeof(glm::mat4x4));
 
-			m_TextRenderer.Render(renderPass);
+			if (m_AssetsReady)
+				m_TextRenderer.Render(renderPass);
 
 			SDL_EndGPURenderPass(renderPass);
 		}

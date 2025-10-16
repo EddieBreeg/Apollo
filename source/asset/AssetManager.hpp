@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 
 namespace apollo::rdr {
@@ -84,6 +85,7 @@ namespace apollo {
 		ULIDMap<AssetMetadata> m_MetadataBank;
 		AssetBankImportFunc* m_ImportBank = nullptr;
 		AssetTypeInfo m_TypeInfo[int32(EAssetType::NTypes)];
+		std::shared_mutex m_Mutex;
 		ULIDMap<IAsset*> m_Cache;
 
 		std::filesystem::path m_AssetsPath;

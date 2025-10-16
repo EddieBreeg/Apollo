@@ -48,7 +48,7 @@ namespace apollo::rdr::txt {
 
 		[[nodiscard]] bool IsInitialized() const noexcept
 		{
-			return m_Material->GetState() == EAssetState::Loaded;
+			return m_Material && m_Sampler && m_Buffer;
 		}
 
 		TextStyle m_Style;

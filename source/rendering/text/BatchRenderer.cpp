@@ -48,6 +48,7 @@ namespace apollo::rdr::txt {
 
 	void Renderer2d::AddText(std::string_view str, float2 origin, EAnchorPoint anchor)
 	{
+		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
 		if (!m_Font || m_Font->GetState() != EAssetState::Loaded)
 		{
 			APOLLO_LOG_ERROR("Called AddText on text renderer, but font is not ready");
@@ -141,6 +142,7 @@ namespace apollo::rdr::txt {
 
 	void Renderer2d::StartRender()
 	{
+		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
 		if (m_Dirty)
 		{
 			Upload();
@@ -152,8 +154,9 @@ namespace apollo::rdr::txt {
 
 	void Renderer2d::Render(SDL_GPURenderPass* renderPass)
 	{
+		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
 		if (m_Quads.empty() || !m_Font || m_Font->GetState() != EAssetState::Loaded ||
-			!m_Material || m_Material->GetState() != EAssetState::Loaded)
+			m_Material->GetState() != EAssetState::Loaded)
 			return;
 
 		const SDL_GPUTextureSamplerBinding samplerBinding{

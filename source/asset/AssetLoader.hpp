@@ -4,8 +4,10 @@
 
 #include "AssetFunctions.hpp"
 #include "AssetRef.hpp"
+#include <atomic>
 #include <core/Queue.hpp>
 #include <core/UniqueFunction.hpp>
+#include <mutex>
 
 struct SDL_GPUCommandBuffer;
 struct SDL_GPUCopyPass;
@@ -46,6 +48,7 @@ namespace apollo {
 		template <class F>
 		void RegisterCallback(F&& cbk)
 		{
+			std::unique_lock lock{m_CallbackMutex};
 			m_LoadCallbacks.emplace_back(std::forward<F>(cbk));
 		}
 
@@ -53,9 +56,13 @@ namespace apollo {
 
 	private:
 		void DispatchCallbacks();
+		void DoProcessRequests();
 
 		rdr::GPUDevice& m_Device;
 		Queue<AssetLoadRequest> m_Requests;
+		std::atomic_uint32_t m_BatchSize = 0;
 		std::vector<UniqueFunction<void()>> m_LoadCallbacks;
+		std::mutex m_QueueMutex;
+		std::mutex m_CallbackMutex;
 	};
 } // namespace apollo

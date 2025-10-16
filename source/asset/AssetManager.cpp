@@ -12,11 +12,14 @@
 namespace {
 	void ProcessUnloadRequests(
 		apollo::Queue<apollo::IAsset*> queue,
-		apollo::ULIDMap<apollo::IAsset*> cache)
+		apollo::ULIDMap<apollo::IAsset*> cache,
+		std::shared_mutex& mutex)
 	{
 		while (queue.GetSize())
 		{
+			std::unique_lock lock{ mutex };
 			apollo::IAsset* ptr = queue.PopAndGetFront();
+
 			if (ptr->GetState() != apollo::EAssetState::Unloading)
 				continue;
 
@@ -27,6 +30,7 @@ namespace {
 					"Asset {} was marked for unload but wasn't found in asset cache",
 					ptr->GetId());
 			}
+			lock.unlock();
 			APOLLO_LOG_TRACE("Unloading asset {}", id);
 			delete ptr;
 		}
@@ -96,6 +100,7 @@ namespace apollo {
 			"Invalid asset type {}",
 			int32(type));
 		{
+			std::shared_lock lock{ m_Mutex };
 			const auto it = m_Cache.find(id);
 			if (it != m_Cache.end())
 			{
@@ -127,7 +132,10 @@ namespace apollo {
 			return nullptr;
 		}
 		auto ptr = info.m_Create(it->second.m_Id);
-		m_Cache.emplace(id, ptr);
+		{
+			std::unique_lock lock{ m_Mutex };
+			m_Cache.emplace(id, ptr);
+		}
 
 		ptr->SetState(EAssetState::Loading);
 		m_Loader.AddRequest(AssetRef<IAsset>{ ptr }, info.m_Import, it->second);
@@ -137,13 +145,14 @@ namespace apollo {
 	void AssetManager::RequestUnload(IAsset* ptr)
 	{
 		ptr->SetState(EAssetState::Unloading);
+		std::unique_lock lock{ m_Mutex };
 		m_UnloadQueue.AddEmplace(ptr);
 	}
 
 	void AssetManager::Update()
 	{
 		m_Loader.ProcessRequests();
-		ProcessUnloadRequests(m_UnloadQueue, m_Cache);
+		ProcessUnloadRequests(m_UnloadQueue, m_Cache, m_Mutex);
 	}
 
 	bool json::Visit(
