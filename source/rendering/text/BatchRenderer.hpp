@@ -6,6 +6,7 @@
 #include "Style.hpp"
 #include <asset/AssetRef.hpp>
 #include <rendering/Buffer.hpp>
+#include <rendering/GpuAlign.hpp>
 #include <rendering/Material.hpp>
 
 struct SDL_GPUColorTargetDescription;
@@ -27,13 +28,13 @@ namespace apollo::rdr::txt {
 			TopLeft,
 			Center,
 		};
-		struct alignas(16) GlyphQuad
+		struct GlyphQuad
 		{
-			float4 m_Rect;
-			float4 m_Uv;
-			float4 m_MainColor;
-			float4 m_OutlineColor;
-			float m_OutlineThickness;
+			GPU_ALIGN(float4) m_Rect;
+			GPU_ALIGN(float4) m_Uv;
+			GPU_ALIGN(float4) m_MainColor;
+			GPU_ALIGN(float4) m_OutlineColor;
+			GPU_ALIGN(float) m_OutlineThickness;
 		};
 
 		Renderer2d() = default;
