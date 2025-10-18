@@ -1,9 +1,11 @@
 #include <SDL3/SDL_gpu.h>
 #include <asset/AssetManager.hpp>
+#include <asset/Scene.hpp>
 #include <core/App.hpp>
 #include <core/Log.hpp>
 #include <core/Utf8.hpp>
 #include <core/Window.hpp>
+#include <ecs/ComponentRegistry.hpp>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <entt/entity/registry.hpp>
@@ -33,17 +35,25 @@ namespace apollo::demo {
 		return glm::orthoRH(-xmax, xmax, -1.0f, 1.0f, 0.01f, 100.f);
 	}
 
-	constexpr const char* g_DefaultText =
-		R"(The quick brown
-fox jumps over
-the lazy dog.)";
+	struct TextComponent
+	{
+		std::string m_Text;
+		AssetRef<rdr::txt::FontAtlas> m_Font;
+
+		static constexpr ecs::ComponentReflection<&TextComponent::m_Text, &TextComponent::m_Font>
+			Reflection{
+				"text",
+				{ "str", "font" },
+			};
+	};
 
 	struct TestSystem
 	{
 		apollo::Window& m_Window;
 		apollo::rdr::Renderer& m_Renderer;
-		apollo::AssetRef<apollo::rdr::Material> m_Material;
-		apollo::AssetRef<apollo::rdr::txt::FontAtlas> m_Font;
+		apollo::AssetRef<rdr::Material> m_Material;
+		apollo::AssetRef<Scene> m_Scene;
+		apollo::AssetRef<rdr::txt::FontAtlas> m_Font;
 		apollo::rdr::txt::Renderer2d m_TextRenderer;
 		glm::uvec2 m_WinSize;
 		bool m_GeometryReady = false;
@@ -67,16 +77,23 @@ the lazy dog.)";
 			m_CamMatrix = GetProjMatrix(eventData.m_Width, eventData.m_Height);
 		}
 
-		TestSystem(apollo::Window& window, apollo::rdr::Renderer& renderer, std::string_view text)
+		TestSystem(apollo::Window& window, apollo::rdr::Renderer& renderer)
 			: m_Window(window)
 			, m_Renderer(renderer)
 			, m_WinSize(m_Window.GetSize())
-			, m_Text(text)
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
 
 			glm::uvec2 winSize = m_Window.GetSize();
 			m_CamMatrix = GetProjMatrix(winSize.x, winSize.y);
+		}
+
+		void FetchData(const entt::registry& world)
+		{
+			const GameObject* object = m_Scene->GetGameObject("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+			const TextComponent& comp = world.get<const TextComponent>(object->m_Entity);
+			m_Text = comp.m_Text;
+			m_TextRenderer.SetFont((m_Font = comp.m_Font));
 		}
 
 		~TestSystem() {}
@@ -94,19 +111,17 @@ the lazy dog.)";
 				{
 					OnLoadingFinished();
 				});
-			m_Material = assetManager->GetAsset<apollo::rdr::Material>(
-				"01K6841M7W2D1J00QKJHHBDJG5"_ulid);
-			m_Font = assetManager->GetAsset<apollo::rdr::txt::FontAtlas>(
-				"01K77QW60RWKYCZFHVP704FV6B"_ulid);
+			m_Material = assetManager->GetAsset<rdr::Material>("01K6841M7W2D1J00QKJHHBDJG5"_ulid);
+			m_Scene = assetManager->GetAsset<Scene>("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+
 			m_TextRenderer.Init(m_Renderer.GetDevice(), m_Material, 128);
-			m_TextRenderer.SetFont(m_Font);
 		}
 
 		void OnLoadingFinished()
 		{
-			APOLLO_LOG_TRACE("Loading complete");
+			APOLLO_LOG_INFO("Loading complete");
 			m_AssetsReady = m_Material->GetState() == EAssetState::Loaded &&
-							m_Font->GetState() == EAssetState::Loaded;
+							m_Scene->GetState() == EAssetState::Loaded;
 		}
 
 		void DisplayUi()
@@ -137,7 +152,7 @@ the lazy dog.)";
 				"Foreground Color",
 				&m_TextRenderer.m_Style.m_FgColor.r);
 			m_GeometryReady &= !ImGui::ColorEdit4(
-				"Outline COlor",
+				"Outline Color",
 				&m_TextRenderer.m_Style.m_OutlineColor.r);
 			ImGui::End();
 		}
@@ -157,6 +172,11 @@ the lazy dog.)";
 			DisplayUi();
 			if (m_AssetsReady)
 			{
+				if (!m_Font)
+				{
+					FetchData(world);
+				}
+
 				m_TextRenderer.StartFrame(mainCommandBuffer);
 				if (!m_GeometryReady)
 				{
@@ -202,17 +222,17 @@ the lazy dog.)";
 		}
 	};
 
-	apollo::EAppResult Init(const apollo::EntryPoint& entry, apollo::App& app)
+	apollo::EAppResult Init(const apollo::EntryPoint&, apollo::App& app)
 	{
 		spdlog::set_level(spdlog::level::trace);
-		const std::span args = entry.m_Args;
 
-		const char* text = args.size() > 2 ? args[2] : g_DefaultText;
+		auto* compRegistry = ecs::ComponentRegistry::GetInstance();
+		compRegistry->RegisterComponent<TextComponent>();
 
 		auto& renderer = *apollo::rdr::Renderer::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
-		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer, text);
+		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
 		return EAppResult::Continue;
 	}
 } // namespace apollo::demo

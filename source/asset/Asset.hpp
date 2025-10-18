@@ -17,6 +17,7 @@ namespace apollo {
 		Shader,
 		Material,
 		FontAtlas,
+		Scene,
 		NTypes
 	};
 

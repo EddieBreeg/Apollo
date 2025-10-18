@@ -1,0 +1,14 @@
+{
+	"gameObjects": [
+		{
+			"id": "01K7VZZSR16FXR2NF8DNYSJQQ4",
+			"name": "text1",
+			"components": {
+				"text": {
+					"str": "The quick brown\nfox jumps over\nthe lazy dog.",
+					"font": "01K77QW60RWKYCZFHVP704FV6B"
+				}
+			}
+		}
+	]
+}

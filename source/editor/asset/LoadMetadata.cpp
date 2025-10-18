@@ -17,6 +17,7 @@ namespace {
 		{ apollo::StringHash{ "shader" }, apollo::EAssetType::Shader },
 		{ apollo::StringHash{ "material" }, apollo::EAssetType::Material },
 		{ apollo::StringHash{ "fontAtlas" }, apollo::EAssetType::FontAtlas },
+		{ apollo::StringHash{ "scene" }, apollo::EAssetType::Scene },
 	};
 
 	struct Parser

@@ -5,6 +5,7 @@
 
 #include <filesystem>
 
+#include <ecs/ComponentRegistry.hpp>
 #include <editor/Editor.hpp>
 #include <editor/asset/AssetLoaders.hpp>
 
@@ -20,6 +21,11 @@ int main(int argc, const char** argv)
 	assetManagerSettings.m_LoadShader = apollo::editor::LoadShader;
 	assetManagerSettings.m_LoadMaterial = &apollo::editor::LoadMaterial;
 	assetManagerSettings.m_LoadFont = &apollo::editor::LoadFont;
+	assetManagerSettings.m_LoadScene = &apollo::editor::LoadScene;
+
+	// component registry is kinda special: the core engine runtime doesn't know about it, we need
+	// to initialize it here
+	apollo::ecs::ComponentRegistry::Init();
 
 	apollo::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
 	apollo::GetEntryPoint(entry);
