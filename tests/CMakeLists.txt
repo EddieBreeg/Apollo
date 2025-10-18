@@ -3,6 +3,7 @@ set(CMAKE_FOLDER "tests")
 AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	BitmapTests.cpp
+	ComponentRegistryTests.cpp
 	EnumTests.cpp
 	GraphicsPipelineTests.cpp
 	HashTests.cpp
@@ -36,3 +37,4 @@ AddTest("Multi-Threading Tests" "${PROJECT_NAME}Tests" FILTERS "[mt]")
 AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
 AddTest("Math Tests" "${PROJECT_NAME}Tests" FILTERS "[math]")
 AddTest("Rendering Tests" "${PROJECT_NAME}Tests" FILTERS "[rdr]")
+AddTest("Scene Management" "${PROJECT_NAME}Tests" FILTERS "[scene]")

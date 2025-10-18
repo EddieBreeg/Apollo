@@ -36,6 +36,7 @@ namespace apollo {
 		AssetImportFunc* m_LoadShader = nullptr;
 		AssetImportFunc* m_LoadMaterial = nullptr;
 		AssetImportFunc* m_LoadFont = nullptr;
+		AssetImportFunc* m_LoadScene = nullptr;
 
 		std::filesystem::path m_AssetPath;
 	};

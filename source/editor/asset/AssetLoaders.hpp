@@ -15,4 +15,5 @@ namespace apollo::editor {
 	EAssetLoadResult LoadShader(IAsset& out_shader, const AssetMetadata& metadata);
 	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata);
 	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata);
+	EAssetLoadResult LoadScene(IAsset& out_asset, const AssetMetadata& metadata);
 } // namespace apollo::editor

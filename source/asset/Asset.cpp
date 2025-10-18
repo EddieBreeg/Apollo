@@ -7,6 +7,7 @@ namespace {
 		"shader",
 		"material",
 		"fontAtlas",
+		"scene",
 	};
 
 	static_assert(

@@ -39,6 +39,7 @@ namespace apollo::ecs {
 
 		APOLLO_API void PostInit();
 		APOLLO_API void Update(const GameTime&);
+		[[nodiscard]] entt::registry& GetEntityWorld() noexcept { return m_World; }
 
 	private:
 		template <System S>

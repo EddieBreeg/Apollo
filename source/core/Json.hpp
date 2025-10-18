@@ -104,7 +104,7 @@ namespace apollo::json {
 			if (!it->is_number())
 				return false;
 		}
-		else
+		else if constexpr(!std::is_same_v<T, nlohmann::json>)
 		{
 			if (it->type() != _internal::ValueType<T>::Type)
 				return false;

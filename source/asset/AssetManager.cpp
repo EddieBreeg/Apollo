@@ -3,6 +3,7 @@
 #include <core/Log.hpp>
 #include <core/ULIDFormatter.hpp>
 
+#include "Scene.hpp"
 #include <core/Json.hpp>
 #include <rendering/Material.hpp>
 #include <rendering/Shader.hpp>
@@ -68,6 +69,7 @@ namespace apollo {
 			{&ConstructAsset<rdr::Shader>, settings.m_LoadShader},
 			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
 			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},
+			{&ConstructAsset<Scene>, settings.m_LoadScene},
 		 }
 		, m_AssetsPath(settings.m_AssetPath)
 		, m_Loader(gpuDevice)
