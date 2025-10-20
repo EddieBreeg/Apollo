@@ -4,14 +4,16 @@
 #include <core/Log.hpp>
 #include <core/Window.hpp>
 #include <rendering/Pipeline.hpp>
-#include <rendering/Renderer.hpp>
+#include <rendering/Context.hpp>
 
 #define PIPELINE_TEST(name) TEST_CASE(name, "[pipeline][rdr]")
 
 namespace apollo::rdr {
-	struct Context
+	using RenderContext = Context;
+
+	struct TestContext
 	{
-		Context()
+		TestContext()
 			: m_Window{
 				WindowSettings{
 					.m_Title = "Apollo Rendering Tests",
@@ -21,10 +23,10 @@ namespace apollo::rdr {
 				},
 			}
 		{
-			m_Device = &Renderer::Init(EBackend::Vulkan, m_Window).GetDevice();
+			m_Device = &RenderContext::Init(EBackend::Vulkan, m_Window).GetDevice();
 		}
 
-		~Context() { Renderer::Shutdown(); }
+		~TestContext() { RenderContext::Shutdown(); }
 
 		Window m_Window;
 		rdr::GPUDevice* m_Device = nullptr;
@@ -32,7 +34,7 @@ namespace apollo::rdr {
 
 	PIPELINE_TEST("Load Default Pipeline description from JSON")
 	{
-		Context ctx;
+		TestContext ctx;
 		using ConverterType = apollo::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>;
 		const nlohmann::json j{};
 		SDL_GPUGraphicsPipelineCreateInfo info = {};
@@ -71,7 +73,7 @@ namespace apollo::rdr {
 
 	PIPELINE_TEST("Load Custom Pipeline description from JSON")
 	{
-		Context ctx;
+		TestContext ctx;
 
 		using ConverterType = apollo::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>;
 		const nlohmann::json j = nlohmann::json::parse(R"json({

@@ -1,5 +1,5 @@
 #include "Buffer.hpp"
-#include "Renderer.hpp"
+#include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 
@@ -38,20 +38,20 @@ namespace apollo::rdr {
 					  SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_READ;
 		info.usage |= m_Flags.HasAny(EBufferFlags::ComputeStorageWrite) *
 					  SDL_GPU_BUFFERUSAGE_COMPUTE_STORAGE_WRITE;
-		m_Handle = SDL_CreateGPUBuffer(Renderer::GetInstance()->GetDevice().GetHandle(), &info);
+		m_Handle = SDL_CreateGPUBuffer(Context::GetInstance()->GetDevice().GetHandle(), &info);
 	}
 
 	Buffer::~Buffer()
 	{
 		if (m_Handle)
-			SDL_ReleaseGPUBuffer(Renderer::GetInstance()->GetDevice().GetHandle(), m_Handle);
+			SDL_ReleaseGPUBuffer(Context::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
 
 	void Buffer::UploadData(SDL_GPUCopyPass* copyPass, const void* data, uint32 size, uint32 offset)
 	{
 		APOLLO_ASSERT(m_Handle, "Called UploadData on null buffer");
 
-		GPUDevice& device = Renderer::GetInstance()->GetDevice();
+		GPUDevice& device = Context::GetInstance()->GetDevice();
 		const SDL_GPUTransferBufferCreateInfo tBufferInfo{
 			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
 			.size = size,

@@ -1,5 +1,5 @@
 #include "Shader.hpp"
-#include "Renderer.hpp"
+#include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 #include <core/Enum.hpp>
@@ -16,7 +16,7 @@ namespace apollo::rdr {
 	Shader::~Shader()
 	{
 		if (m_Handle)
-			SDL_ReleaseGPUShader(Renderer::GetInstance()->GetDevice().GetHandle(), m_Handle);
+			SDL_ReleaseGPUShader(Context::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
 
 	Shader::Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen)
@@ -41,7 +41,7 @@ namespace apollo::rdr {
 			.num_storage_buffers = info.m_NumStorageBuffers,
 			.num_uniform_buffers = info.m_NumUniformBuffers,
 		};
-		GPUDevice& device = Renderer::GetInstance()->GetDevice();
+		GPUDevice& device = Context::GetInstance()->GetDevice();
 		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
 		if (!m_Handle) [[unlikely]]
 		{

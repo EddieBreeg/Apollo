@@ -14,10 +14,10 @@ namespace apollo {
 }
 
 namespace apollo::rdr {
-	class Renderer : public Singleton<Renderer>
+	class Context : public Singleton<Context>
 	{
 	public:
-		~Renderer() = default;
+		~Context() = default;
 
 		float4 m_ClearColor{};
 
@@ -42,14 +42,14 @@ namespace apollo::rdr {
 		APOLLO_API void EndFrame();
 
 	private:
-		APOLLO_API Renderer(
+		APOLLO_API Context(
 			EBackend backend,
 			Window& window,
 			bool gpuDebug = false,
 			bool vSync = false);
-		friend class Singleton<Renderer>;
+		friend class Singleton<Context>;
 
-		static APOLLO_API std::unique_ptr<Renderer> s_Instance;
+		static APOLLO_API std::unique_ptr<Context> s_Instance;
 
 		GPUDevice m_Device;
 		Window& m_Window;

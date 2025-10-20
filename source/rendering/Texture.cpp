@@ -1,5 +1,5 @@
 #include "Texture.hpp"
-#include "Renderer.hpp"
+#include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Enum.hpp>
 #include <core/Log.hpp>
@@ -71,7 +71,7 @@ namespace apollo::rdr {
 		{
 			return;
 		}
-		auto* device = Renderer::GetInstance()->GetDevice().GetHandle();
+		auto* device = Context::GetInstance()->GetDevice().GetHandle();
 		const SDL_GPUTextureCreateInfo info{
 			.type = SDL_GPU_TEXTURETYPE_2D,
 			.format = g_Formats[ToUnderlying(settings.m_Format)],
@@ -92,6 +92,6 @@ namespace apollo::rdr {
 	Texture2D::~Texture2D()
 	{
 		if (m_Handle)
-			SDL_ReleaseGPUTexture(Renderer::GetInstance()->GetDevice().GetHandle(), m_Handle);
+			SDL_ReleaseGPUTexture(Context::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
 } // namespace apollo::rdr

@@ -11,7 +11,7 @@
 #include <freetype/freetype.h>
 #include <fstream>
 #include <msdfgen.h>
-#include <rendering/Renderer.hpp>
+#include <rendering/Context.hpp>
 #include <rendering/text/FontAtlas.hpp>
 
 namespace {
@@ -185,7 +185,7 @@ namespace apollo::editor {
 			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
 			.size = uint32(sizeof(rdr::RGBAPixel<uint8>) * pixelCount),
 		};
-		SDL_GPUDevice* device = rdr::Renderer::GetInstance()->GetDevice().GetHandle();
+		SDL_GPUDevice* device = rdr::Context::GetInstance()->GetDevice().GetHandle();
 
 		SDL_GPUTransferBuffer* transferBuf = SDL_CreateGPUTransferBuffer(device, &tBufferInfo);
 		auto* buf = (rdr::RGBAPixel<uint8>*)SDL_MapGPUTransferBuffer(device, transferBuf, true);

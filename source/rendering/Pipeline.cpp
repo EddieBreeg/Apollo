@@ -1,5 +1,5 @@
 #include "Pipeline.hpp"
-#include "Renderer.hpp"
+#include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 #include <core/Json.hpp>
@@ -230,9 +230,9 @@ struct apollo::json::Converter<SDL_GPUColorTargetDescription>
 		}
 		else
 		{
-			auto* renderer = rdr::Renderer::GetInstance();
-			auto& window = renderer->GetWindow();
-			auto& device = renderer->GetDevice();
+			auto* ctx = rdr::Context::GetInstance();
+			auto& window = ctx->GetWindow();
+			auto& device = ctx->GetDevice();
 			out_desc.format = SDL_GetGPUSwapchainTextureFormat(
 				device.GetHandle(),
 				window.GetHandle());
@@ -423,9 +423,9 @@ namespace apollo::json {
 		const auto it = json.find("colorTargets");
 		if (it == json.end())
 		{
-			auto* renderer = rdr::Renderer::GetInstance();
-			auto& window = renderer->GetWindow();
-			auto& device = renderer->GetDevice();
+			auto* ctx = rdr::Context::GetInstance();
+			auto& window = ctx->GetWindow();
+			auto& device = ctx->GetDevice();
 			g_ColorTargets[0] = SDL_GPUColorTargetDescription{
 				.format = SDL_GetGPUSwapchainTextureFormat(device.GetHandle(), window.GetHandle()),
 				.blend_state =

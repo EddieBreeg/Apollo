@@ -9,7 +9,7 @@
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <imgui.h>
-#include <rendering/Renderer.hpp>
+#include <rendering/Context.hpp>
 
 namespace {
 	ImGuiContext* InitImGui(SDL_Window* window, SDL_GPUDevice* device)
@@ -80,13 +80,13 @@ namespace apollo {
 		}
 
 #ifdef APOLLO_DEV
-		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, true);
+		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, true);
 #else
-		m_Renderer = &rdr::Renderer::Init(rdr::EBackend::Default, m_Window, false);
+		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
 #endif
-		m_AssetManager = &AssetManager::Init(entry.m_AssetManagerSettings, m_Renderer->GetDevice());
+		m_AssetManager = &AssetManager::Init(entry.m_AssetManagerSettings, m_RenderContext->GetDevice());
 
-		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_Renderer->GetDevice().GetHandle());
+		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_RenderContext->GetDevice().GetHandle());
 
 		m_ECSManager = &ecs::Manager::Init();
 		RegisterCoreSystems(*this, *m_ECSManager);
@@ -123,15 +123,15 @@ namespace apollo {
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 
-		m_Renderer->BeginFrame();
+		m_RenderContext->BeginFrame();
 		m_AssetManager->Update();
 
 		m_ECSManager->Update(m_GameTime);
-		m_Renderer->ImGuiRenderPass();
+		m_RenderContext->ImGuiRenderPass();
 
 		ImGui::EndFrame();
 
-		m_Renderer->EndFrame();
+		m_RenderContext->EndFrame();
 
 		// Update and Render additional Platform Windows
 		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -150,7 +150,7 @@ namespace apollo {
 		ShutdownImGui();
 		ecs::Manager::Shutdown();
 		AssetManager::Shutdown();
-		rdr::Renderer::Shutdown();
+		rdr::Context::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}
 } // namespace apollo

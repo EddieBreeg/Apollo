@@ -9,7 +9,7 @@
 #include <fstream>
 #include <rendering/Material.hpp>
 #include <rendering/Pipeline.hpp>
-#include <rendering/Renderer.hpp>
+#include <rendering/Context.hpp>
 
 namespace {
 #ifdef APOLLO_DEV
@@ -136,7 +136,7 @@ namespace {
 
 		desc.vertex_shader = out_vShader->GetHandle();
 		desc.fragment_shader = out_vShader->GetHandle();
-		auto& device = rdr::Renderer::GetInstance()->GetDevice();
+		auto& device = rdr::Context::GetInstance()->GetDevice();
 
 		out_handle = SDL_CreateGPUGraphicsPipeline(device.GetHandle(), &desc);
 		if (!out_handle)
@@ -172,7 +172,7 @@ namespace apollo::editor {
 		std::unique_ptr<const SDL_GPUColorTargetDescription[]> targetDesc{
 			info->target_info.color_target_descriptions,
 		};
-		auto& device = rdr::Renderer::GetInstance()->GetDevice();
+		auto& device = rdr::Context::GetInstance()->GetDevice();
 		info->vertex_shader = mat.m_VertShader->GetHandle();
 		info->fragment_shader = mat.m_FragShader->GetHandle();
 

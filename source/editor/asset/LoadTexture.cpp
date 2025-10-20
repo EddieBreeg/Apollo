@@ -2,7 +2,7 @@
 #include <SDL3/SDL_gpu.h>
 #include <asset/AssetManager.hpp>
 #include <core/Assert.hpp>
-#include <rendering/Renderer.hpp>
+#include <rendering/Context.hpp>
 #include <rendering/Texture.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -42,7 +42,7 @@ namespace apollo::editor {
 		}
 
 		rdr::Texture2D& tex = static_cast<rdr::Texture2D&>(out_texture);
-		rdr::GPUDevice& device = rdr::Renderer::GetInstance()->GetDevice();
+		rdr::GPUDevice& device = rdr::Context::GetInstance()->GetDevice();
 		tex = rdr::Texture2D(
 			metadata.m_Id,
 			rdr::TextureSettings{

@@ -1,5 +1,5 @@
 #include "Material.hpp"
-#include "Renderer.hpp"
+#include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 
 namespace apollo::rdr {
@@ -8,7 +8,7 @@ namespace apollo::rdr {
 		if (m_Handle)
 		{
 			SDL_ReleaseGPUGraphicsPipeline(
-				Renderer::GetInstance()->GetDevice().GetHandle(),
+				Context::GetInstance()->GetDevice().GetHandle(),
 				static_cast<SDL_GPUGraphicsPipeline*>(m_Handle));
 		}
 	}

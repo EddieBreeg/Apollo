@@ -18,7 +18,7 @@
 #include <rendering/Device.hpp>
 #include <rendering/Material.hpp>
 #include <rendering/Pixel.hpp>
-#include <rendering/Renderer.hpp>
+#include <rendering/Context.hpp>
 #include <rendering/Texture.hpp>
 #include <rendering/text/BatchRenderer.hpp>
 #include <rendering/text/FontAtlas.hpp>
@@ -50,7 +50,7 @@ namespace apollo::demo {
 	struct TestSystem
 	{
 		apollo::Window& m_Window;
-		apollo::rdr::Renderer& m_Renderer;
+		apollo::rdr::Context& m_RenderContext;
 		apollo::AssetRef<rdr::Material> m_Material;
 		apollo::AssetRef<Scene> m_Scene;
 		apollo::AssetRef<rdr::txt::FontAtlas> m_Font;
@@ -77,9 +77,9 @@ namespace apollo::demo {
 			m_CamMatrix = GetProjMatrix(eventData.m_Width, eventData.m_Height);
 		}
 
-		TestSystem(apollo::Window& window, apollo::rdr::Renderer& renderer)
+		TestSystem(apollo::Window& window, apollo::rdr::Context& renderer)
 			: m_Window(window)
-			, m_Renderer(renderer)
+			, m_RenderContext(renderer)
 			, m_WinSize(m_Window.GetSize())
 		{
 			m_ModelMatrix = glm::identity<glm::mat4x4>();
@@ -114,7 +114,7 @@ namespace apollo::demo {
 			m_Material = assetManager->GetAsset<rdr::Material>("01K6841M7W2D1J00QKJHHBDJG5"_ulid);
 			m_Scene = assetManager->GetAsset<Scene>("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
 
-			m_TextRenderer.Init(m_Renderer.GetDevice(), m_Material, 128);
+			m_TextRenderer.Init(m_RenderContext.GetDevice(), m_Material, 128);
 		}
 
 		void OnLoadingFinished()
@@ -162,8 +162,8 @@ namespace apollo::demo {
 			if (!m_Window) [[unlikely]]
 				return;
 
-			auto* swapchainTexture = m_Renderer.GetSwapchainTexture();
-			auto* mainCommandBuffer = m_Renderer.GetMainCommandBuffer();
+			auto* swapchainTexture = m_RenderContext.GetSwapchainTexture();
+			auto* mainCommandBuffer = m_RenderContext.GetMainCommandBuffer();
 
 			if (!swapchainTexture)
 				return;
@@ -229,7 +229,7 @@ namespace apollo::demo {
 		auto* compRegistry = ecs::ComponentRegistry::GetInstance();
 		compRegistry->RegisterComponent<TextComponent>();
 
-		auto& renderer = *apollo::rdr::Renderer::GetInstance();
+		auto& renderer = *apollo::rdr::Context::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
 		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);

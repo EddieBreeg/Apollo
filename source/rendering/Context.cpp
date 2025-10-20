@@ -1,4 +1,4 @@
-#include "Renderer.hpp"
+#include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>
@@ -8,16 +8,16 @@
 #include <imgui.h>
 
 namespace apollo::rdr {
-	std::unique_ptr<Renderer> Renderer::s_Instance;
+	std::unique_ptr<Context> Context::s_Instance;
 
-	Renderer::Renderer(EBackend backend, Window& window, bool gpuDebug, bool vSync)
+	Context::Context(EBackend backend, Window& window, bool gpuDebug, bool vSync)
 		: m_Device(backend, gpuDebug)
 		, m_Window(window)
 	{
 		if (!m_Device) [[unlikely]]
 			return;
 
-		// it is valid to initialized the renderer without a window, we can use offline rendering
+		// it is valid to initialized the Context without a window, we can use offline rendering
 		if (!window)
 			return;
 
@@ -33,7 +33,7 @@ namespace apollo::rdr {
 			vSync ? SDL_GPU_PRESENTMODE_VSYNC : SDL_GPU_PRESENTMODE_IMMEDIATE);
 	}
 
-	void Renderer::BeginFrame()
+	void Context::BeginFrame()
 	{
 		m_MainCommandBuffer = SDL_AcquireGPUCommandBuffer(m_Device.GetHandle());
 		DEBUG_CHECK(m_MainCommandBuffer)
@@ -56,7 +56,7 @@ namespace apollo::rdr {
 		}
 	}
 
-	void Renderer::ImGuiRenderPass()
+	void Context::ImGuiRenderPass()
 	{
 		DEBUG_CHECK(m_MainCommandBuffer)
 		{
@@ -91,7 +91,7 @@ namespace apollo::rdr {
 		SDL_EndGPURenderPass(pass);
 	}
 
-	void Renderer::EndFrame()
+	void Context::EndFrame()
 	{
 		m_SwapchainTexture = nullptr;
 

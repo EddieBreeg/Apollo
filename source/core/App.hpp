@@ -17,7 +17,7 @@ namespace apollo {
 	}
 
 	namespace rdr {
-		class Renderer;
+		class Context;
 	}
 
 	enum class EAppResult : int8;
@@ -55,7 +55,7 @@ namespace apollo {
 
 		const EntryPoint& m_EntryPoint;
 		Window m_Window;
-		rdr::Renderer* m_Renderer = nullptr;
+		rdr::Context* m_RenderContext = nullptr;
 		ecs::Manager* m_ECSManager = nullptr;
 		AssetManager* m_AssetManager = nullptr;
 		ImGuiContext* m_ImGuiContext = nullptr;
