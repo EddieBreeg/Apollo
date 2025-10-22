@@ -5,6 +5,7 @@
 #include "FontAtlas.hpp"
 #include "Style.hpp"
 #include <asset/AssetRef.hpp>
+#include <rendering/Batch.hpp>
 #include <rendering/Buffer.hpp>
 #include <rendering/GpuAlign.hpp>
 #include <rendering/Material.hpp>
@@ -37,7 +38,7 @@ namespace apollo::rdr::txt {
 			GPU_ALIGN(float) m_OutlineThickness;
 		};
 
-		Renderer2d() = default;
+		Renderer2d()= default;
 		APOLLO_API void Init(
 			const rdr::GPUDevice& device,
 			AssetRef<Material> material,
@@ -47,16 +48,12 @@ namespace apollo::rdr::txt {
 
 		[[nodiscard]] bool IsInitialized() const noexcept
 		{
-			return m_Material && m_Sampler && m_Buffer;
+			return m_Batch && m_Sampler;
 		}
 
 		TextStyle m_Style;
 
-		void Clear() noexcept
-		{
-			m_Quads.clear();
-			m_Dirty = false;
-		}
+		void Clear() noexcept { m_Batch.Clear(); }
 
 		APOLLO_API void StartFrame(SDL_GPUCommandBuffer* cmdBuffer);
 		APOLLO_API void AddText(
@@ -71,18 +68,13 @@ namespace apollo::rdr::txt {
 		APOLLO_API ~Renderer2d();
 
 	private:
-		void Upload();
 
 		SDL_GPUCopyPass* m_CopyPass = nullptr;
 
 		bool m_Dirty = false;
 
 		AssetRef<FontAtlas> m_Font;
-		Buffer m_Buffer; // storage buffer for quad instances
-		std::vector<GlyphQuad> m_Quads;
-
-		uint32 m_BatchSize;
-		AssetRef<Material> m_Material;
+		Batch<GlyphQuad> m_Batch;
 		const GPUDevice* m_Device = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 	};

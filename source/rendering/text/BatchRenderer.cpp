@@ -22,12 +22,8 @@ namespace apollo::rdr::txt {
 			APOLLO_LOG_ERROR("Invalid material passed to txt::Renderer2d::Init");
 			return;
 		}
-		m_Material = std::move(material);
 		m_Device = &device;
-		m_BatchSize = batchSize;
-		m_Quads.reserve(m_BatchSize);
-
-		m_Buffer = Buffer(EBufferFlags::GraphicsStorage, batchSize * sizeof(GlyphQuad));
+		m_Batch = Batch<GlyphQuad>{ std::move(material), batchSize };
 
 		const SDL_GPUSamplerCreateInfo samplerInfo{
 			.min_filter = SDL_GPU_FILTER_LINEAR,
@@ -44,6 +40,7 @@ namespace apollo::rdr::txt {
 	void Renderer2d::StartFrame(SDL_GPUCommandBuffer* cmdBuffer)
 	{
 		m_CopyPass = SDL_BeginGPUCopyPass(cmdBuffer);
+		m_Batch.StartRecording();
 	}
 
 	void Renderer2d::AddText(std::string_view str, float2 origin, EAnchorPoint anchor)
@@ -106,18 +103,17 @@ namespace apollo::rdr::txt {
 				rect.x + rect.z,
 				rect.y + rect.w,
 			};
-			m_Quads.emplace_back(GlyphQuad{
-					.m_Rect = rect,
-					.m_Uv = {
-						uvScale.x * glyph->m_Uv.x0,
-						uvScale.y * glyph->m_Uv.y0,
-						uvScale.x * width,
-						uvScale.y * height,
-					},
-					.m_MainColor = m_Style.m_FgColor,
-					.m_OutlineColor = m_Style.m_OutlineColor,
-					.m_OutlineThickness = m_Style.m_OutlineThickness,
-				});
+			m_Batch.Add(
+				rect,
+				float4{
+					uvScale.x * glyph->m_Uv.x0,
+					uvScale.y * glyph->m_Uv.y0,
+					uvScale.x * width,
+					uvScale.y * height,
+				},
+				m_Style.m_FgColor,
+				m_Style.m_OutlineColor,
+				m_Style.m_OutlineThickness);
 
 			pos.x += m_Style.m_Size * glyph->m_Advance * m_Style.m_Tracking;
 			prev = glyph;
@@ -133,7 +129,7 @@ namespace apollo::rdr::txt {
 		default: break;
 		}
 
-		for (GlyphQuad& q : m_Quads)
+		for (GlyphQuad& q : m_Batch)
 		{
 			q.m_Rect.x += offset.x;
 			q.m_Rect.y += offset.y;
@@ -143,11 +139,7 @@ namespace apollo::rdr::txt {
 	void Renderer2d::StartRender()
 	{
 		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
-		if (m_Dirty)
-		{
-			Upload();
-			m_Dirty = false;
-		}
+		m_Batch.EndRecording(m_CopyPass);
 		SDL_EndGPUCopyPass(m_CopyPass);
 		m_CopyPass = nullptr;
 	}
@@ -155,8 +147,9 @@ namespace apollo::rdr::txt {
 	void Renderer2d::Render(SDL_GPURenderPass* renderPass)
 	{
 		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
-		if (m_Quads.empty() || !m_Font || m_Font->GetState() != EAssetState::Loaded ||
-			m_Material->GetState() != EAssetState::Loaded)
+		const uint32 count = m_Batch.GetCount();
+		auto* const pipeline = m_Batch.GetPipeline();
+		if (!count || !m_Font || m_Font->GetState() != EAssetState::Loaded || !pipeline)
 			return;
 
 		const SDL_GPUTextureSamplerBinding samplerBinding{
@@ -164,22 +157,10 @@ namespace apollo::rdr::txt {
 			.sampler = m_Sampler,
 		};
 
-		SDL_BindGPUGraphicsPipeline(
-			renderPass,
-			static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetHandle()));
-		SDL_GPUBuffer* const temp = m_Buffer.GetHandle();
+		SDL_BindGPUGraphicsPipeline(renderPass, pipeline);
+		SDL_GPUBuffer* const temp = m_Batch.GetBuffer().GetHandle();
 		SDL_BindGPUFragmentSamplers(renderPass, 0, &samplerBinding, 1);
 		SDL_BindGPUVertexStorageBuffers(renderPass, 0, &temp, 1);
-		SDL_DrawGPUPrimitives(renderPass, 4, (uint32)m_Quads.size(), 0, 0);
-	}
-
-	void Renderer2d::Upload()
-	{
-		if (m_Quads.size() > m_BatchSize)
-		{
-			m_BatchSize = (uint32)m_Quads.size();
-			m_Buffer = Buffer(EBufferFlags::GraphicsStorage, m_BatchSize * sizeof(GlyphQuad));
-		}
-		m_Buffer.UploadData(m_CopyPass, m_Quads.data(), uint32(m_Quads.size() * sizeof(GlyphQuad)));
+		SDL_DrawGPUPrimitives(renderPass, 4, count, 0, 0);
 	}
 } // namespace apollo::rdr::txt
