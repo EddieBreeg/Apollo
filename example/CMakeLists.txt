@@ -22,4 +22,4 @@ if(${APOLLO_EXAMPLE_MULTITHREADED})
 	target_compile_definitions(${PROJECT_NAME}Example PRIVATE USE_MULTITHREADING=1)
 endif(${APOLLO_EXAMPLE_MULTITHREADED})
 
-add_dependencies(${PROJECT_NAME}Example TextVertShader TextFragShader)
+# add_dependencies(${PROJECT_NAME}Example TextVertShader TextFragShader)

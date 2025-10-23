@@ -39,11 +39,18 @@ namespace apollo::rdr {
 			EShaderStage stage,
 			const void* code,
 			size_t codeLen);
+
+		APOLLO_API GraphicsShader(
+			const ULID& id,
+			EShaderStage stage,
+			std::string_view source,
+			const char* entryPoint = "main");
 	};
 
 	class VertexShader : public GraphicsShader
 	{
 	public:
+		using GraphicsShader::GraphicsShader;
 		VertexShader() = default;
 		VertexShader(const ULID& id)
 			: GraphicsShader(id)
@@ -52,12 +59,21 @@ namespace apollo::rdr {
 			: GraphicsShader(id, EShaderStage::Vertex, byteCode, codeLen)
 		{}
 
+		[[nodiscard]] static VertexShader CompileFromSource(
+			const ULID& id,
+			std::string_view hlsl,
+			const char* entryPoint = "main")
+		{
+			return VertexShader{ id, EShaderStage::Vertex, hlsl, entryPoint };
+		}
+
 		GET_ASSET_TYPE_IMPL(EAssetType::VertexShader);
 	};
 
 	class FragmentShader : public GraphicsShader
 	{
 	public:
+		using GraphicsShader::GraphicsShader;
 		FragmentShader() = default;
 		FragmentShader(const ULID& id)
 			: GraphicsShader(id)
@@ -65,6 +81,15 @@ namespace apollo::rdr {
 		FragmentShader(const ULID& id, const void* byteCode, size_t codeLen)
 			: GraphicsShader(id, EShaderStage::Fragment, byteCode, codeLen)
 		{}
+
+		[[nodiscard]] static FragmentShader CompileFromSource(
+			const ULID& id,
+			std::string_view hlsl,
+			const char* entryPoint = "main")
+		{
+			return FragmentShader{ id, EShaderStage::Fragment, hlsl, entryPoint };
+		}
+
 		GET_ASSET_TYPE_IMPL(EAssetType::FragmentShader);
 	};
 } // namespace apollo::rdr

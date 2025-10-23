@@ -18,8 +18,8 @@ int main(int argc, const char** argv)
 	assetManagerSettings.m_MetadataImportFunc = &apollo::editor::ImporteAssetMetadata;
 
 	assetManagerSettings.m_LoadTexture2d = apollo::editor::LoadTexture2d;
-	assetManagerSettings.m_LoadVertexShader = apollo::editor::LoadShader;
-	assetManagerSettings.m_LoadFragmentShader = apollo::editor::LoadShader;
+	assetManagerSettings.m_LoadVertexShader = apollo::editor::LoadVertexShader;
+	assetManagerSettings.m_LoadFragmentShader = apollo::editor::LoadFragmentShader;
 	assetManagerSettings.m_LoadMaterial = apollo::editor::LoadMaterial;
 	assetManagerSettings.m_LoadFont = apollo::editor::LoadFont;
 	assetManagerSettings.m_LoadScene = apollo::editor::LoadScene;

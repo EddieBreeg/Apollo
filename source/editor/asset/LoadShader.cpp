@@ -17,11 +17,13 @@ namespace {
 		return (w == 0x07230203) || (w == 0x03022307);
 	}
 #endif
-} // namespace
 
-namespace apollo::editor {
-	EAssetLoadResult LoadShader(IAsset& out_asset, const AssetMetadata& metadata)
+	template <class ShaderType>
+	apollo::EAssetLoadResult LoadShader(
+		ShaderType& out_shader,
+		const apollo::AssetMetadata& metadata)
 	{
+		using namespace apollo;
 		std::ifstream inFile{
 			metadata.m_FilePath,
 			std::ios::binary | std::ios::ate,
@@ -58,34 +60,30 @@ namespace apollo::editor {
 				GetErrnoMessage(errno));
 			return EAssetLoadResult::Failure;
 		}
+
 #ifdef APOLLO_VULKAN
-		if (!IsSpirvByteCode(data.get(), len))
-		{
-			APOLLO_LOG_ERROR(
-				"Failed to load shader {}({}) from {}: not a SPIRV binary",
-				metadata.m_Name,
-				metadata.m_Id,
-				metadata.m_FilePath.string());
-		}
+		const bool isByteCode = IsSpirvByteCode(data.get(), len);
 #endif
-
-		switch (metadata.m_Type)
+		if (isByteCode)
 		{
-		case apollo::EAssetType::VertexShader:
+			out_shader = ShaderType{ metadata.m_Id, data.get(), len };
+		}
+		else
 		{
-			rdr::VertexShader& shader = dynamic_cast<rdr::VertexShader&>(out_asset);
-			shader = rdr::VertexShader(metadata.m_Id, data.get(), len);
-			return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+			std::string_view src{ data.get(), len };
+			out_shader = ShaderType::CompileFromSource(metadata.m_Id, src);
 		}
+		return out_shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+	}
+} // namespace
 
-		case apollo::EAssetType::FragmentShader:
-		{
-			rdr::FragmentShader& shader = dynamic_cast<rdr::FragmentShader&>(out_asset);
-			shader = rdr::FragmentShader(metadata.m_Id, data.get(), len);
-			return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
-		}
-
-		default: return EAssetLoadResult::Failure;
-		}
+namespace apollo::editor {
+	EAssetLoadResult LoadVertexShader(IAsset& out_asset, const AssetMetadata& metadata)
+	{
+		return LoadShader(static_cast<rdr::VertexShader&>(out_asset), metadata);
+	}
+	EAssetLoadResult LoadFragmentShader(IAsset& out_asset, const AssetMetadata& metadata)
+	{
+		return LoadShader(static_cast<rdr::FragmentShader&>(out_asset), metadata);
 	}
 } // namespace apollo::editor

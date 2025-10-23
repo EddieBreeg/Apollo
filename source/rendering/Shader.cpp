@@ -25,7 +25,11 @@ namespace {
 } // namespace
 
 #ifdef APOLLO_VULKAN
+#include <SPIRV/GlslangToSpv.h>
+#include <glslang/Public/ResourceLimits.h>
+#include <glslang/Public/ShaderLang.h>
 #include <spirv_reflect.h>
+
 namespace {
 	[[maybe_unused]] const char* GetSpirvReflectErrorMsg(SpvReflectResult code)
 	{
@@ -125,7 +129,11 @@ namespace apollo::rdr {
 			SDL_ReleaseGPUShader(Context::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
 
-	GraphicsShader::GraphicsShader(const ULID& id, EShaderStage stage, const void* code, size_t codeLen)
+	GraphicsShader::GraphicsShader(
+		const ULID& id,
+		EShaderStage stage,
+		const void* code,
+		size_t codeLen)
 		: IAsset(id)
 	{
 		ReflectionContext ctx;
@@ -149,6 +157,82 @@ namespace apollo::rdr {
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
 #endif
 			.stage = g_Stages[int32(info.m_Stage)],
+			.num_samplers = info.m_NumSamplers,
+			.num_storage_textures = info.m_NumStorageTextures,
+			.num_storage_buffers = info.m_NumStorageBuffers,
+			.num_uniform_buffers = info.m_NumUniformBuffers,
+		};
+		GPUDevice& device = Context::GetInstance()->GetDevice();
+		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
+		if (!m_Handle) [[unlikely]]
+		{
+			APOLLO_LOG_ERROR("Failed to create shader: {}", SDL_GetError());
+		}
+	}
+
+	GraphicsShader::GraphicsShader(
+		const ULID& id,
+		EShaderStage stage,
+		std::string_view hlsl,
+		const char* entryPoint)
+		: IAsset(id)
+	{
+#ifdef APOLLO_VULKAN
+		constexpr EShLanguage vkStages[] = {
+			EShLanguage::EShLangVertex,
+			EShLanguage::EShLangFragment,
+		};
+		const EShLanguage vkStage = vkStages[ToUnderlying(stage)];
+		glslang::TShader vkShader{ vkStage };
+		const char* tempPtr = hlsl.data();
+		const int32 tempLen = (int32)hlsl.length();
+		vkShader.setStringsWithLengths(&tempPtr, &tempLen, 1);
+		vkShader.setEntryPoint(entryPoint);
+		vkShader.setEnvInput(glslang::EShSourceHlsl, vkStage, glslang::EShClientVulkan, 100);
+		vkShader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_1);
+		vkShader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_3);
+		if (!vkShader.parse(GetDefaultResources(), 100, true, EShMsgDefault))
+		{
+			APOLLO_LOG_ERROR("Shader compilation failed: {}", vkShader.getInfoLog());
+			return;
+		}
+		glslang::TProgram vkProg;
+		vkProg.addShader(&vkShader);
+		if (!vkProg.link(EShMsgDefault))
+		{
+			APOLLO_LOG_ERROR("Shader linking failed: {}", vkProg.getInfoLog());
+			return;
+		}
+		std::vector<uint32> code;
+		spv::SpvBuildLogger logger;
+		glslang::SpvOptions options{};
+#ifdef APOLLO_DEV
+		options.generateDebugInfo = true;
+#else
+		options.disableOptimizer = false;
+#endif
+		glslang::GlslangToSpv(*vkProg.getIntermediate(vkStage), code, &logger, &options);
+		std::string log = logger.getAllMessages();
+		if (log.size())
+		{
+			APOLLO_LOG_ERROR("SPIRV Generation failed: {}", log);
+			return;
+		}
+		const size_t codeLen = 4 * code.size();
+#endif
+		ReflectionContext ctx{};
+		if (!ctx.Init(code.data(), codeLen))
+			return;
+
+		ShaderInfo info{};
+		ctx.GetInfo(info);
+
+		SDL_GPUShaderCreateInfo createInfo{
+			.code_size = codeLen,
+			.code = (uint8*)code.data(),
+			.entrypoint = entryPoint,
+			.format = SDL_GPU_SHADERFORMAT_SPIRV,
+			.stage = g_Stages[ToUnderlying(stage)],
 			.num_samplers = info.m_NumSamplers,
 			.num_storage_textures = info.m_NumStorageTextures,
 			.num_storage_buffers = info.m_NumStorageBuffers,

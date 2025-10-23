@@ -1,5 +1,5 @@
-01K65F71RK1WNJ6D7XDNTNPVX4,vertexShader,textVert,".brk/_assetCache/text.vert"
-01K6G8959Y1A6BM730HAQSS9PC,fragmentShader,textFrag,".brk/_assetCache/text.frag"
+01K65F71RK1WNJ6D7XDNTNPVX4,vertexShader,textVert,assets/text.vert.hlsl
+01K6G8959Y1A6BM730HAQSS9PC,fragmentShader,textFrag,assets/text.frag.hlsl
 01K6841M7W2D1J00QKJHHBDJG5,material,text,"assets/text.mat"
 01K77QW60RWKYCZFHVP704FV6B,fontAtlas,arial,"assets/arial.atlas"
 01K7VZZSR16FXR2NF8DNYSJQQ4,scene,main,main.scn
