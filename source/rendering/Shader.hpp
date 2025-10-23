@@ -10,44 +10,61 @@ struct SDL_GPUShader;
 
 namespace apollo::rdr {
 	enum class EShaderStage : int8;
-	
-	class Shader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
+
+	class GraphicsShader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
 	{
 	public:
-		Shader() = default;
-		Shader(const ULID& id)
-			: IAsset(id)
-		{}
+		void Swap(GraphicsShader& other) noexcept { BaseType::Swap(other); }
 
-		Shader(Shader&& other)
-			: BaseType(std::move(other))
-			, m_Stage(other.m_Stage)
-		{
-			other.m_Stage = EShaderStage::Invalid;
-		}
-
-		APOLLO_API Shader(const ULID& id, const void* code, size_t codeLen);
-		APOLLO_API Shader(const void* code, size_t codeLen);
-
-		void Swap(Shader& other) noexcept
-		{
-			BaseType::Swap(other);
-			std::swap(m_Stage, other.m_Stage);
-		}
-
-		Shader& operator=(Shader&& other) noexcept
+		GraphicsShader& operator=(GraphicsShader&& other) noexcept
 		{
 			Swap(other);
 			return *this;
 		}
 
-		APOLLO_API ~Shader();
+		APOLLO_API ~GraphicsShader();
 
-		[[nodiscard]] EShaderStage GetStage() const noexcept { return m_Stage; }
+	protected:
+		GraphicsShader() = default;
+		GraphicsShader(const ULID& id)
+			: IAsset(id)
+		{}
 
-		GET_ASSET_TYPE_IMPL(EAssetType::Shader);
+		GraphicsShader(GraphicsShader&& other)
+			: BaseType(std::move(other))
+		{}
 
-	private:
-		EShaderStage m_Stage = EShaderStage::Invalid;
+		APOLLO_API GraphicsShader(
+			const ULID& id,
+			EShaderStage stage,
+			const void* code,
+			size_t codeLen);
+	};
+
+	class VertexShader : public GraphicsShader
+	{
+	public:
+		VertexShader() = default;
+		VertexShader(const ULID& id)
+			: GraphicsShader(id)
+		{}
+		VertexShader(const ULID& id, const void* byteCode, size_t codeLen)
+			: GraphicsShader(id, EShaderStage::Vertex, byteCode, codeLen)
+		{}
+
+		GET_ASSET_TYPE_IMPL(EAssetType::VertexShader);
+	};
+
+	class FragmentShader : public GraphicsShader
+	{
+	public:
+		FragmentShader() = default;
+		FragmentShader(const ULID& id)
+			: GraphicsShader(id)
+		{}
+		FragmentShader(const ULID& id, const void* byteCode, size_t codeLen)
+			: GraphicsShader(id, EShaderStage::Fragment, byteCode, codeLen)
+		{}
+		GET_ASSET_TYPE_IMPL(EAssetType::FragmentShader);
 	};
 } // namespace apollo::rdr

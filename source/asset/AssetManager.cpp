@@ -66,7 +66,8 @@ namespace apollo {
 		: m_ImportBank(settings.m_MetadataImportFunc)
 		, m_TypeInfo{ 
 			{&ConstructAsset<rdr::Texture2D>, settings.m_LoadTexture2d},
-			{&ConstructAsset<rdr::Shader>, settings.m_LoadShader},
+			{&ConstructAsset<rdr::VertexShader>, settings.m_LoadVertexShader},
+			{&ConstructAsset<rdr::FragmentShader>, settings.m_LoadFragmentShader},
 			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
 			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},
 			{&ConstructAsset<Scene>, settings.m_LoadScene},

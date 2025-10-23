@@ -12,21 +12,9 @@
 #include <rendering/Context.hpp>
 
 namespace {
-#ifdef APOLLO_DEV
-	const char* GetStageName(apollo::rdr::EShaderStage stage)
-	{
-		switch (stage)
-		{
-		case apollo::rdr::EShaderStage::Fragment: return "Fragment";
-		case apollo::rdr::EShaderStage::Vertex: return "Vertex";
-		default: return "Invalid";
-		};
-	}
-#endif
-
 	apollo::EAssetLoadResult ValidateShaderStates(
-		const apollo::rdr::Shader* vShader,
-		const apollo::rdr::Shader* fShader)
+		const apollo::rdr::GraphicsShader* vShader,
+		const apollo::rdr::GraphicsShader* fShader)
 	{
 		const apollo::EAssetState s1 = vShader->GetState(), s2 = fShader->GetState();
 		if (s1 == apollo::EAssetState::Invalid || s2 == apollo::EAssetState::Invalid)
@@ -38,32 +26,10 @@ namespace {
 		return apollo::EAssetLoadResult::TryAgain;
 	}
 
-	bool ValidateShaderStages(const apollo::rdr::Shader* vShader, const apollo::rdr::Shader* fShader)
-	{
-		apollo::rdr::EShaderStage stage = vShader->GetStage();
-		if (stage != apollo::rdr::EShaderStage::Vertex)
-		{
-			APOLLO_LOG_ERROR(
-				"Shader {} has stage {}, expected Vertex",
-				vShader->GetId(),
-				GetStageName(stage));
-			return false;
-		}
-		if ((stage = fShader->GetStage()) != apollo::rdr::EShaderStage::Fragment)
-		{
-			APOLLO_LOG_ERROR(
-				"Shader {} has stage {}, expected Fragment",
-				fShader->GetId(),
-				GetStageName(stage));
-			return false;
-		}
-		return true;
-	}
-
 	apollo::EAssetLoadResult LoadMaterialJson(
 		const apollo::AssetMetadata& metadata,
-		apollo::AssetRef<apollo::rdr::Shader>& out_vShader,
-		apollo::AssetRef<apollo::rdr::Shader>& out_fShader,
+		apollo::AssetRef<apollo::rdr::VertexShader>& out_vShader,
+		apollo::AssetRef<apollo::rdr::FragmentShader>& out_fShader,
 		void*& out_handle)
 	{
 		using apollo::json::Converter;
@@ -131,9 +97,6 @@ namespace {
 		default: break;
 		}
 
-		if (!ValidateShaderStages(out_vShader.Get(), out_fShader.Get()))
-			return EAssetLoadResult::Failure;
-
 		desc.vertex_shader = out_vShader->GetHandle();
 		desc.fragment_shader = out_vShader->GetHandle();
 		auto& device = rdr::Context::GetInstance()->GetDevice();
@@ -161,9 +124,6 @@ namespace apollo::editor {
 			mat.m_FragShader.Get());
 		if (result != EAssetLoadResult::Success)
 			return result;
-
-		if (!ValidateShaderStages(mat.m_VertShader.Get(), mat.m_FragShader.Get()))
-			return EAssetLoadResult::Failure;
 
 		std::unique_ptr<SDL_GPUGraphicsPipelineCreateInfo> info{
 			static_cast<SDL_GPUGraphicsPipelineCreateInfo*>(std::exchange(mat.m_Handle, nullptr)),

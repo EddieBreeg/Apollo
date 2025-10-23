@@ -14,7 +14,8 @@ namespace apollo {
 	{
 		Invalid = -1,
 		Texture2D,
-		Shader,
+		VertexShader,
+		FragmentShader,
 		Material,
 		FontAtlas,
 		Scene,

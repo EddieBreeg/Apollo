@@ -18,10 +18,11 @@ int main(int argc, const char** argv)
 	assetManagerSettings.m_MetadataImportFunc = &apollo::editor::ImporteAssetMetadata;
 
 	assetManagerSettings.m_LoadTexture2d = apollo::editor::LoadTexture2d;
-	assetManagerSettings.m_LoadShader = apollo::editor::LoadShader;
-	assetManagerSettings.m_LoadMaterial = &apollo::editor::LoadMaterial;
-	assetManagerSettings.m_LoadFont = &apollo::editor::LoadFont;
-	assetManagerSettings.m_LoadScene = &apollo::editor::LoadScene;
+	assetManagerSettings.m_LoadVertexShader = apollo::editor::LoadShader;
+	assetManagerSettings.m_LoadFragmentShader = apollo::editor::LoadShader;
+	assetManagerSettings.m_LoadMaterial = apollo::editor::LoadMaterial;
+	assetManagerSettings.m_LoadFont = apollo::editor::LoadFont;
+	assetManagerSettings.m_LoadScene = apollo::editor::LoadScene;
 
 	// component registry is kinda special: the core engine runtime doesn't know about it, we need
 	// to initialize it here

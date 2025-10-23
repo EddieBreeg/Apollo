@@ -10,7 +10,19 @@ namespace {
 		SDL_GPU_SHADERSTAGE_VERTEX,
 		SDL_GPU_SHADERSTAGE_FRAGMENT,
 	};
-}
+
+#ifdef APOLLO_DEV
+	const char* GetStageName(apollo::rdr::EShaderStage stage)
+	{
+		switch (stage)
+		{
+		case apollo::rdr::EShaderStage::Fragment: return "Fragment";
+		case apollo::rdr::EShaderStage::Vertex: return "Vertex";
+		default: return "Invalid";
+		};
+	}
+#endif
+} // namespace
 
 #ifdef APOLLO_VULKAN
 #include <spirv_reflect.h>
@@ -107,13 +119,13 @@ namespace {
 #endif
 
 namespace apollo::rdr {
-	Shader::~Shader()
+	GraphicsShader::~GraphicsShader()
 	{
 		if (m_Handle)
 			SDL_ReleaseGPUShader(Context::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
 
-	Shader::Shader(const ULID& id, const void* code, size_t codeLen)
+	GraphicsShader::GraphicsShader(const ULID& id, EShaderStage stage, const void* code, size_t codeLen)
 		: IAsset(id)
 	{
 		ReflectionContext ctx;
@@ -121,9 +133,13 @@ namespace apollo::rdr {
 			return;
 		ShaderInfo info{};
 		ctx.GetInfo(info);
-		if (info.m_Stage == EShaderStage::Invalid)
-			return;
-		m_Stage = info.m_Stage;
+		if (info.m_Stage != stage)
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to create shader from byte code: expected stage {}, got {}",
+				GetStageName(stage),
+				GetStageName(info.m_Stage));
+		}
 
 		const SDL_GPUShaderCreateInfo createInfo{
 			.code_size = codeLen,
@@ -145,8 +161,4 @@ namespace apollo::rdr {
 			APOLLO_LOG_ERROR("Failed to create shader: {}", SDL_GetError());
 		}
 	}
-
-	Shader::Shader(const void* code, size_t codeLen)
-		: Shader(ULID::Generate(), code, codeLen)
-	{}
 } // namespace apollo::rdr

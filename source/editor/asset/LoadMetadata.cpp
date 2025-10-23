@@ -14,7 +14,8 @@
 namespace {
 	const apollo::StringHashMap<apollo::EAssetType> g_AssetTypeMap{
 		{ apollo::StringHash{ "texture2d" }, apollo::EAssetType::Texture2D },
-		{ apollo::StringHash{ "shader" }, apollo::EAssetType::Shader },
+		{ apollo::StringHash{ "vertexShader" }, apollo::EAssetType::VertexShader },
+		{ apollo::StringHash{ "fragmentShader" }, apollo::EAssetType::FragmentShader },
 		{ apollo::StringHash{ "material" }, apollo::EAssetType::Material },
 		{ apollo::StringHash{ "fontAtlas" }, apollo::EAssetType::FontAtlas },
 		{ apollo::StringHash{ "scene" }, apollo::EAssetType::Scene },

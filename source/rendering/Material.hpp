@@ -49,8 +49,8 @@ namespace apollo::rdr {
 
 		GET_ASSET_TYPE_IMPL(EAssetType::Material);
 
-		[[nodiscard]] const Shader* GetVertexShader() const noexcept { return m_VertShader.Get(); }
-		[[nodiscard]] const Shader* GetFragmentShader() const noexcept
+		[[nodiscard]] const VertexShader* GetVertexShader() const noexcept { return m_VertShader.Get(); }
+		[[nodiscard]] const FragmentShader* GetFragmentShader() const noexcept
 		{
 			return m_FragShader.Get();
 		}
@@ -60,7 +60,7 @@ namespace apollo::rdr {
 			IAsset& out_asset,
 			const AssetMetadata& metadata);
 
-		AssetRef<Shader> m_VertShader;
-		AssetRef<Shader> m_FragShader;
+		AssetRef<VertexShader> m_VertShader;
+		AssetRef<FragmentShader> m_FragShader;
 	};
 } // namespace apollo::rdr

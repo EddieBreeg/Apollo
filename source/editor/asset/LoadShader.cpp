@@ -69,9 +69,23 @@ namespace apollo::editor {
 		}
 #endif
 
-		rdr::Shader& shader = dynamic_cast<rdr::Shader&>(out_asset);
-		shader = rdr::Shader(metadata.m_Id, data.get(), len);
+		switch (metadata.m_Type)
+		{
+		case apollo::EAssetType::VertexShader:
+		{
+			rdr::VertexShader& shader = dynamic_cast<rdr::VertexShader&>(out_asset);
+			shader = rdr::VertexShader(metadata.m_Id, data.get(), len);
+			return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+		}
 
-		return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+		case apollo::EAssetType::FragmentShader:
+		{
+			rdr::FragmentShader& shader = dynamic_cast<rdr::FragmentShader&>(out_asset);
+			shader = rdr::FragmentShader(metadata.m_Id, data.get(), len);
+			return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+		}
+
+		default: return EAssetLoadResult::Failure;
+		}
 	}
 } // namespace apollo::editor

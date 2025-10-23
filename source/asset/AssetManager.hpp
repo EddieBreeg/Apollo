@@ -33,7 +33,8 @@ namespace apollo {
 
 		// Asset importers
 		AssetImportFunc* m_LoadTexture2d = nullptr;
-		AssetImportFunc* m_LoadShader = nullptr;
+		AssetImportFunc* m_LoadVertexShader = nullptr;
+		AssetImportFunc* m_LoadFragmentShader = nullptr;
 		AssetImportFunc* m_LoadMaterial = nullptr;
 		AssetImportFunc* m_LoadFont = nullptr;
 		AssetImportFunc* m_LoadScene = nullptr;

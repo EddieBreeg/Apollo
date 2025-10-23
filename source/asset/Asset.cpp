@@ -4,7 +4,8 @@
 namespace {
 	constexpr std::string_view g_TypeNames[] = {
 		"texture2d",
-		"shader",
+		"vertexShader",
+		"fragmentShader",
 		"material",
 		"fontAtlas",
 		"scene",
