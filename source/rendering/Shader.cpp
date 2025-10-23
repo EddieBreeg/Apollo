@@ -12,6 +12,100 @@ namespace {
 	};
 }
 
+#ifdef APOLLO_VULKAN
+#include <spirv_reflect.h>
+namespace {
+	[[maybe_unused]] const char* GetSpirvReflectErrorMsg(SpvReflectResult code)
+	{
+		constexpr const char* msg[] = {
+			"Success",
+			"Not Ready",
+			"Error Parse Failed",
+			"Error Alloc Failed",
+			"Error Range Exceeded",
+			"Error Null Pointer",
+			"Error Internal Error",
+			"Error Count Mismatch",
+			"Error Element Not Found",
+			"Error Spirv Invalid Code Size",
+			"Error Spirv Invalid Magic Number",
+			"Error Spirv Unexpected Eof",
+			"Error Spirv Invalid Id Reference",
+			"Error Spirv Set Number Overflow",
+			"Error Spirv Invalid Storage Class",
+			"Error Spirv Recursion",
+			"Error Spirv Invalid Instruction",
+			"Error Spirv Unexpected Block Data",
+			"Error Spirv Invalid Block Member Reference",
+			"Error Spirv Invalid Entry Point",
+			"Error Spirv Invalid Execution Mode",
+			"Error Spirv Max Recursive Exceeded",
+		};
+		DEBUG_CHECK(code >= 0 && code < STATIC_ARRAY_SIZE(msg))
+		{
+			return "Unknown";
+		}
+		return msg[code];
+	}
+
+	struct ReflectionContext
+	{
+		SpvReflectShaderModule m_Module;
+
+		bool Init(const void* code, size_t len)
+		{
+			const auto res = spvReflectCreateShaderModule(len, code, &m_Module);
+			if (res != SPV_REFLECT_RESULT_SUCCESS)
+			{
+				APOLLO_LOG_ERROR("Failed to inspect SPIRV shader: {}", GetSpirvReflectErrorMsg(res));
+				return false;
+			}
+			return true;
+		}
+		void GetInfo(apollo::rdr::ShaderInfo& out_info)
+		{
+			using namespace apollo::rdr;
+			out_info.m_EntryPoint = m_Module.entry_point_name;
+			switch (m_Module.shader_stage)
+			{
+			case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
+				out_info.m_Stage = EShaderStage::Vertex;
+				break;
+			case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
+				out_info.m_Stage = EShaderStage::Fragment;
+				break;
+			default:
+				[[unlikely]] APOLLO_LOG_ERROR(
+					"SPIRV shader reflection failed: invalid stage {}",
+					uint32(m_Module.shader_stage));
+				out_info.m_Stage = EShaderStage::Invalid;
+				return;
+			}
+
+			for (uint32 i = 0; i < m_Module.descriptor_binding_count; ++i)
+			{
+				switch (m_Module.descriptor_bindings[i].descriptor_type)
+				{
+				case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+					++out_info.m_NumStorageBuffers;
+					break;
+				case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+					++out_info.m_NumUniformBuffers;
+					break;
+				case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER: ++out_info.m_NumSamplers; break;
+				case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+					++out_info.m_NumStorageTextures;
+					break;
+				default: break;
+				}
+			}
+		}
+
+		~ReflectionContext() { spvReflectDestroyShaderModule(&m_Module); }
+	};
+} // namespace
+#endif
+
 namespace apollo::rdr {
 	Shader::~Shader()
 	{
@@ -19,14 +113,17 @@ namespace apollo::rdr {
 			SDL_ReleaseGPUShader(Context::GetInstance()->GetDevice().GetHandle(), m_Handle);
 	}
 
-	Shader::Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen)
+	Shader::Shader(const ULID& id, const void* code, size_t codeLen)
 		: IAsset(id)
-		, m_Stage(info.m_Stage)
 	{
-		APOLLO_ASSERT(
-			m_Stage > EShaderStage::Invalid && info.m_Stage < EShaderStage::NStages,
-			"Invalid shader stage {}",
-			int32(info.m_Stage));
+		ReflectionContext ctx;
+		if (!ctx.Init(code, codeLen))
+			return;
+		ShaderInfo info{};
+		ctx.GetInfo(info);
+		if (info.m_Stage == EShaderStage::Invalid)
+			return;
+		m_Stage = info.m_Stage;
 
 		const SDL_GPUShaderCreateInfo createInfo{
 			.code_size = codeLen,
@@ -49,7 +146,7 @@ namespace apollo::rdr {
 		}
 	}
 
-	Shader::Shader(const ShaderInfo& info, const void* code, size_t codeLen)
-		: Shader(ULID::Generate(), info, code, codeLen)
+	Shader::Shader(const void* code, size_t codeLen)
+		: Shader(ULID::Generate(), code, codeLen)
 	{}
 } // namespace apollo::rdr

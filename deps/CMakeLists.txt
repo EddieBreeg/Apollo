@@ -12,7 +12,8 @@ add_subdirectory(freetype)
 add_subdirectory(msdfgen)
 
 if(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
-	add_subdirectory(SPIRV-Reflect)
+	include(SPIRV)
+	FetchSpirvRepos()
 endif(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
 
 file(GLOB IMGUI_HEADERS "imgui/*.h")

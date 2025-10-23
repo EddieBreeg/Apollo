@@ -6,68 +6,18 @@
 #include <fstream>
 #include <rendering/Shader.hpp>
 
-#ifdef APOLLO_VULKAN
-#include <spirv_reflect.h>
 namespace {
-	[[maybe_unused]] const char* GetSpirvReflectErrorMsg(SpvReflectResult code)
+#ifdef APOLLO_VULKAN
+	bool IsSpirvByteCode(const void* data, size_t len)
 	{
-		constexpr const char* msg[] = {
-			"Success",
-			"Not Ready",
-			"Error Parse Failed",
-			"Error Alloc Failed",
-			"Error Range Exceeded",
-			"Error Null Pointer",
-			"Error Internal Error",
-			"Error Count Mismatch",
-			"Error Element Not Found",
-			"Error Spirv Invalid Code Size",
-			"Error Spirv Invalid Magic Number",
-			"Error Spirv Unexpected Eof",
-			"Error Spirv Invalid Id Reference",
-			"Error Spirv Set Number Overflow",
-			"Error Spirv Invalid Storage Class",
-			"Error Spirv Recursion",
-			"Error Spirv Invalid Instruction",
-			"Error Spirv Unexpected Block Data",
-			"Error Spirv Invalid Block Member Reference",
-			"Error Spirv Invalid Entry Point",
-			"Error Spirv Invalid Execution Mode",
-			"Error Spirv Max Recursive Exceeded",
-		};
-		DEBUG_CHECK(code >= 0 && code < STATIC_ARRAY_SIZE(msg))
-		{
-			return "Unknown";
-		}
-		return msg[code];
+		if (len % 4)
+			return false;
+		uint32 w = *static_cast<const uint32_t*>(data);
+		// compare to SPIRV magic number in both little and big endian
+		return (w == 0x07230203) || (w == 0x03022307);
 	}
-	void GetSpirvShaderInfo(SpvReflectShaderModule module, apollo::rdr::ShaderInfo& out_info)
-	{
-		using namespace apollo::rdr;
-		out_info.m_EntryPoint = module.entry_point_name;
-		switch (module.shader_stage)
-		{
-		case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT: out_info.m_Stage = EShaderStage::Vertex; break;
-		case SPV_REFLECT_SHADER_STAGE_FRAGMENT_BIT:
-			out_info.m_Stage = EShaderStage::Fragment;
-			break;
-		default: [[unlikely]] out_info.m_Stage = EShaderStage::Invalid; return;
-		}
-
-		for (uint32 i = 0; i < module.descriptor_binding_count; ++i)
-		{
-			switch (module.descriptor_bindings[i].descriptor_type)
-			{
-			case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER: ++out_info.m_NumStorageBuffers; break;
-			case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER: ++out_info.m_NumUniformBuffers; break;
-			case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER: ++out_info.m_NumSamplers; break;
-			case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE: ++out_info.m_NumStorageTextures; break;
-			default: break;
-			}
-		}
-	}
-} // namespace
 #endif
+} // namespace
 
 namespace apollo::editor {
 	EAssetLoadResult LoadShader(IAsset& out_asset, const AssetMetadata& metadata)
@@ -87,6 +37,15 @@ namespace apollo::editor {
 			return EAssetLoadResult::Failure;
 		}
 		size_t len = inFile.tellg();
+		if (!len)
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to load shader {}({}) from {}: empty file",
+				metadata.m_Name,
+				metadata.m_Id,
+				metadata.m_FilePath.string());
+			return EAssetLoadResult::Failure;
+		}
 		inFile.seekg(0, std::ios::beg);
 		std::unique_ptr data = std::make_unique<char[]>(len);
 		if (inFile.read(data.get(), len).fail())
@@ -99,37 +58,20 @@ namespace apollo::editor {
 				GetErrnoMessage(errno));
 			return EAssetLoadResult::Failure;
 		}
-
-		rdr::Shader& shader = dynamic_cast<rdr::Shader&>(out_asset);
-		rdr::ShaderInfo info;
 #ifdef APOLLO_VULKAN
-		SpvReflectShaderModule reflectModule{};
-		auto res = spvReflectCreateShaderModule(len, data.get(), &reflectModule);
-		if (res != SPV_REFLECT_RESULT_SUCCESS) [[unlikely]]
+		if (!IsSpirvByteCode(data.get(), len))
 		{
 			APOLLO_LOG_ERROR(
-				"Failed to inspect SPIRV shader {}({}): {}",
+				"Failed to load shader {}({}) from {}: not a SPIRV binary",
 				metadata.m_Name,
 				metadata.m_Id,
-				GetSpirvReflectErrorMsg(res));
-			return EAssetLoadResult::Failure;
+				metadata.m_FilePath.string());
 		}
-		GetSpirvShaderInfo(reflectModule, info);
 #endif
-		if (info.m_Stage == rdr::EShaderStage::Invalid) [[unlikely]]
-		{
-			APOLLO_LOG_ERROR("Shader {}({}) has unsupported stage", metadata.m_Name, metadata.m_Id);
-			goto LOAD_END;
-		}
 
-		shader = rdr::Shader(metadata.m_Id, info, data.get(), len);
-
-	LOAD_END:
-#ifdef APOLLO_VULKAN
-		spvReflectDestroyShaderModule(&reflectModule);
-#endif
+		rdr::Shader& shader = dynamic_cast<rdr::Shader&>(out_asset);
+		shader = rdr::Shader(metadata.m_Id, data.get(), len);
 
 		return shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
 	}
-
 } // namespace apollo::editor

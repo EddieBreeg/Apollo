@@ -9,6 +9,8 @@
 struct SDL_GPUShader;
 
 namespace apollo::rdr {
+	enum class EShaderStage : int8;
+	
 	class Shader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
 	{
 	public:
@@ -24,8 +26,8 @@ namespace apollo::rdr {
 			other.m_Stage = EShaderStage::Invalid;
 		}
 
-		APOLLO_API Shader(const ULID& id, const ShaderInfo& info, const void* code, size_t codeLen);
-		APOLLO_API Shader(const ShaderInfo& info, const void* code, size_t codeLen);
+		APOLLO_API Shader(const ULID& id, const void* code, size_t codeLen);
+		APOLLO_API Shader(const void* code, size_t codeLen);
 
 		void Swap(Shader& other) noexcept
 		{
