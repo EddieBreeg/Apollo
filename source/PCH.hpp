@@ -4,9 +4,7 @@
 
 #include "core/Rectangle.hpp"
 #include <concepts>
-#include <type_traits>
-#include <utility>
-
+#include <core/Util.hpp>
 
 #ifdef _WIN32
 extern "C" void* _alloca(size_t);
