@@ -106,7 +106,19 @@ namespace {
 					++out_info.m_NumStorageBuffers;
 					break;
 				case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-					++out_info.m_NumUniformBuffers;
+					if (out_info.m_NumUniformBuffers >= STATIC_ARRAY_SIZE(out_info.m_Blocks))
+						[[unlikely]]
+					{
+						APOLLO_LOG_ERROR(
+							"Shader uniform buffer count exceeds the maximum allowed ({})",
+							STATIC_ARRAY_SIZE(out_info.m_Blocks));
+					}
+					else
+					{
+						AddUniformBlock(
+							m_Module.descriptor_bindings[i].block,
+							out_info.m_Blocks[out_info.m_NumUniformBuffers++]);
+					}
 					break;
 				case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER: ++out_info.m_NumSamplers; break;
 				case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
@@ -115,6 +127,50 @@ namespace {
 				default: break;
 				}
 			}
+		}
+
+		void AddUniformBlock(
+			const SpvReflectBlockVariable& block,
+			apollo::rdr::ShaderConstantBlock& out_block)
+		{
+			using namespace apollo::rdr;
+
+			out_block.m_Name = block.name;
+			out_block.m_Size = block.padded_size;
+			out_block.m_NumMembers = block.member_count;
+			out_block.m_Members = std::make_unique<ShaderConstant[]>(out_block.m_NumMembers);
+			for (uint32 i = 0; i < out_block.m_NumMembers; ++i)
+			{
+				auto& member = block.members[i];
+				out_block.m_Members[i].m_Name = member.name;
+				out_block.m_Members[i].m_Offset = member.offset;
+				out_block.m_Members[i].m_Type = ParseParamType(*member.type_description);
+			}
+		}
+
+		apollo::rdr::ShaderConstant::EType ParseParamType(const SpvReflectTypeDescription& desc)
+		{
+			using apollo::rdr::ShaderConstant;
+			ShaderConstant::EType type = ShaderConstant::Invalid;
+
+			if (desc.type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
+				type = ShaderConstant::Float;
+			else if (desc.type_flags & SPV_REFLECT_TYPE_FLAG_INT)
+				type = ShaderConstant::Int;
+			else
+				return type;
+
+			if (!(desc.type_flags & SPV_REFLECT_TYPE_FLAG_VECTOR))
+				return type;
+
+			const uint32 comp = desc.traits.numeric.vector.component_count - 1;
+			type = ShaderConstant::EType(type + comp);
+			if (desc.type_flags & SPV_REFLECT_TYPE_FLAG_MATRIX)
+			{
+				const uint32 r = desc.traits.numeric.matrix.row_count - 1;
+				type = ShaderConstant::EType(type + 3 * r);
+			}
+			return type;
 		}
 
 		~ReflectionContext() { spvReflectDestroyShaderModule(&m_Module); }
@@ -147,6 +203,12 @@ namespace apollo::rdr {
 				"Failed to create shader from byte code: expected stage {}, got {}",
 				GetStageName(stage),
 				GetStageName(info.m_Stage));
+		}
+
+		while (m_NumConstantBlocks < info.m_NumUniformBuffers)
+		{
+			m_ConstantBlocks[m_NumConstantBlocks] = std::move(info.m_Blocks[m_NumConstantBlocks]);
+			++m_NumConstantBlocks;
 		}
 
 		const SDL_GPUShaderCreateInfo createInfo{
@@ -226,6 +288,12 @@ namespace apollo::rdr {
 
 		ShaderInfo info{};
 		ctx.GetInfo(info);
+
+		while (m_NumConstantBlocks < info.m_NumUniformBuffers)
+		{
+			m_ConstantBlocks[m_NumConstantBlocks] = std::move(info.m_Blocks[m_NumConstantBlocks]);
+			++m_NumConstantBlocks;
+		}
 
 		SDL_GPUShaderCreateInfo createInfo{
 			.code_size = codeLen,

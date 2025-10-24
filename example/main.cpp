@@ -15,10 +15,10 @@
 #include <imgui.h>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Buffer.hpp>
+#include <rendering/Context.hpp>
 #include <rendering/Device.hpp>
 #include <rendering/Material.hpp>
 #include <rendering/Pixel.hpp>
-#include <rendering/Context.hpp>
 #include <rendering/Texture.hpp>
 #include <rendering/text/BatchRenderer.hpp>
 #include <rendering/text/FontAtlas.hpp>
@@ -33,6 +33,27 @@ namespace apollo::demo {
 	{
 		const float xmax = float(width) / height;
 		return glm::orthoRH(-xmax, xmax, -1.0f, 1.0f, 0.01f, 100.f);
+	}
+
+	void ShaderParamWidget(const rdr::ShaderConstant& param)
+	{
+		const char* typeName = rdr::ShaderConstant::GetTypeName(param.m_Type);
+		ImGui::Text("%s: %s, offset %u", param.m_Name.c_str(), typeName, param.m_Offset);
+	}
+
+	void ShaderParamBlockWidget(const rdr::ShaderConstantBlock& block)
+	{
+		if (block.m_Name.length())
+			ImGui::SeparatorText(block.m_Name.c_str());
+		else
+			ImGui::Separator();
+
+		ImGui::Text("Total size: %u", block.m_Size);
+
+		for (uint32 i = 0; i < block.m_NumMembers; ++i)
+		{
+			ShaderParamWidget(block.m_Members[i]);
+		}
 	}
 
 	struct TextComponent
@@ -124,7 +145,7 @@ namespace apollo::demo {
 							m_Scene->GetState() == EAssetState::Loaded;
 		}
 
-		void DisplayUi()
+		void DisplayUi(const rdr::Material& mat)
 		{
 			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
@@ -155,6 +176,27 @@ namespace apollo::demo {
 				"Outline Color",
 				&m_TextRenderer.m_Style.m_OutlineColor.r);
 			ImGui::End();
+			
+			char title[37] = {};
+			mat.GetId().ToChars(title);
+
+			if (mat.GetState() != EAssetState::Loaded)
+				return;
+
+			ImGui::Begin(title);
+
+			ImGui::SeparatorText("Vertex Shader Constants");
+			for (const auto& block : mat.GetVertexShader()->GetParameterBlocks())
+			{
+				ShaderParamBlockWidget(block);
+			}
+
+			ImGui::SeparatorText("Fragment Shader Constants");
+			for (const auto& block : mat.GetFragmentShader()->GetParameterBlocks())
+			{
+				ShaderParamBlockWidget(block);
+			}
+			ImGui::End();
 		}
 
 		void Update(entt::registry& world, const apollo::GameTime&)
@@ -169,7 +211,7 @@ namespace apollo::demo {
 				return;
 
 			ProcessWindowResize(world);
-			DisplayUi();
+			DisplayUi(*m_Material);
 			if (m_AssetsReady)
 			{
 				if (!m_Font)
