@@ -1,4 +1,7 @@
+#include "Camera.hpp"
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_mouse.h>
 #include <asset/AssetManager.hpp>
 #include <asset/Scene.hpp>
 #include <core/App.hpp>
@@ -13,6 +16,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 #include <imgui.h>
+#include <numbers>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Buffer.hpp>
 #include <rendering/Context.hpp>
@@ -23,6 +27,7 @@
 #include <rendering/text/BatchRenderer.hpp>
 #include <rendering/text/FontAtlas.hpp>
 #include <systems/InputEventComponents.hpp>
+#include <systems/InputSystem.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -31,8 +36,12 @@ namespace ImGui {
 namespace apollo::demo {
 	glm::mat4x4 GetProjMatrix(uint32 width, uint32 height)
 	{
-		const float xmax = float(width) / height;
-		return glm::orthoRH(-xmax, xmax, -1.0f, 1.0f, 0.01f, 100.f);
+		return glm::perspectiveFovRH(
+			0.5f * std::numbers::pi_v<float>,
+			float(width),
+			float(height),
+			0.01f,
+			100.f);
 	}
 
 	void ShaderParamWidget(const rdr::ShaderConstant& param)
@@ -70,6 +79,7 @@ namespace apollo::demo {
 
 	struct TestSystem
 	{
+		Camera m_Camera;
 		apollo::Window& m_Window;
 		apollo::rdr::Context& m_RenderContext;
 		apollo::AssetRef<rdr::Material> m_Material;
@@ -81,21 +91,68 @@ namespace apollo::demo {
 		std::atomic_bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
+		float m_MouseSpeed = 3.0f;
+		float m_MoveSpeed = 1.0f;
+		bool m_CameraLocked = true;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
-		glm::mat4x4 m_ModelMatrix = glm::identity<glm::mat4x4>();
+		glm::mat4x4 m_ModelMatrix;
 		std::string_view m_Text;
 
-		void ProcessWindowResize(entt::registry& world)
+		void ProcessInputs(entt::registry& world)
 		{
 			using namespace apollo::inputs;
-			const auto view = world.view<const WindowResizeEventComponent>();
-			if (view->empty())
-				return;
+			const glm::uvec2 winSize = m_Window.GetSize();
+			glm::mat4x4 projMatrix = GetProjMatrix(winSize.x, winSize.y);
+			float2 mouseMotion = {};
+			constexpr float maxPitch = .49f * std::numbers::pi_v<float>;
 
-			const WindowResizeEventComponent& eventData = *view->begin();
-			m_WinSize = { eventData.m_Width, eventData.m_Height };
+			{
+				const auto view = world.view<const inputs::KeyDownEventComponent>();
+				for (const auto e : view)
+				{
+					const auto& comp = view->get(e);
+					switch (comp.m_Key)
+					{
+					case inputs::EKey::F1:
+						if (comp.m_Repeat)
+							break;
+						m_CameraLocked = !m_CameraLocked;
+						SDL_SetWindowRelativeMouseMode(m_Window.GetHandle(), !m_CameraLocked);
+						break;
+					default: break;
+					}
+				}
+				const bool* keyStates = inputs::GetKeyStates();
+				const float lateralMovement = keyStates[SDL_SCANCODE_D] -
+											  2 * keyStates[SDL_SCANCODE_A];
+				const float fwdMovement = keyStates[SDL_SCANCODE_W] - 2 * keyStates[SDL_SCANCODE_S];
+				if (lateralMovement)
+				{
+					m_Camera.m_Translate += m_Camera.GetRight() * 0.01f * m_MoveSpeed *
+											lateralMovement;
+				}
+				if (fwdMovement)
+				{
+					m_Camera.m_Translate += m_Camera.GetForward() * 0.01f * m_MoveSpeed *
+											fwdMovement;
+				}
+			}
 
-			m_CamMatrix = GetProjMatrix(eventData.m_Width, eventData.m_Height);
+			if (!m_CameraLocked)
+			{
+				const auto view = world.view<inputs::MouseMotionEventComponent>();
+				for (const auto e : view)
+				{
+					mouseMotion += view->get(e).m_Motion;
+				}
+				m_Camera.m_Yaw -= 0.001f * m_MouseSpeed * mouseMotion.x;
+				m_Camera.m_Pitch = Clamp(
+					m_Camera.m_Pitch - 0.001f * m_MouseSpeed * mouseMotion.y,
+					-maxPitch,
+					maxPitch);
+			}
+
+			m_CamMatrix = projMatrix * m_Camera.GetLookAt();
 		}
 
 		TestSystem(apollo::Window& window, apollo::rdr::Context& renderer)
@@ -103,7 +160,7 @@ namespace apollo::demo {
 			, m_RenderContext(renderer)
 			, m_WinSize(m_Window.GetSize())
 		{
-			m_ModelMatrix = glm::identity<glm::mat4x4>();
+			m_ModelMatrix = glm::translate(glm::identity<glm::mat4x4>(), { 0, 0, -1 });
 
 			glm::uvec2 winSize = m_Window.GetSize();
 			m_CamMatrix = GetProjMatrix(winSize.x, winSize.y);
@@ -176,7 +233,7 @@ namespace apollo::demo {
 				"Outline Color",
 				&m_TextRenderer.m_Style.m_OutlineColor.r);
 			ImGui::End();
-			
+
 			char title[37] = {};
 			mat.GetId().ToChars(title);
 
@@ -197,6 +254,11 @@ namespace apollo::demo {
 				ShaderParamBlockWidget(block);
 			}
 			ImGui::End();
+
+			ImGui::Begin("Camera Settings");
+			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
+			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
+			ImGui::End();
 		}
 
 		void Update(entt::registry& world, const apollo::GameTime&)
@@ -210,7 +272,7 @@ namespace apollo::demo {
 			if (!swapchainTexture)
 				return;
 
-			ProcessWindowResize(world);
+			ProcessInputs(world);
 			DisplayUi(*m_Material);
 			if (m_AssetsReady)
 			{

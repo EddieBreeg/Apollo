@@ -20,4 +20,6 @@ namespace apollo::inputs {
 	private:
 		App& m_App;
 	};
+
+	APOLLO_API const bool *GetKeyStates() noexcept;
 } // namespace apollo::inputs
