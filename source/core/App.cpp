@@ -112,9 +112,9 @@ namespace apollo {
 		return m_Result;
 	}
 
-	void App::RequestAppQuit() noexcept
+	void App::RequestAppQuit(bool success) noexcept
 	{
-		m_Result = EAppResult::Success;
+		m_Result = success ? EAppResult::Success : EAppResult::Failure;
 	}
 
 	EAppResult App::Update()

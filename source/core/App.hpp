@@ -41,7 +41,7 @@ namespace apollo {
 
 		// Internally requests program termination. The loop will stop once the current iteration is
 		// done
-		APOLLO_API void RequestAppQuit() noexcept;
+		APOLLO_API void RequestAppQuit(bool success = true) noexcept;
 
 		[[nodiscard]] mt::ThreadPool& GetThreadPool() noexcept { return m_MainThreadPool; }
 
