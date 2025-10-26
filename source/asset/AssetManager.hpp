@@ -77,7 +77,10 @@ namespace apollo {
 		[[nodiscard]] AssetLoader& GetAssetLoader() noexcept { return m_Loader; }
 
 	private:
-		APOLLO_API AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice);
+		APOLLO_API AssetManager(
+			const AssetManagerSettings& settings,
+			rdr::GPUDevice& gpuDevice,
+			mt::ThreadPool& threadPool);
 		friend class Singleton<AssetManager>;
 		friend struct AssetRetainTraits;
 

@@ -43,6 +43,8 @@ namespace apollo {
 
 	AssetManager::~AssetManager()
 	{
+		m_Loader.Clear();
+
 		while (m_Cache.size())
 		{
 			auto it = m_Cache.begin();
@@ -62,7 +64,7 @@ namespace apollo {
 		}
 	}
 
-	AssetManager::AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice)
+	AssetManager::AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice, mt::ThreadPool& tp)
 		: m_ImportBank(settings.m_MetadataImportFunc)
 		, m_TypeInfo{ 
 			{&ConstructAsset<rdr::Texture2D>, settings.m_LoadTexture2d},
@@ -73,7 +75,7 @@ namespace apollo {
 			{&ConstructAsset<Scene>, settings.m_LoadScene},
 		 }
 		, m_AssetsPath(settings.m_AssetPath)
-		, m_Loader(gpuDevice)
+		, m_Loader(gpuDevice, tp)
 	{}
 
 	bool AssetManager::ImportMetadataBank()

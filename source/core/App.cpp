@@ -84,7 +84,10 @@ namespace apollo {
 #else
 		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
 #endif
-		m_AssetManager = &AssetManager::Init(entry.m_AssetManagerSettings, m_RenderContext->GetDevice());
+		m_AssetManager = &AssetManager::Init(
+			entry.m_AssetManagerSettings,
+			m_RenderContext->GetDevice(),
+			m_MainThreadPool);
 
 		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_RenderContext->GetDevice().GetHandle());
 

@@ -28,11 +28,8 @@ namespace apollo {
 		AssetImportFunc* loadFunc,
 		const AssetMetadata& metadata)
 	{
-		std::unique_lock lock{ m_QueueMutex };
+		std::unique_lock lock{ m_Mutex };
 		m_Requests.AddEmplace(std::move(asset), loadFunc, &metadata);
-		// if we are currently processing assets, then add the new request to the current batch
-		if (m_BatchSize)
-			++m_BatchSize;
 	}
 
 	SDL_GPUCommandBuffer* AssetLoader::GetCurrentCommandBuffer() noexcept
@@ -49,12 +46,12 @@ namespace apollo {
 	{
 		// if batch size is non-zero, a thread is already processing the assets, we don't need to do
 		// anything else
-		if (!m_Requests.GetSize() || m_BatchSize)
+		if (m_RunningBatch || !m_Requests.GetSize())
 			return;
 
-		m_BatchSize = m_Requests.GetSize();
-		mt::ThreadPool& tp = App::GetInstance()->GetThreadPool();
-		tp.Enqueue(
+		APOLLO_LOG_TRACE("Starting asset load batch");
+		m_RunningBatch = true;
+		m_ThreadPool.Enqueue(
 			[this]()
 			{
 				DoProcessRequests();
@@ -66,9 +63,12 @@ namespace apollo {
 		g_CommandBuffer = SDL_AcquireGPUCommandBuffer(m_Device.GetHandle());
 		g_CopyPass = SDL_BeginGPUCopyPass(g_CommandBuffer);
 
-		while (m_BatchSize)
+		for (;;)
 		{
-			std::unique_lock lock{ m_QueueMutex };
+			std::unique_lock lock{ m_Mutex };
+			if (!m_Requests.GetSize())
+				break;
+
 			AssetLoadRequest request = m_Requests.PopAndGetFront();
 			lock.unlock();
 
@@ -90,7 +90,6 @@ namespace apollo {
 					"Asset {}({}) loaded successfully!",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
-				--m_BatchSize;
 				continue;
 			case apollo::EAssetLoadResult::TryAgain:
 				m_Requests.AddEmplace(std::move(request));
@@ -101,7 +100,6 @@ namespace apollo {
 					"Asset {}({}) failed to load",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
-				--m_BatchSize;
 			}
 		}
 
@@ -111,11 +109,30 @@ namespace apollo {
 		g_CommandBuffer = nullptr;
 
 		DispatchCallbacks();
+		{
+			std::unique_lock lock{ m_Mutex };
+			m_RunningBatch = false;
+		}
+		m_Cond.notify_one();
+	}
+
+	void AssetLoader::WaitForCompletion()
+	{
+		std::unique_lock lock{ m_Mutex };
+		while (m_RunningBatch)
+		{
+			m_Cond.wait(lock);
+		}
+	}
+
+	void AssetLoader::Clear()
+	{
+		std::unique_lock lock{ m_Mutex };
+		m_Requests.Clear();
 	}
 
 	void AssetLoader::DispatchCallbacks()
 	{
-		std::unique_lock lock{ m_CallbackMutex };
 		for (auto& cbk : m_LoadCallbacks)
 		{
 			cbk();
