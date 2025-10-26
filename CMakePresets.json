@@ -6,8 +6,8 @@
 			"hidden": true,
 			"binaryDir": "${sourceDir}/build/${presetName}",
 			"cacheVariables": {
-				"SDL_SHARED": "OFF",
-				"SDL_STATIC": "ON",
+				"SDL_SHARED": "ON",
+				"SDL_STATIC": "OFF",
 				"SDL_AUDIO": "OFF",
 				"SDL_CAMERA": "OFF",
 				"SDL_DISKAUDIO": "OFF",
@@ -25,7 +25,9 @@
 				"MSDFGEN_DISABLE_PNG": "ON",
 				"MSDFGEN_USE_SKIA": "OFF",
 				"MSDFGEN_USE_VCPKG": "OFF",
-				"FT_ENABLE_ERROR_STRINGS": "ON"
+				"FT_ENABLE_ERROR_STRINGS": "ON",
+				"ASSIMP_INSTALL": "OFF",
+				"ASSIMP_BUILD_TESTS": "OFF"
 			},
 			"environment": {
 				"FREETYPE_DIR": "${sourceDir}/build/install"
