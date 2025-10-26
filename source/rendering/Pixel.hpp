@@ -100,6 +100,13 @@ namespace apollo::rdr {
 		RG8_SNorm,
 		RGBA8_SNorm,
 
+		// Depth/Stencil Formats
+		Depth16,
+		Depth24,
+		Depth32,
+		Depth24_Stencil8,
+		Depth32_Stencil8,
+
 		NFormats
 	};
 
