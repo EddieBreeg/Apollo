@@ -335,6 +335,12 @@ struct apollo::json::Converter<SDL_GPUDepthStencilState>
 				!out_state.enable_stencil_test))
 			return false;
 
+		if (out_state.enable_stencil_test)
+		{
+			out_state.compare_mask = 0xff;
+			out_state.write_mask = 0xff;
+		}
+
 		if (!Visit(out_state.compare_mask, json, "compareMask", !out_state.enable_stencil_test))
 			return false;
 
