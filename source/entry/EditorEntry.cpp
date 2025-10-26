@@ -3,11 +3,14 @@
 #include <asset/AssetManager.hpp>
 #include <core/App.hpp>
 
-#include <filesystem>
-
 #include <ecs/ComponentRegistry.hpp>
 #include <editor/Editor.hpp>
 #include <editor/asset/AssetLoaders.hpp>
+#include <filesystem>
+
+namespace apollo::editor {
+	void RegisterComponents(ecs::ComponentRegistry& registry);
+}
 
 int main(int argc, const char** argv)
 {
@@ -26,7 +29,8 @@ int main(int argc, const char** argv)
 
 	// component registry is kinda special: the core engine runtime doesn't know about it, we need
 	// to initialize it here
-	apollo::ecs::ComponentRegistry::Init();
+	auto& componentRegistry = apollo::ecs::ComponentRegistry::Init();
+	apollo::editor::RegisterComponents(componentRegistry);
 
 	apollo::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
 	apollo::GetEntryPoint(entry);

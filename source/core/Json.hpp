@@ -5,6 +5,7 @@
 #include "JsonFwd.hpp"
 #include "TypeTraits.hpp"
 #include <glm/detail/qualifier.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <nlohmann/json.hpp>
 
 namespace apollo::json {
@@ -104,7 +105,7 @@ namespace apollo::json {
 			if (!it->is_number())
 				return false;
 		}
-		else if constexpr(!std::is_same_v<T, nlohmann::json>)
+		else if constexpr (!std::is_same_v<T, nlohmann::json>)
 		{
 			if (it->type() != _internal::ValueType<T>::Type)
 				return false;
@@ -254,6 +255,16 @@ namespace apollo::json {
 				out_json["z"] = vec.z;
 			if constexpr (L >= 4)
 				out_json["w"] = vec.w;
+		}
+	};
+
+	template <>
+	struct Converter<glm::quat>
+	{
+		static bool FromJson(glm::quat& out_q, const nlohmann::json& j) noexcept
+		{
+			return Visit(out_q.x, j, "x") && Visit(out_q.y, j, "y") && Visit(out_q.z, j, "z") &&
+				   Visit(out_q.w, j, "w");
 		}
 	};
 

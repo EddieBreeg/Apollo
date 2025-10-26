@@ -9,6 +9,7 @@ SOURCES
 	asset/LoadShader.cpp
 	asset/LoadTexture.cpp
 	Editor.cpp
+	RegisterComponents.cpp
 	${EDITOR_HEADERS}
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
