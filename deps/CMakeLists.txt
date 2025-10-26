@@ -8,6 +8,7 @@ add_subdirectory(stb)
 add_subdirectory(entt)
 add_subdirectory(json)
 add_subdirectory(freetype)
+add_subdirectory(assimp)
 
 add_subdirectory(msdfgen)
 
