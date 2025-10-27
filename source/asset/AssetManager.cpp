@@ -11,13 +11,16 @@
 
 namespace {
 	void ProcessUnloadRequests(
-		apollo::Queue<apollo::IAsset*> queue,
-		apollo::ULIDMap<apollo::IAsset*> cache,
+		apollo::Queue<apollo::IAsset*>& queue,
+		apollo::ULIDMap<apollo::IAsset*>& cache,
 		std::shared_mutex& mutex)
 	{
-		while (queue.GetSize())
+		for(;;)
 		{
 			std::unique_lock lock{ mutex };
+			if (!queue.GetSize())
+				return;
+
 			apollo::IAsset* ptr = queue.PopAndGetFront();
 
 			if (ptr->GetState() != apollo::EAssetState::Unloading)
