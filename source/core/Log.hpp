@@ -18,3 +18,5 @@
 #define APOLLO_LOG_ERROR(...)	 (void)0
 #define APOLLO_LOG_CRITICAL(...) (void)0
 #endif
+
+#include "ULIDFormatter.hpp"

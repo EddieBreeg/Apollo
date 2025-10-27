@@ -4,7 +4,6 @@
 #include <asset/AssetManager.hpp>
 #include <core/App.hpp>
 #include <core/Log.hpp>
-#include <core/ULIDFormatter.hpp>
 #include <rendering/Device.hpp>
 
 namespace {
