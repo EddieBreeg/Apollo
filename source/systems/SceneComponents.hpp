@@ -2,12 +2,19 @@
 #include <asset/AssetRef.hpp>
 #include <asset/Scene.hpp>
 
+#include <ecs/ComponentRegistry.hpp>
+
 namespace apollo {
 	// Represents a scene that is currently loaded
 	struct SceneComponent
 	{
 		AssetRef<Scene> m_Scene;
 		bool m_IsRoot = false;
+
+		static constexpr ecs::ComponentReflection<&SceneComponent::m_Scene> Reflection{
+			"scene",
+			{ "ref" },
+		};
 	};
 
 	// Represents a scene that is being loaded
