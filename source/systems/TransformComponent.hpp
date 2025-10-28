@@ -2,7 +2,7 @@
 
 #include <PCH.hpp>
 #include <core/Transform.hpp>
-#include <ecs/ComponentRegistry.hpp>
+#include <ecs/Reflection.hpp>
 
 namespace apollo {
 	struct TransformComponent

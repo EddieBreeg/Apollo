@@ -2,7 +2,7 @@
 #include <asset/AssetRef.hpp>
 #include <asset/Scene.hpp>
 
-#include <ecs/ComponentRegistry.hpp>
+#include <ecs/Reflection.hpp>
 
 namespace apollo {
 	// Represents a scene that is currently loaded

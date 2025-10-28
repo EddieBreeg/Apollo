@@ -1,4 +1,5 @@
 #include <asset/AssetManager.hpp>
+#include <ecs/ComponentRegistry.hpp>
 #include <systems/SceneComponents.hpp>
 #include <systems/TransformComponent.hpp>
 
