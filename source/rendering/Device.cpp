@@ -30,11 +30,19 @@ namespace apollo::rdr {
 		}
 	}
 
+	void GPUDevice::Reset()
+	{
+		if (m_Handle)
+		{
+			APOLLO_LOG_TRACE("Cleaning up GPU device");
+			SDL_DestroyGPUDevice(m_Handle);
+			m_Handle = nullptr;
+		}
+	}
+
 	GPUDevice::~GPUDevice()
 	{
-		APOLLO_LOG_TRACE("Cleaning up GPU device");
-		if (m_Handle)
-			SDL_DestroyGPUDevice(m_Handle);
+		Reset();
 	}
 
 	bool GPUDevice::ClaimWindow(Window& win)

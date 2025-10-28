@@ -5,8 +5,8 @@
 #include <core/Json.hpp>
 #include <core/Log.hpp>
 #include <ecs/ComponentRegistry.hpp>
-#include <ecs/Manager.hpp>
 #include <fstream>
+#include <systems/SceneLoadingSystem.hpp>
 
 namespace {
 	bool LoadGameObject(
@@ -92,8 +92,7 @@ namespace apollo::editor {
 
 		Scene& scene = static_cast<Scene&>(out_asset);
 
-		auto* ecsManager = ecs::Manager::GetInstance();
-		entt::registry& world = ecsManager->GetEntityWorld();
+		entt::registry& world = SceneLoadingSystem::GetTempWorld();
 		const auto& registry = *ecs::ComponentRegistry::GetInstance();
 
 		GameObject object;

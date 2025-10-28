@@ -28,6 +28,7 @@
 #include <rendering/text/FontAtlas.hpp>
 #include <systems/InputEventComponents.hpp>
 #include <systems/InputSystem.hpp>
+#include <systems/SceneComponents.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -69,11 +70,15 @@ namespace apollo::demo {
 	{
 		std::string m_Text;
 		AssetRef<rdr::txt::FontAtlas> m_Font;
+		AssetRef<rdr::Material> m_Material;
 
-		static constexpr ecs::ComponentReflection<&TextComponent::m_Text, &TextComponent::m_Font>
+		static constexpr ecs::ComponentReflection<
+			&TextComponent::m_Text,
+			&TextComponent::m_Font,
+			&TextComponent::m_Material>
 			Reflection{
 				"text",
-				{ "str", "font" },
+				{ "str", "font", "material" },
 			};
 	};
 
@@ -88,7 +93,7 @@ namespace apollo::demo {
 		apollo::rdr::txt::Renderer2d m_TextRenderer;
 		glm::uvec2 m_WinSize;
 		bool m_GeometryReady = false;
-		std::atomic_bool m_AssetsReady = false;
+		bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
 		float m_MouseSpeed = 3.0f;
@@ -97,6 +102,31 @@ namespace apollo::demo {
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
 		std::string_view m_Text;
+
+		void ProcessSceneLoadFinished(const entt::registry& world, entt::entity sceneEntity)
+		{
+			const auto* sceneComp = world.try_get<const SceneComponent>(sceneEntity);
+			DEBUG_CHECK(sceneComp)
+			{
+				APOLLO_LOG_ERROR("Missing SceneComponent");
+				return;
+			}
+			m_Scene = sceneComp->m_Scene;
+			const GameObject* object = m_Scene->GetGameObject("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+			const TextComponent& textComp = world.get<const TextComponent>(object->m_Entity);
+			m_Text = textComp.m_Text;
+			m_Material = textComp.m_Material;
+
+			DEBUG_CHECK(
+				textComp.m_Material && textComp.m_Material->GetState() == EAssetState::Loaded)
+			{
+				return;
+			}
+
+			m_TextRenderer.SetFont((m_Font = textComp.m_Font));
+			m_TextRenderer.Init(m_RenderContext.GetDevice(), m_Material, 128);
+			m_AssetsReady = true;
+		}
 
 		void ProcessInputs(entt::registry& world)
 		{
@@ -166,14 +196,6 @@ namespace apollo::demo {
 			m_CamMatrix = GetProjMatrix(winSize.x, winSize.y);
 		}
 
-		void FetchData(const entt::registry& world)
-		{
-			const GameObject* object = m_Scene->GetGameObject("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
-			const TextComponent& comp = world.get<const TextComponent>(object->m_Entity);
-			m_Text = comp.m_Text;
-			m_TextRenderer.SetFont((m_Font = comp.m_Font));
-		}
-
 		~TestSystem() {}
 
 		void PostInit()
@@ -183,26 +205,9 @@ namespace apollo::demo {
 			APOLLO_LOG_TRACE("Example Post-Init");
 			auto* assetManager = AssetManager::GetInstance();
 			APOLLO_ASSERT(assetManager, "Asset manager hasn't been initialized!");
-
-			assetManager->GetAssetLoader().RegisterCallback(
-				[this]()
-				{
-					OnLoadingFinished();
-				});
-			m_Material = assetManager->GetAsset<rdr::Material>("01K6841M7W2D1J00QKJHHBDJG5"_ulid);
-			m_Scene = assetManager->GetAsset<Scene>("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
-
-			m_TextRenderer.Init(m_RenderContext.GetDevice(), m_Material, 128);
 		}
 
-		void OnLoadingFinished()
-		{
-			APOLLO_LOG_INFO("Loading complete");
-			m_AssetsReady = m_Material->GetState() == EAssetState::Loaded &&
-							m_Scene->GetState() == EAssetState::Loaded;
-		}
-
-		void DisplayUi(const rdr::Material& mat)
+		void DisplayUi(const rdr::Material* mat)
 		{
 			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
@@ -234,22 +239,25 @@ namespace apollo::demo {
 				&m_TextRenderer.m_Style.m_OutlineColor.r);
 			ImGui::End();
 
-			char title[37] = {};
-			mat.GetId().ToChars(title);
+			if (!mat)
+				return;
 
-			if (mat.GetState() != EAssetState::Loaded)
+			char title[37] = {};
+			mat->GetId().ToChars(title);
+
+			if (mat->GetState() != EAssetState::Loaded)
 				return;
 
 			ImGui::Begin(title);
 
 			ImGui::SeparatorText("Vertex Shader Constants");
-			for (const auto& block : mat.GetVertexShader()->GetParameterBlocks())
+			for (const auto& block : mat->GetVertexShader()->GetParameterBlocks())
 			{
 				ShaderParamBlockWidget(block);
 			}
 
 			ImGui::SeparatorText("Fragment Shader Constants");
-			for (const auto& block : mat.GetFragmentShader()->GetParameterBlocks())
+			for (const auto& block : mat->GetFragmentShader()->GetParameterBlocks())
 			{
 				ShaderParamBlockWidget(block);
 			}
@@ -266,6 +274,13 @@ namespace apollo::demo {
 			if (!m_Window) [[unlikely]]
 				return;
 
+			if (!m_AssetsReady)
+			{
+				const auto view = world.view<const SceneLoadFinishedEventComponent>();
+				if (!view.empty())
+					ProcessSceneLoadFinished(world, *view->begin());
+			}
+
 			auto* swapchainTexture = m_RenderContext.GetSwapchainTexture();
 			auto* mainCommandBuffer = m_RenderContext.GetMainCommandBuffer();
 
@@ -273,14 +288,9 @@ namespace apollo::demo {
 				return;
 
 			ProcessInputs(world);
-			DisplayUi(*m_Material);
+			DisplayUi(m_Material.Get());
 			if (m_AssetsReady)
 			{
-				if (!m_Font)
-				{
-					FetchData(world);
-				}
-
 				m_TextRenderer.StartFrame(mainCommandBuffer);
 				if (!m_GeometryReady)
 				{
@@ -337,6 +347,9 @@ namespace apollo::demo {
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
 		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
+		auto& world = manager.GetEntityWorld();
+		world.emplace<SceneSwitchRequestComponent>(world.create(), "01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+
 		return EAppResult::Continue;
 	}
 } // namespace apollo::demo

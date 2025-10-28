@@ -23,6 +23,8 @@ namespace apollo::mt {
 		ThreadPool(ThreadPool&&) = delete;
 		ThreadPool& operator=(ThreadPool&&) = delete;
 
+		[[nodiscard]] bool IsRunning() const noexcept { return m_Running; }
+
 		/*
 		 * Adds a simple job to the queue. This is the preferred overload, as it does not require
 		 * wrapping the functor in a lambda.
@@ -92,7 +94,9 @@ namespace apollo::mt {
 				m_Cv.wait(lock);
 			}
 			if (!m_Running)
+			{
 				return;
+			}
 
 			UniqueFunction job = m_Jobs.PopAndGetFront();
 			lock.unlock();

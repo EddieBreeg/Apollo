@@ -45,7 +45,7 @@ namespace {
 namespace apollo {
 	std::unique_ptr<App> App::s_Instance;
 
-	void RegisterCoreSystems(App& app, ecs::Manager& manager);
+	void RegisterCoreSystems(App& app, ecs::Manager& manager, AssetManager& assetManager);
 
 	App::App(const EntryPoint& entry)
 		: m_EntryPoint(entry)
@@ -92,7 +92,7 @@ namespace apollo {
 		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_RenderContext->GetDevice().GetHandle());
 
 		m_ECSManager = &ecs::Manager::Init();
-		RegisterCoreSystems(*this, *m_ECSManager);
+		RegisterCoreSystems(*this, *m_ECSManager, *m_AssetManager);
 
 		if (m_EntryPoint.m_OnInit)
 			m_Result = m_EntryPoint.m_OnInit(m_EntryPoint, *this);

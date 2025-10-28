@@ -6,7 +6,8 @@
 			"components": {
 				"text": {
 					"str": "The quick brown\nfox jumps over\nthe lazy dog.",
-					"font": "01K77QW60RWKYCZFHVP704FV6B"
+					"font": "01K77QW60RWKYCZFHVP704FV6B",
+					"material": "01K6841M7W2D1J00QKJHHBDJG5"
 				}
 			}
 		}

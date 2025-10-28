@@ -32,11 +32,13 @@ namespace apollo::rdr {
 		GPUDevice(EBackend backend, bool debugMode = false);
 		GPUDevice(const GPUDevice&) = delete;
 
-		GPUDevice& operator=(GPUDevice& other)
+		GPUDevice& operator=(GPUDevice&& other)
 		{
 			Swap(static_cast<BaseType&>(other));
 			return *this;
 		}
+
+		void Reset();
 
 		bool ClaimWindow(Window& win);
 

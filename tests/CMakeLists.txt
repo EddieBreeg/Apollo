@@ -2,6 +2,7 @@ set(CMAKE_FOLDER "tests")
 
 AddExecutable(${PROJECT_NAME}Tests
 SOURCES
+	main.cpp
 	BitmapTests.cpp
 	ComponentRegistryTests.cpp
 	EnumTests.cpp
@@ -13,6 +14,7 @@ SOURCES
 	RetainPtrTests.cpp
 	RectTests.cpp
 	TypeInfoTests.cpp
+	SceneLoadingTests.cpp
 	SystemTests.cpp
 	ThreadPoolTests.cpp
 	TypeInfoTests.cpp
@@ -20,7 +22,7 @@ SOURCES
 	UniqueFunctionTests.cpp
 	UtilTests.cpp
 	VertexTests.cpp
-LINK PRIVATE Apollo::Runtime Catch2::Catch2WithMain SDL3::SDL3
+LINK PRIVATE Apollo::Runtime Catch2::Catch2 SDL3::SDL3
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 )
