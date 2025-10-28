@@ -27,4 +27,4 @@
 	url = git@github.com:freetype/freetype.git
 [submodule "deps/assimp"]
 	path = deps/assimp
-	url = git@github.com:assimp/assimp.git
+	url = git@github.com:EddieBreeg/assimp.git
