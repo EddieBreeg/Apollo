@@ -59,8 +59,11 @@ namespace apollo {
 
 	void AssetLoader::DoProcessRequests()
 	{
-		g_CommandBuffer = SDL_AcquireGPUCommandBuffer(m_Device.GetHandle());
-		g_CopyPass = SDL_BeginGPUCopyPass(g_CommandBuffer);
+		if (m_Device) [[likely]]
+		{
+			g_CommandBuffer = SDL_AcquireGPUCommandBuffer(m_Device.GetHandle());
+			g_CopyPass = SDL_BeginGPUCopyPass(g_CommandBuffer);
+		}
 
 		for (;;)
 		{
@@ -102,10 +105,16 @@ namespace apollo {
 			}
 		}
 
-		SDL_EndGPUCopyPass(g_CopyPass);
-		g_CopyPass = nullptr;
-		SDL_SubmitGPUCommandBuffer(g_CommandBuffer);
-		g_CommandBuffer = nullptr;
+		if (g_CopyPass) [[likely]]
+		{
+			SDL_EndGPUCopyPass(g_CopyPass);
+			g_CopyPass = nullptr;
+		}
+		if (g_CommandBuffer) [[likely]]
+		{
+			SDL_SubmitGPUCommandBuffer(g_CommandBuffer);
+			g_CommandBuffer = nullptr;
+		}
 
 		DispatchCallbacks();
 		{

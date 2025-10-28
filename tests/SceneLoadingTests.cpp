@@ -57,8 +57,6 @@ namespace apollo::scene_ut {
 			, m_Semaphore(0)
 		{
 			APOLLO_LOG_INFO("Test Start");
-			SDL_Init(SDL_INIT_VIDEO);
-			m_Device = rdr::GPUDevice{ rdr::EBackend::Default };
 			m_AssetManager = &AssetManager::Init(
 				AssetManagerSettings{
 					.m_MetadataImportFunc = CreateMetadata,
@@ -86,8 +84,6 @@ namespace apollo::scene_ut {
 			APOLLO_LOG_INFO("Test End");
 			ecs::Manager::Shutdown();
 			AssetManager::Shutdown();
-			m_Device.Reset();
-			SDL_Quit();
 		}
 
 		void Update()
@@ -97,9 +93,9 @@ namespace apollo::scene_ut {
 			m_GameTime.Update();
 		}
 
-		rdr::GPUDevice m_Device;
 		mt::ThreadPool m_ThreadPool;
 		ecs::Manager& m_EcsManager;
+		rdr::GPUDevice m_Device;
 		AssetManager* m_AssetManager = nullptr;
 		std::binary_semaphore m_Semaphore;
 		GameTime m_GameTime;
