@@ -15,7 +15,7 @@ namespace {
 		apollo::ULIDMap<apollo::IAsset*>& cache,
 		std::shared_mutex& mutex)
 	{
-		for(;;)
+		for (;;)
 		{
 			std::unique_lock lock{ mutex };
 			if (!queue.GetSize())
@@ -145,7 +145,12 @@ namespace apollo {
 		}
 
 		ptr->SetState(EAssetState::Loading);
-		m_Loader.AddRequest(AssetRef<IAsset>{ ptr }, info.m_Import, it->second);
+		m_Loader.AddRequest(
+			AssetLoadRequest{
+				AssetRef<IAsset>{ ptr },
+				info.m_Import,
+				&it->second,
+			});
 		return ptr;
 	}
 

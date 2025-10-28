@@ -22,13 +22,10 @@ namespace apollo {
 		return m_Import(*m_Asset, *m_Metadata);
 	}
 
-	void AssetLoader::AddRequest(
-		AssetRef<IAsset> asset,
-		AssetImportFunc* loadFunc,
-		const AssetMetadata& metadata)
+	void AssetLoader::AddRequest(AssetLoadRequest req)
 	{
 		std::unique_lock lock{ m_Mutex };
-		m_Requests.AddEmplace(std::move(asset), loadFunc, &metadata);
+		m_Requests.AddEmplace(std::move(req));
 	}
 
 	SDL_GPUCommandBuffer* AssetLoader::GetCurrentCommandBuffer() noexcept
@@ -92,17 +89,20 @@ namespace apollo {
 					"Asset {}({}) loaded successfully!",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
-				continue;
+				break;
 			case apollo::EAssetLoadResult::TryAgain:
 				m_Requests.AddEmplace(std::move(request));
-				continue;
+				break;
 			default:
 				request.m_Asset->SetState(EAssetState::Invalid);
 				APOLLO_LOG_ERROR(
 					"Asset {}({}) failed to load",
 					request.m_Metadata->m_Name,
 					request.m_Metadata->m_Id);
+				break;
 			}
+			if (request.m_Callback)
+				request.m_Callback(*request.m_Asset);
 		}
 
 		if (g_CopyPass) [[likely]]

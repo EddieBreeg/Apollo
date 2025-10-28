@@ -29,6 +29,7 @@ namespace apollo {
 		AssetRef<IAsset> m_Asset;
 		AssetImportFunc* m_Import = nullptr;
 		const AssetMetadata* m_Metadata = nullptr;
+		UniqueFunction<void(const IAsset&)> m_Callback;
 
 		EAssetLoadResult operator()();
 	};
@@ -41,10 +42,7 @@ namespace apollo {
 			, m_ThreadPool(threadPool)
 		{}
 
-		APOLLO_API void AddRequest(
-			AssetRef<IAsset> asset,
-			AssetImportFunc* importFunc,
-			const AssetMetadata& metadata);
+		APOLLO_API void AddRequest(AssetLoadRequest request);
 
 		APOLLO_API void ProcessRequests();
 		APOLLO_API void WaitForCompletion();
@@ -53,9 +51,12 @@ namespace apollo {
 		static APOLLO_API SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
 		static APOLLO_API SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
 
-		// This function is not thread-safe, and must be called from the main thread before any
-		// asset load operations can begin. Ideally, you'd call this during the post-init phase at
-		// the start of the app
+		/* \brief Registers a callback which will be called after all assets in a batch have been
+		 * processed
+		 * \note This function is not thread-safe, and must be called from the main thread before
+		 * any asset load operations can begin. Ideally, you'd call this during the post-init phase
+		 * at the start of the app
+		 */
 		template <class F>
 		void RegisterCallback(F&& cbk)
 		{

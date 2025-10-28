@@ -3,6 +3,7 @@ set(CMAKE_FOLDER "tests")
 AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	main.cpp
+	AssetLoaderTests.cpp
 	BitmapTests.cpp
 	ComponentRegistryTests.cpp
 	EnumTests.cpp
@@ -27,6 +28,7 @@ PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 )
 
+AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
 AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("Hash Tests" "${PROJECT_NAME}Tests" FILTERS "[hash]")
