@@ -62,12 +62,30 @@ namespace apollo {
 			return AssetRef<IAsset>{ GetAssetImpl(id, type) };
 		}
 
+		template <class F>
+		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type, F&& callback)
+			requires(std::invocable<F, const IAsset&>)
+		{
+			return AssetRef<IAsset>{
+				GetAssetImpl(id, type, std::forward<F>(callback)),
+			};
+		}
+
 		template <class A>
 		AssetRef<A> GetAsset(const ULID& id) requires(
 			std::is_base_of_v<IAsset, A>&& A::AssetType > EAssetType::Invalid &&
 			A::AssetType < EAssetType::NTypes)
 		{
 			IAsset* const ptr = GetAssetImpl(id, A::AssetType);
+			return AssetRef<A>{ static_cast<A*>(ptr) };
+		}
+
+		template <class A, class F>
+		AssetRef<A> GetAsset(const ULID& id, F&& callback) requires(
+			(std::is_base_of_v<IAsset, A>) && (A::AssetType > EAssetType::Invalid) &&
+			(A::AssetType < EAssetType::NTypes) && std::is_invocable_v<F, const IAsset&>)
+		{
+			IAsset* const ptr = GetAssetImpl(id, A::AssetType, std::forward<F>(callback));
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 
@@ -84,7 +102,10 @@ namespace apollo {
 		friend class Singleton<AssetManager>;
 		friend struct AssetRetainTraits;
 
-		APOLLO_API IAsset* GetAssetImpl(const ULID& id, EAssetType type);
+		APOLLO_API IAsset* GetAssetImpl(
+			const ULID& id,
+			EAssetType type,
+			UniqueFunction<void(const IAsset&)> cbk = {});
 		APOLLO_API void RequestUnload(IAsset* res);
 
 		ULIDMap<AssetMetadata> m_MetadataBank;

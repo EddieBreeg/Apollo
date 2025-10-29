@@ -100,7 +100,10 @@ namespace apollo {
 		return true;
 	}
 
-	IAsset* AssetManager::GetAssetImpl(const ULID& id, EAssetType type)
+	IAsset* AssetManager::GetAssetImpl(
+		const ULID& id,
+		EAssetType type,
+		UniqueFunction<void(const IAsset&)> cbk)
 	{
 		APOLLO_ASSERT(
 			type < EAssetType::NTypes && type > EAssetType::Invalid,
@@ -121,6 +124,10 @@ namespace apollo {
 						GetAssetTypeName(type));
 					return nullptr;
 				}
+
+				if (cbk)
+					cbk(*it->second);
+
 				return it->second;
 			}
 		}
@@ -150,6 +157,7 @@ namespace apollo {
 				AssetRef<IAsset>{ ptr },
 				info.m_Import,
 				&it->second,
+				std::move(cbk),
 			});
 		return ptr;
 	}
