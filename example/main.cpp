@@ -12,9 +12,6 @@
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <entt/entity/registry.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/mat4x4.hpp>
 #include <imgui.h>
 #include <numbers>
 #include <rendering/Bitmap.hpp>
@@ -24,11 +21,17 @@
 #include <rendering/Material.hpp>
 #include <rendering/Pixel.hpp>
 #include <rendering/Texture.hpp>
+#include <rendering/VertexTypes.hpp>
 #include <rendering/text/BatchRenderer.hpp>
 #include <rendering/text/FontAtlas.hpp>
 #include <systems/InputEventComponents.hpp>
 #include <systems/InputSystem.hpp>
 #include <systems/SceneComponents.hpp>
+#include <systems/TransformComponent.hpp>
+
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -66,33 +69,77 @@ namespace apollo::demo {
 		}
 	}
 
-	struct TextComponent
+	struct MeshComponent
 	{
-		std::string m_Text;
-		AssetRef<rdr::txt::FontAtlas> m_Font;
 		AssetRef<rdr::Material> m_Material;
+		rdr::Buffer m_VBuffer;
+		rdr::Buffer m_IBuffer;
+		uint32 m_NumIndices = 0;
 
-		static constexpr ecs::ComponentReflection<
-			&TextComponent::m_Text,
-			&TextComponent::m_Font,
-			&TextComponent::m_Material>
-			Reflection{
-				"text",
-				{ "str", "font", "material" },
-			};
+		static constexpr ecs::ComponentReflection<&MeshComponent::m_Material> Reflection{
+			"mesh",
+			{ "material" },
+		};
 	};
+
+	bool LoadMesh(SDL_GPUCopyPass* copyPass, const char* path, MeshComponent& out_mesh)
+	{
+		Assimp::Importer importer;
+		const auto* scene = importer.ReadFile(
+			path,
+			aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FixInfacingNormals |
+				aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_FlipUVs);
+		if (!scene)
+		{
+			APOLLO_LOG_ERROR("Failed to load mesh from {}: {}", path, importer.GetErrorString());
+			return false;
+		}
+
+		if (!scene->HasMeshes())
+			return false;
+
+		const aiMesh* am = scene->mMeshes[0];
+
+		std::vector<rdr::Vertex3d> vertices;
+		vertices.reserve(am->mNumVertices);
+		std::vector<uint32> indices;
+		indices.reserve(am->mNumFaces * 3);
+
+		for (uint32 i = 0; i < am->mNumVertices; ++i)
+		{
+			const float3 pos{ am->mVertices[i].x, am->mVertices[i].y, am->mVertices[i].z };
+			const float3 nor{ am->mNormals[i].x, am->mNormals[i].y, am->mNormals[i].z };
+			const float2 uv{ am->mTextureCoords[0][i].x, am->mTextureCoords[0][i].y };
+			vertices.emplace_back(rdr::Vertex3d{ pos, nor, uv });
+		}
+
+		for (uint32 i = 0; i < am->mNumFaces; ++i)
+		{
+			const auto& face = am->mFaces[i];
+			for (uint32 j = 0; j < face.mNumIndices; ++j)
+			{
+				indices.emplace_back(face.mIndices[j]);
+			}
+		}
+		const uint32 vertSize = am->mNumVertices * sizeof(rdr::Vertex3d);
+		out_mesh.m_NumIndices = (uint32)indices.size();
+		const uint32 indSize = 4 * out_mesh.m_NumIndices;
+
+		out_mesh.m_VBuffer = rdr::Buffer(rdr::EBufferFlags::Vertex, vertSize);
+		out_mesh.m_IBuffer = rdr::Buffer(rdr::EBufferFlags::Index, 4 * (uint32)indices.size());
+		out_mesh.m_VBuffer.UploadData(copyPass, vertices.data(), vertSize);
+		out_mesh.m_IBuffer.UploadData(copyPass, indices.data(), indSize);
+		return true;
+	}
 
 	struct TestSystem
 	{
 		Camera m_Camera;
 		apollo::Window& m_Window;
 		apollo::rdr::Context& m_RenderContext;
-		apollo::AssetRef<rdr::Material> m_Material;
 		apollo::AssetRef<Scene> m_Scene;
-		apollo::AssetRef<rdr::txt::FontAtlas> m_Font;
-		apollo::rdr::txt::Renderer2d m_TextRenderer;
-		glm::uvec2 m_WinSize;
-		bool m_GeometryReady = false;
+		apollo::AssetRef<rdr::Material> m_Material;
+		rdr::Texture2D m_DepthBuffer;
 		bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
@@ -101,9 +148,17 @@ namespace apollo::demo {
 		bool m_CameraLocked = true;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
-		std::string_view m_Text;
 
-		void ProcessSceneLoadFinished(const entt::registry& world, entt::entity sceneEntity)
+		struct FragConstants
+		{
+			GPU_ALIGN(float4) m_Color = { 1, 1, 1, 1 };
+			GPU_ALIGN(uint32) m_Scale = 5;
+		} m_FragParams;
+
+		void ProcessSceneLoadFinished(
+			entt::registry& world,
+			entt::entity sceneEntity,
+			SDL_GPUCopyPass* copyPass)
 		{
 			const auto* sceneComp = world.try_get<const SceneComponent>(sceneEntity);
 			DEBUG_CHECK(sceneComp)
@@ -112,29 +167,34 @@ namespace apollo::demo {
 				return;
 			}
 			m_Scene = sceneComp->m_Scene;
-			const GameObject* object = m_Scene->GetGameObject("01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
-			const TextComponent& textComp = world.get<const TextComponent>(object->m_Entity);
-			m_Text = textComp.m_Text;
-			m_Material = textComp.m_Material;
-
-			DEBUG_CHECK(
-				textComp.m_Material && textComp.m_Material->IsLoaded())
-			{
+			const GameObject* object = m_Scene->GetGameObject("01K8EC89XVHA1N3ZRZTFGNMYT5"_ulid);
+			auto& mesh = world.get<MeshComponent>(object->m_Entity);
+			m_Material = mesh.m_Material;
+			if (!m_Material || !m_Material->IsLoaded())
 				return;
-			}
 
-			m_TextRenderer.SetFont((m_Font = textComp.m_Font));
-			m_TextRenderer.Init(m_RenderContext.GetDevice(), m_Material, 128);
-			m_AssetsReady = true;
+			m_AssetsReady = LoadMesh(copyPass, "assets/Cube.obj", mesh);
 		}
 
-		void ProcessInputs(entt::registry& world)
+		void ProcessInputs(entt::registry& world, const GameTime& time)
 		{
 			using namespace apollo::inputs;
 			const glm::uvec2 winSize = m_Window.GetSize();
 			glm::mat4x4 projMatrix = GetProjMatrix(winSize.x, winSize.y);
 			float2 mouseMotion = {};
 			constexpr float maxPitch = .49f * std::numbers::pi_v<float>;
+
+			if (!world.view<const inputs::WindowResizeEventComponent>()->empty())
+			{
+				m_DepthBuffer = rdr::Texture2D{
+					rdr::TextureSettings{
+						.m_Width = winSize.x,
+						.m_Height = winSize.y,
+						.m_Format = rdr::EPixelFormat::Depth32,
+						.m_Usage = rdr::ETextureUsageFlags::DepthStencilTarget,
+					},
+				};
+			}
 
 			{
 				const auto view = world.view<const inputs::KeyDownEventComponent>();
@@ -146,25 +206,40 @@ namespace apollo::demo {
 					case inputs::EKey::F1:
 						if (comp.m_Repeat)
 							break;
+
+						DEBUG_CHECK(
+							SDL_SetWindowRelativeMouseMode(m_Window.GetHandle(), m_CameraLocked))
+						{
+							APOLLO_LOG_ERROR(
+								"Failed to set relative cursor mode: {}",
+								SDL_GetError());
+						}
 						m_CameraLocked = !m_CameraLocked;
-						SDL_SetWindowRelativeMouseMode(m_Window.GetHandle(), !m_CameraLocked);
 						break;
 					default: break;
 					}
 				}
 				const bool* keyStates = inputs::GetKeyStates();
-				const float lateralMovement = keyStates[SDL_SCANCODE_D] -
-											  2 * keyStates[SDL_SCANCODE_A];
-				const float fwdMovement = keyStates[SDL_SCANCODE_W] - 2 * keyStates[SDL_SCANCODE_S];
+				const float lateralMovement = float(
+					keyStates[SDL_SCANCODE_D] - keyStates[SDL_SCANCODE_A]);
+				const float fwdMovement = float(
+					keyStates[SDL_SCANCODE_W] - keyStates[SDL_SCANCODE_S]);
+				const float vMovement = float(
+					keyStates[SDL_SCANCODE_Q] - keyStates[SDL_SCANCODE_E]);
+
+				const float moveSpeed = time.GetDelta().count() * m_MoveSpeed;
+
 				if (lateralMovement)
 				{
-					m_Camera.m_Translate += m_Camera.GetRight() * 0.01f * m_MoveSpeed *
-											lateralMovement;
+					m_Camera.m_Translate += m_Camera.GetRight() * moveSpeed * lateralMovement;
 				}
 				if (fwdMovement)
 				{
-					m_Camera.m_Translate += m_Camera.GetForward() * 0.01f * m_MoveSpeed *
-											fwdMovement;
+					m_Camera.m_Translate += m_Camera.GetForward() * moveSpeed * fwdMovement;
+				}
+				if (vMovement)
+				{
+					m_Camera.m_Translate += moveSpeed * vMovement * float3{ 0, 1, 0 };
 				}
 			}
 
@@ -175,9 +250,10 @@ namespace apollo::demo {
 				{
 					mouseMotion += view->get(e).m_Motion;
 				}
-				m_Camera.m_Yaw -= 0.001f * m_MouseSpeed * mouseMotion.x;
+				const float camSpeed = time.GetDelta().count() * m_MouseSpeed;
+				m_Camera.m_Yaw -= camSpeed * mouseMotion.x;
 				m_Camera.m_Pitch = Clamp(
-					m_Camera.m_Pitch - 0.001f * m_MouseSpeed * mouseMotion.y,
+					m_Camera.m_Pitch - camSpeed * mouseMotion.y,
 					-maxPitch,
 					maxPitch);
 			}
@@ -188,7 +264,6 @@ namespace apollo::demo {
 		TestSystem(apollo::Window& window, apollo::rdr::Context& renderer)
 			: m_Window(window)
 			, m_RenderContext(renderer)
-			, m_WinSize(m_Window.GetSize())
 		{
 			m_ModelMatrix = glm::translate(glm::identity<glm::mat4x4>(), { 0, 0, -1 });
 
@@ -196,47 +271,28 @@ namespace apollo::demo {
 			m_CamMatrix = GetProjMatrix(winSize.x, winSize.y);
 		}
 
-		~TestSystem() {}
-
 		void PostInit()
 		{
-			m_TextRenderer.m_Style.m_Size = 0.2f;
-
-			APOLLO_LOG_TRACE("Example Post-Init");
-			auto* assetManager = AssetManager::GetInstance();
-			APOLLO_ASSERT(assetManager, "Asset manager hasn't been initialized!");
+			const auto winSize = m_Window.GetSize();
+			m_DepthBuffer = rdr::Texture2D{
+				rdr::TextureSettings{
+					.m_Width = winSize.x,
+					.m_Height = winSize.y,
+					.m_Format = rdr::EPixelFormat::Depth32,
+					.m_Usage = rdr::ETextureUsageFlags::DepthStencilTarget,
+				},
+			};
 		}
+
+		~TestSystem() {}
 
 		void DisplayUi(const rdr::Material* mat)
 		{
-			ImGui::Begin("Settings");
-			ImGui::SliderFloat("Anti-Aliasing Width", &m_AntiAliasing, 0.0f, 5.0f);
-			m_GeometryReady &= !ImGui::DragFloat("Size", &m_TextRenderer.m_Style.m_Size, 0.01f);
-			m_GeometryReady &= !ImGui::DragFloat(
-				"Line Spacing",
-				&m_TextRenderer.m_Style.m_LineSpacing,
-				0.01f);
-			m_GeometryReady &= !ImGui::SliderFloat(
-				"Kerning",
-				&m_TextRenderer.m_Style.m_Kerning,
-				0.0f,
-				1.0f);
-
-			m_GeometryReady &= !ImGui::SliderFloat(
-				"Outline Thickness",
-				&m_TextRenderer.m_Style.m_OutlineThickness,
-				0,
-				0.5f);
-			m_GeometryReady &= !ImGui::DragFloat(
-				"Tracking",
-				&m_TextRenderer.m_Style.m_Tracking,
-				0.001f);
-			m_GeometryReady &= !ImGui::ColorEdit4(
-				"Foreground Color",
-				&m_TextRenderer.m_Style.m_FgColor.r);
-			m_GeometryReady &= !ImGui::ColorEdit4(
-				"Outline Color",
-				&m_TextRenderer.m_Style.m_OutlineColor.r);
+			ImGui::Begin("Camera Settings");
+			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
+			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
+			ImGui::ColorEdit4("Cube Color", &m_FragParams.m_Color.x);
+			ImGui::SliderInt("Checkerboard Size", (int32*)&m_FragParams.m_Scale, 1, 10);
 			ImGui::End();
 
 			if (!mat)
@@ -262,77 +318,103 @@ namespace apollo::demo {
 				ShaderParamBlockWidget(block);
 			}
 			ImGui::End();
-
-			ImGui::Begin("Camera Settings");
-			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
-			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
-			ImGui::End();
 		}
 
-		void Update(entt::registry& world, const apollo::GameTime&)
+		void Update(entt::registry& world, const apollo::GameTime& time)
 		{
 			if (!m_Window) [[unlikely]]
 				return;
+
+			auto* swapchainTexture = m_RenderContext.GetSwapchainTexture();
+			auto* mainCommandBuffer = m_RenderContext.GetMainCommandBuffer();
 
 			if (!m_AssetsReady)
 			{
 				const auto view = world.view<const SceneLoadFinishedEventComponent>();
 				if (!view.empty())
-					ProcessSceneLoadFinished(world, *view->begin());
+				{
+					SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(mainCommandBuffer);
+					ProcessSceneLoadFinished(world, *view->begin(), copyPass);
+					SDL_EndGPUCopyPass(copyPass);
+				}
 			}
-
-			auto* swapchainTexture = m_RenderContext.GetSwapchainTexture();
-			auto* mainCommandBuffer = m_RenderContext.GetMainCommandBuffer();
 
 			if (!swapchainTexture)
 				return;
 
-			ProcessInputs(world);
+			ProcessInputs(world, time);
 			DisplayUi(m_Material.Get());
 			if (m_AssetsReady)
 			{
-				m_TextRenderer.StartFrame(mainCommandBuffer);
-				if (!m_GeometryReady)
+				const SDL_GPUColorTargetInfo targetInfo{
+					.texture = swapchainTexture,
+					.clear_color = { .1f, .1f, .1f, 1 },
+					.load_op = SDL_GPU_LOADOP_CLEAR,
+					.store_op = SDL_GPU_STOREOP_STORE,
+					.cycle = true,
+				};
+				const SDL_GPUDepthStencilTargetInfo depthBufInfo{
+					.texture = m_DepthBuffer.GetHandle(),
+					.clear_depth = 1.0f,
+					.load_op = SDL_GPU_LOADOP_CLEAR,
+					.store_op = SDL_GPU_STOREOP_STORE,
+					.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE,
+					.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
+				};
+
+				SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(
+					mainCommandBuffer,
+					&targetInfo,
+					1,
+					&depthBufInfo);
+
+				SDL_PushGPUVertexUniformData(
+					mainCommandBuffer,
+					0,
+					&m_CamMatrix,
+					sizeof(glm::mat4x4));
+				SDL_PushGPUFragmentUniformData(
+					mainCommandBuffer,
+					0,
+					&m_FragParams,
+					sizeof(m_FragParams));
+
+				SDL_BindGPUGraphicsPipeline(
+					renderPass,
+					static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetHandle()));
+
+				const auto view = world.view<const MeshComponent, const TransformComponent>();
+				for (const auto entt : view)
 				{
-					m_TextRenderer.Clear();
-					m_TextRenderer.AddText(m_Text, { 0, 0 }, rdr::txt::Renderer2d::Center);
-					float2 size = m_Font->MeasureText(m_Text, m_TextRenderer.m_Style);
-					const float ratio = float(m_WinSize.x) / m_WinSize.y;
-					glm::uvec2 pixelSize = {
-						uint32(0.5f * size.x / ratio * m_WinSize.x),
-						uint32(0.5f * size.y * m_WinSize.y),
+					const auto& mesh = view.get<const MeshComponent>(entt);
+					const auto& transform = view.get<const TransformComponent>(entt);
+					const auto modelMat = ComputeTransformMatrix(
+						transform.m_Position,
+						transform.m_Scale,
+						transform.m_Rotation);
+					SDL_PushGPUVertexUniformData(mainCommandBuffer, 1, &modelMat, sizeof(modelMat));
+
+					const SDL_GPUBufferBinding vBinding{
+						.buffer = mesh.m_VBuffer.GetHandle(),
+						.offset = 0,
 					};
-					APOLLO_LOG_TRACE("Text size: ({}, {})", pixelSize.x, pixelSize.y);
-					m_GeometryReady = true;
+					SDL_BindGPUVertexBuffers(renderPass, 0, &vBinding, 1);
+
+					if (mesh.m_IBuffer)
+					{
+						const SDL_GPUBufferBinding iBinding{
+							.buffer = mesh.m_IBuffer.GetHandle(),
+							.offset = 0,
+						};
+						SDL_BindGPUIndexBuffer(
+							renderPass,
+							&iBinding,
+							SDL_GPU_INDEXELEMENTSIZE_32BIT);
+					}
+					SDL_DrawGPUIndexedPrimitives(renderPass, mesh.m_NumIndices, 1, 0, 0, 0);
 				}
-
-				m_TextRenderer.StartRender();
+				SDL_EndGPURenderPass(renderPass);
 			}
-
-			const SDL_GPUColorTargetInfo targetInfo{
-				.texture = swapchainTexture,
-				.clear_color = { .1f, .1f, .1f, 1 },
-				.load_op = SDL_GPU_LOADOP_CLEAR,
-				.store_op = SDL_GPU_STOREOP_STORE,
-				.cycle = true,
-			};
-
-			SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(
-				mainCommandBuffer,
-				&targetInfo,
-				1,
-				nullptr);
-
-			SDL_PushGPUVertexUniformData(
-				mainCommandBuffer,
-				0,
-				&m_CamMatrix,
-				2 * sizeof(glm::mat4x4));
-
-			if (m_AssetsReady)
-				m_TextRenderer.Render(renderPass);
-
-			SDL_EndGPURenderPass(renderPass);
 		}
 	};
 
@@ -341,14 +423,16 @@ namespace apollo::demo {
 		spdlog::set_level(spdlog::level::trace);
 
 		auto* compRegistry = ecs::ComponentRegistry::GetInstance();
-		compRegistry->RegisterComponent<TextComponent>();
+		compRegistry->RegisterComponent<MeshComponent>();
 
 		auto& renderer = *apollo::rdr::Context::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
 		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
 		auto& world = manager.GetEntityWorld();
-		world.emplace<SceneSwitchRequestComponent>(world.create(), "01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+		world.emplace<SceneSwitchRequestComponent>(
+			world.create(),
+			"01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
 
 		return EAppResult::Continue;
 	}

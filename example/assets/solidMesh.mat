@@ -1,0 +1,15 @@
+{
+	"vertexShader": "01K8FV6RFXGPN1H9K95KDNRHZZ",
+	"fragmentShader": "01K8FV7B760ERMPXD0CZ1J5X8J",
+	"input": "vertex3d",
+	"depthStencil": {
+		"enableDepthTest": false,
+		"enableDepthWrite": false,
+		"compareOp": "less"
+	},
+	"hasDepthStencilTarget": true,
+	"depthStencilFormat": "d32float",
+	"rasterizer": {
+		"cullMode": "back"
+	}
+}

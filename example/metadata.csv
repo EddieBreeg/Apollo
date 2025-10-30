@@ -1,5 +1,8 @@
 01K65F71RK1WNJ6D7XDNTNPVX4,vertexShader,textVert,assets/text.vert.hlsl
 01K6G8959Y1A6BM730HAQSS9PC,fragmentShader,textFrag,assets/text.frag.hlsl
+01K8FV6RFXGPN1H9K95KDNRHZZ,vertexShader,solidMeshVert,assets/solidMesh.vert.hlsl
+01K8FV7B760ERMPXD0CZ1J5X8J,fragmentShader,solidMeshFrag,assets/solidMesh.frag.hlsl
 01K6841M7W2D1J00QKJHHBDJG5,material,text,"assets/text.mat"
+01K8FV8FHRT60EZ0JACS752KN9,material,solidMesh,"assets/solidMesh.mat"
 01K77QW60RWKYCZFHVP704FV6B,fontAtlas,arial,"assets/arial.atlas"
 01K7VZZSR16FXR2NF8DNYSJQQ4,scene,main,main.scn

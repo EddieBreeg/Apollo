@@ -1,13 +1,29 @@
 {
 	"gameObjects": [
 		{
-			"id": "01K7VZZSR16FXR2NF8DNYSJQQ4",
-			"name": "text1",
+			"id": "01K8EC89XVHA1N3ZRZTFGNMYT5",
+			"name": "cube",
 			"components": {
-				"text": {
-					"str": "The quick brown\nfox jumps over\nthe lazy dog.",
-					"font": "01K77QW60RWKYCZFHVP704FV6B",
-					"material": "01K6841M7W2D1J00QKJHHBDJG5"
+				"transform": {
+					"position": {
+						"x": 0,
+						"y": 0,
+						"z": -5
+					},
+					"scale": {
+						"x": 1,
+						"y": 1,
+						"z": 1
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0,
+						"w": 1
+					}
+				},
+				"mesh": {
+					"material": "01K8FV8FHRT60EZ0JACS752KN9"
 				}
 			}
 		}
