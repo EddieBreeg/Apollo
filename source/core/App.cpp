@@ -12,7 +12,7 @@
 #include <rendering/Context.hpp>
 
 namespace {
-	ImGuiContext* InitImGui(SDL_Window* window, SDL_GPUDevice* device)
+	ImGuiContext* InitImGui(SDL_Window* window, SDL_GPUDevice* device, bool vsync = false)
 	{
 		auto* const ctx = ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
@@ -29,7 +29,7 @@ namespace {
 		init_info.ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(device, window);
 		init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
 		init_info.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR;
-		init_info.PresentMode = SDL_GPU_PRESENTMODE_VSYNC;
+		init_info.PresentMode = vsync ? SDL_GPU_PRESENTMODE_VSYNC : SDL_GPU_PRESENTMODE_IMMEDIATE;
 		ImGui_ImplSDLGPU3_Init(&init_info);
 		return ctx;
 	}
