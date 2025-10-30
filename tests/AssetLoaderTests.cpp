@@ -60,7 +60,7 @@ namespace apollo::asset_ut {
 			});
 		helper.m_Loader.ProcessRequests();
 		helper.m_Sem.acquire();
-		CHECK(ref->GetState() == EAssetState::Loaded);
+		CHECK(ref->IsLoaded());
 	}
 
 	ASSET_LOADER_TEST("Load Asset With Callback")
@@ -82,7 +82,7 @@ namespace apollo::asset_ut {
 			});
 		helper.m_Loader.ProcessRequests();
 		helper.m_Sem.acquire();
-		CHECK(ref->GetState() == EAssetState::Loaded);
+		CHECK(ref->IsLoaded());
 		CHECK(state == EAssetState::Loaded);
 	}
 

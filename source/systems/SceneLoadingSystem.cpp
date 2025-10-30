@@ -37,8 +37,8 @@ namespace apollo {
 					"Scene Load entity has been destroyed before the scene was fully loaded!");
 				return;
 			}
-			// Something went when loading the scene: abort
-			if (loadComp->m_Scene->GetState() != EAssetState::Loaded)
+			// Something went wrong when loading the scene: abort
+			if (!loadComp->m_Scene->IsLoaded())
 				return;
 
 			APOLLO_LOG_INFO("Scene {} loaded successfully", loadComp->m_Scene->GetId());

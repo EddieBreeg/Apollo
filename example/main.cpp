@@ -118,7 +118,7 @@ namespace apollo::demo {
 			m_Material = textComp.m_Material;
 
 			DEBUG_CHECK(
-				textComp.m_Material && textComp.m_Material->GetState() == EAssetState::Loaded)
+				textComp.m_Material && textComp.m_Material->IsLoaded())
 			{
 				return;
 			}
@@ -245,7 +245,7 @@ namespace apollo::demo {
 			char title[37] = {};
 			mat->GetId().ToChars(title);
 
-			if (mat->GetState() != EAssetState::Loaded)
+			if (!mat->IsLoaded())
 				return;
 
 			ImGui::Begin(title);

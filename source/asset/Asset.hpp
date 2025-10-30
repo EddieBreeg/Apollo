@@ -3,6 +3,7 @@
 #include <PCH.hpp>
 
 #include <atomic>
+#include <core/Enum.hpp>
 #include <core/RetainPtr.hpp>
 #include <core/ULID.hpp>
 
@@ -26,9 +27,11 @@ namespace apollo {
 	{
 		Invalid = 0,
 		Loading = BIT(0),
-		Loaded = BIT(1),
-		Unloading = BIT(2),
-		Unloaded = BIT(3),
+		LoadingDeferred = BIT(1), /* Used when the loading operation couldn't be completed in one
+								   * go, and needs to be resumed */
+		Loaded = BIT(2),
+		Unloading = BIT(3),
+		Unloaded = BIT(4),
 	};
 
 	[[nodiscard]] APOLLO_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
@@ -44,6 +47,19 @@ namespace apollo {
 
 		[[nodiscard]] apollo::ULID GetId() const noexcept { return m_Id; }
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
+
+		[[nodiscard]] bool IsLoading() const noexcept
+		{
+			return bool(m_State.load() & EAssetState::Loading);
+		}
+		[[nodiscard]] bool IsLoadingDeferred() const noexcept
+		{
+			return bool(m_State.load() & EAssetState::LoadingDeferred);
+		}
+		[[nodiscard]] bool IsLoaded() const noexcept
+		{
+			return bool(m_State.load() & EAssetState::Loaded);
+		}
 
 		[[nodiscard]] virtual APOLLO_API EAssetType GetType() const noexcept = 0;
 		[[nodiscard]] APOLLO_API std::string_view GetTypeName() const noexcept;

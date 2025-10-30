@@ -17,7 +17,7 @@ namespace apollo::rdr::txt {
 		AssetRef<Material> material,
 		uint32 batchSize)
 	{
-		DEBUG_CHECK(material->GetState() != EAssetState::Invalid)
+		DEBUG_CHECK(material->GetState())
 		{
 			APOLLO_LOG_ERROR("Invalid material passed to txt::Renderer2d::Init");
 			return;
@@ -46,7 +46,7 @@ namespace apollo::rdr::txt {
 	void Renderer2d::AddText(std::string_view str, float2 origin, EAnchorPoint anchor)
 	{
 		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
-		if (!m_Font || m_Font->GetState() != EAssetState::Loaded)
+		if (!m_Font || !m_Font->IsLoaded())
 		{
 			APOLLO_LOG_ERROR("Called AddText on text renderer, but font is not ready");
 			return;
@@ -149,7 +149,7 @@ namespace apollo::rdr::txt {
 		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
 		const uint32 count = m_Batch.GetCount();
 		auto* const pipeline = m_Batch.GetPipeline();
-		if (!count || !m_Font || m_Font->GetState() != EAssetState::Loaded || !pipeline)
+		if (!count || !m_Font || !m_Font->IsLoaded() || !pipeline)
 			return;
 
 		const SDL_GPUTextureSamplerBinding samplerBinding{

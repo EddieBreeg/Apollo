@@ -115,7 +115,7 @@ namespace apollo::editor {
 	{
 		auto& mat = dynamic_cast<rdr::Material&>(out_asset);
 
-		if (!mat.m_VertShader && !mat.m_FragShader)
+		if (!out_asset.IsLoadingDeferred())
 			return LoadMaterialJson(metadata, mat.m_VertShader, mat.m_FragShader, mat.m_Handle);
 
 		const EAssetLoadResult result = ValidateShaderStates(

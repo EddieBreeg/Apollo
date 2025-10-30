@@ -71,8 +71,7 @@ namespace apollo {
 			AssetLoadRequest request = m_Requests.PopAndGetFront();
 			lock.unlock();
 
-			if (!request.m_Asset || request.m_Asset->GetState() != EAssetState::Loading)
-				[[unlikely]]
+			if (!request.m_Asset || !request.m_Asset->IsLoading()) [[unlikely]]
 				continue;
 
 			APOLLO_LOG_TRACE(
@@ -91,6 +90,7 @@ namespace apollo {
 					request.m_Metadata->m_Id);
 				break;
 			case apollo::EAssetLoadResult::TryAgain:
+				request.m_Asset->SetState(EAssetState::Loading | EAssetState::LoadingDeferred);
 				m_Requests.AddEmplace(std::move(request));
 				break;
 			default:

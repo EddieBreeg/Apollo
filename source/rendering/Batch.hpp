@@ -79,7 +79,7 @@ namespace apollo::rdr {
 			if (!m_Material)
 				return nullptr;
 
-			return m_Material->GetState() == EAssetState::Loaded
+			return m_Material->IsLoaded()
 					   ? static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetHandle())
 					   : nullptr;
 		}

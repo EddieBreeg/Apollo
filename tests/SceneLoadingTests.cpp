@@ -112,7 +112,7 @@ namespace apollo::scene_ut {
 
 		helper.Update();
 		helper.m_Semaphore.acquire();
-		CHECK(scene->GetState() == EAssetState::Loaded);
+		CHECK(scene->IsLoaded());
 	}
 
 	SCENE_TEST("No switch request")
@@ -188,7 +188,7 @@ namespace apollo::scene_ut {
 			scene = sceneComp->m_Scene;
 			CHECK(scene);
 			CHECK(scene->GetId() == g_AssetId1);
-			CHECK(scene->GetState() == EAssetState::Loaded);
+			CHECK(scene->IsLoaded());
 		}
 		helper.Update();
 
@@ -225,7 +225,7 @@ namespace apollo::scene_ut {
 		CHECK(!subSceneComp->m_IsRoot);
 		CHECK(subSceneComp->m_Scene);
 		CHECK(subSceneComp->m_Scene->GetId() == g_AssetId2);
-		CHECK(subSceneComp->m_Scene->GetState() == EAssetState::Loaded);
+		CHECK(subSceneComp->m_Scene->IsLoaded());
 	}
 
 	SCENE_TEST("Switch from scene1 to scene2")
@@ -252,7 +252,7 @@ namespace apollo::scene_ut {
 			CHECK(sceneComp.m_IsRoot);
 			CHECK(sceneComp.m_Scene);
 			CHECK(sceneComp.m_Scene->GetId() == g_AssetId2);
-			CHECK(sceneComp.m_Scene->GetState() == EAssetState::Loaded);
+			CHECK(sceneComp.m_Scene->IsLoaded());
 		}
 	}
 
