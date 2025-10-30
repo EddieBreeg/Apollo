@@ -74,10 +74,15 @@ namespace apollo {
 			if (!request.m_Asset || !request.m_Asset->IsLoading()) [[unlikely]]
 				continue;
 
-			APOLLO_LOG_TRACE(
-				"Loading asset {}({})",
-				request.m_Metadata->m_Name,
-				request.m_Metadata->m_Id);
+#ifdef APOLLO_DEV
+			if (!request.m_Asset->IsLoadingDeferred())
+			{
+				APOLLO_LOG_TRACE(
+					"Loading asset {}({})",
+					request.m_Metadata->m_Name,
+					request.m_Metadata->m_Id);
+			}
+#endif
 			const EAssetLoadResult result = request();
 
 			switch (result)

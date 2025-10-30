@@ -49,6 +49,21 @@ namespace apollo::rdr {
 			Int4x3,
 			Int4x4,
 
+			UInt,
+			UInt2,
+			UInt3,
+			UInt4,
+
+			UInt2x2,
+			UInt2x3,
+			UInt2x4,
+			UInt3x2,
+			UInt3x3,
+			UInt3x4,
+			UInt4x2,
+			UInt4x3,
+			UInt4x4,
+
 			NTypes
 		};
 
@@ -84,6 +99,11 @@ namespace apollo::rdr {
 				TYPE_CASE(Int4x2);
 				TYPE_CASE(Int4x3);
 				TYPE_CASE(Int4x4);
+
+				TYPE_CASE(UInt);
+				TYPE_CASE(UInt2);
+				TYPE_CASE(UInt3);
+				TYPE_CASE(UInt4);
 			default: return "Invalid";
 			}
 #undef TYPE_CASE

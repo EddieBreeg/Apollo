@@ -154,11 +154,18 @@ namespace {
 			ShaderConstant::EType type = ShaderConstant::Invalid;
 
 			if (desc.type_flags & SPV_REFLECT_TYPE_FLAG_FLOAT)
+			{
 				type = ShaderConstant::Float;
+			}
 			else if (desc.type_flags & SPV_REFLECT_TYPE_FLAG_INT)
-				type = ShaderConstant::Int;
+			{
+				type = desc.traits.numeric.scalar.signedness ? ShaderConstant::Int
+															 : ShaderConstant::UInt;
+			}
 			else
+			{
 				return type;
+			}
 
 			if (!(desc.type_flags & SPV_REFLECT_TYPE_FLAG_VECTOR))
 				return type;

@@ -7,6 +7,7 @@ namespace {
 		"vertexShader",
 		"fragmentShader",
 		"material",
+		"materialInstance",
 		"fontAtlas",
 		"scene",
 	};

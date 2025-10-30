@@ -48,14 +48,68 @@ namespace apollo::demo {
 			100.f);
 	}
 
-	void ShaderParamWidget(const rdr::ShaderConstant& param)
+	void ShaderParamWidget(
+		const rdr::ShaderConstant& param,
+		rdr::MaterialInstance& matInstance,
+		uint32 blockIndex = 0)
 	{
-		const char* typeName = rdr::ShaderConstant::GetTypeName(param.m_Type);
-		ImGui::Text("%s: %s, offset %u", param.m_Name.c_str(), typeName, param.m_Offset);
+		using namespace apollo::rdr;
+		const char* label = param.m_Name.c_str();
+
+		switch (param.m_Type)
+		{
+		case ShaderConstant::Float:
+			ImGui::DragFloat(
+				label,
+				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Float2:
+			ImGui::DragFloat2(
+				label,
+				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Float3:
+			ImGui::DragFloat3(
+				label,
+				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Float4:
+			ImGui::DragFloat4(
+				label,
+				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Int: [[fallthrough]];
+		case ShaderConstant::UInt:
+			ImGui::DragInt(
+				label,
+				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Int2: [[fallthrough]];
+		case ShaderConstant::UInt2:
+			ImGui::DragInt2(
+				label,
+				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Int3: [[fallthrough]];
+		case ShaderConstant::UInt3:
+			ImGui::DragInt3(
+				label,
+				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
+			return;
+		case ShaderConstant::Int4: [[fallthrough]];
+		case ShaderConstant::UInt4:
+			ImGui::DragInt4(
+				label,
+				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
+			return;
+		default: ImGui::Text("%s (%s)", label, ShaderConstant::GetTypeName(param.m_Type)); return;
+		}
 	}
 
-	void ShaderParamBlockWidget(const rdr::ShaderConstantBlock& block)
+	void ShaderParamBlockWidget(rdr::MaterialInstance& matInstance, uint32 blockIndex = 0)
 	{
+		const auto* fragShader = matInstance.GetMaterial()->GetFragmentShader();
+		const auto& block = fragShader->GetParameterBlocks()[blockIndex];
 		if (block.m_Name.length())
 			ImGui::SeparatorText(block.m_Name.c_str());
 		else
@@ -65,13 +119,13 @@ namespace apollo::demo {
 
 		for (uint32 i = 0; i < block.m_NumMembers; ++i)
 		{
-			ShaderParamWidget(block.m_Members[i]);
+			ShaderParamWidget(block.m_Members[i], matInstance, blockIndex);
 		}
 	}
 
 	struct MeshComponent
 	{
-		AssetRef<rdr::Material> m_Material;
+		AssetRef<rdr::MaterialInstance> m_Material;
 		rdr::Buffer m_VBuffer;
 		rdr::Buffer m_IBuffer;
 		uint32 m_NumIndices = 0;
@@ -138,7 +192,7 @@ namespace apollo::demo {
 		apollo::Window& m_Window;
 		apollo::rdr::Context& m_RenderContext;
 		apollo::AssetRef<Scene> m_Scene;
-		apollo::AssetRef<rdr::Material> m_Material;
+		apollo::AssetRef<rdr::MaterialInstance> m_Material;
 		rdr::Texture2D m_DepthBuffer;
 		bool m_AssetsReady = false;
 
@@ -148,12 +202,6 @@ namespace apollo::demo {
 		bool m_CameraLocked = true;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
-
-		struct FragConstants
-		{
-			GPU_ALIGN(float4) m_Color = { 1, 1, 1, 1 };
-			GPU_ALIGN(uint32) m_Scale = 5;
-		} m_FragParams;
 
 		void ProcessSceneLoadFinished(
 			entt::registry& world,
@@ -286,13 +334,11 @@ namespace apollo::demo {
 
 		~TestSystem() {}
 
-		void DisplayUi(const rdr::Material* mat)
+		void DisplayUi(rdr::MaterialInstance* mat)
 		{
 			ImGui::Begin("Camera Settings");
 			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
 			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
-			ImGui::ColorEdit4("Cube Color", &m_FragParams.m_Color.x);
-			ImGui::SliderInt("Checkerboard Size", (int32*)&m_FragParams.m_Scale, 1, 10);
 			ImGui::End();
 
 			if (!mat)
@@ -306,17 +352,8 @@ namespace apollo::demo {
 
 			ImGui::Begin(title);
 
-			ImGui::SeparatorText("Vertex Shader Constants");
-			for (const auto& block : mat->GetVertexShader()->GetParameterBlocks())
-			{
-				ShaderParamBlockWidget(block);
-			}
-
 			ImGui::SeparatorText("Fragment Shader Constants");
-			for (const auto& block : mat->GetFragmentShader()->GetParameterBlocks())
-			{
-				ShaderParamBlockWidget(block);
-			}
+			ShaderParamBlockWidget(*mat);
 			ImGui::End();
 		}
 
@@ -373,15 +410,11 @@ namespace apollo::demo {
 					0,
 					&m_CamMatrix,
 					sizeof(glm::mat4x4));
-				SDL_PushGPUFragmentUniformData(
-					mainCommandBuffer,
-					0,
-					&m_FragParams,
-					sizeof(m_FragParams));
+				m_Material->PushFragmentConstants(mainCommandBuffer);
 
 				SDL_BindGPUGraphicsPipeline(
 					renderPass,
-					static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetHandle()));
+					static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetMaterial()->GetHandle()));
 
 				const auto view = world.view<const MeshComponent, const TransformComponent>();
 				for (const auto entt : view)

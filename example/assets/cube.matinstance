@@ -1,0 +1,14 @@
+{
+	"material": "01K8FV8FHRT60EZ0JACS752KN9",
+	"parameters": [
+		{
+			"Scale": 10,
+			"Color": {
+				"x": 1,
+				"y": 0,
+				"z": 1,
+				"w": 1
+			}
+		}
+	]
+}

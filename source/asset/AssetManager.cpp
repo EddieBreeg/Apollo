@@ -73,6 +73,7 @@ namespace apollo {
 			{&ConstructAsset<rdr::VertexShader>, settings.m_LoadVertexShader},
 			{&ConstructAsset<rdr::FragmentShader>, settings.m_LoadFragmentShader},
 			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
+			{&ConstructAsset<rdr::MaterialInstance>, settings.m_LoadMaterialInstance},
 			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},
 			{&ConstructAsset<Scene>, settings.m_LoadScene},
 		 }

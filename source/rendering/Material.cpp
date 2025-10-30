@@ -12,4 +12,14 @@ namespace apollo::rdr {
 				static_cast<SDL_GPUGraphicsPipeline*>(m_Handle));
 		}
 	}
+
+	void MaterialInstance::PushFragmentConstants(SDL_GPUCommandBuffer* cmdBuffer, uint32 index)
+	{
+		APOLLO_ASSERT(index < 4, "Block index {} is out of bounds", index);
+		SDL_PushGPUFragmentUniformData(
+			cmdBuffer,
+			index,
+			m_FragmentConstants[index].m_Buf,
+			m_BlockSizes[index]);
+	}
 } // namespace apollo::rdr

@@ -36,6 +36,7 @@ namespace apollo {
 		AssetImportFunc* m_LoadVertexShader = nullptr;
 		AssetImportFunc* m_LoadFragmentShader = nullptr;
 		AssetImportFunc* m_LoadMaterial = nullptr;
+		AssetImportFunc* m_LoadMaterialInstance = nullptr;
 		AssetImportFunc* m_LoadFont = nullptr;
 		AssetImportFunc* m_LoadScene = nullptr;
 
@@ -67,7 +68,10 @@ namespace apollo {
 			requires(std::invocable<F, const IAsset&>)
 		{
 			return AssetRef<IAsset>{
-				GetAssetImpl(id, type, std::forward<F>(callback)),
+				GetAssetImpl(
+					id,
+					type,
+					UniqueFunction<void(const IAsset&)>{ std::forward<F>(callback) }),
 			};
 		}
 
@@ -85,7 +89,10 @@ namespace apollo {
 			(std::is_base_of_v<IAsset, A>) && (A::AssetType > EAssetType::Invalid) &&
 			(A::AssetType < EAssetType::NTypes) && std::is_invocable_v<F, const IAsset&>)
 		{
-			IAsset* const ptr = GetAssetImpl(id, A::AssetType, std::forward<F>(callback));
+			IAsset* const ptr = GetAssetImpl(
+				id,
+				A::AssetType,
+				UniqueFunction<void(const IAsset&)>{ std::forward<F>(callback) });
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 

@@ -6,9 +6,9 @@
 #include <core/Log.hpp>
 #include <core/ULID.hpp>
 #include <fstream>
+#include <rendering/Context.hpp>
 #include <rendering/Material.hpp>
 #include <rendering/Pipeline.hpp>
-#include <rendering/Context.hpp>
 
 namespace {
 	apollo::EAssetLoadResult ValidateShaderStates(
@@ -34,7 +34,7 @@ namespace {
 		using apollo::json::Converter;
 		using namespace apollo;
 		auto* manager = AssetManager::GetInstance();
-		DEBUG_CHECK(manager)
+		if (!manager) [[unlikely]]
 		{
 			APOLLO_LOG_CRITICAL(
 				"Tried to load material but asset manager has not been initialised");
@@ -142,5 +142,178 @@ namespace apollo::editor {
 			return EAssetLoadResult::Failure;
 		}
 		return EAssetLoadResult::Success;
+	}
+
+	EAssetLoadResult LoadMaterialInstance(IAsset& out_asset, const AssetMetadata& metadata)
+	{
+		auto& instance = dynamic_cast<rdr::MaterialInstance&>(out_asset);
+		if (instance.IsLoadingDeferred())
+		{
+			if (instance.m_Material->IsLoading())
+				return EAssetLoadResult::TryAgain;
+			return instance.m_Material->IsLoaded() ? EAssetLoadResult::Success
+												   : EAssetLoadResult::Failure;
+		}
+
+		std::ifstream inFile{ metadata.m_FilePath, std::ios::binary };
+		if (!inFile.is_open())
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to load material instance from {}: {}",
+				metadata.m_FilePath.string(),
+				GetErrnoMessage(errno));
+			return EAssetLoadResult::Failure;
+		}
+
+		nlohmann::json json = nlohmann::json::parse(inFile, nullptr, false);
+		if (json.is_discarded())
+		{
+			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
+			return EAssetLoadResult::Failure;
+		}
+
+		ULID matId;
+		if (!json::Visit(matId, json, "material"))
+		{
+			APOLLO_LOG_ERROR("Failed to get material ID for instance {}", metadata.m_Name);
+			return EAssetLoadResult::Failure;
+		}
+
+		if (!matId) [[unlikely]]
+		{
+			APOLLO_LOG_ERROR("Invalid material ID for instance {}", metadata.m_Name);
+			return EAssetLoadResult::Failure;
+		}
+
+		AssetManager* manager = AssetManager::GetInstance();
+
+		if (!manager) [[unlikely]]
+		{
+			return EAssetLoadResult::Failure;
+		}
+
+		struct MaterialCallback
+		{
+			rdr::MaterialInstance& instance;
+			nlohmann::json m_ParamsDesc;
+
+			void LoadConstantBlock(uint32 index, const rdr::ShaderConstantBlock& block)
+			{
+				instance.m_BlockSizes[index] = block.m_Size;
+				constexpr uint32 maxBlockSize = sizeof(rdr::MaterialInstance::ConstantBlockStorage);
+				if (block.m_Size > maxBlockSize) [[unlikely]]
+				{
+					APOLLO_LOG_WARN(
+						"Shader constant block {} has size {}, which is over the maximum limit of "
+						"{}. Truncation will occur",
+						index,
+						block.m_Size,
+						maxBlockSize);
+					instance.m_BlockSizes[index] = maxBlockSize;
+				}
+
+				if (index >= m_ParamsDesc.size())
+					return;
+
+				const nlohmann::json& blockDesc = m_ParamsDesc[index];
+				if (!blockDesc.is_object())
+				{
+					APOLLO_LOG_ERROR(
+						"Cann't parse shader constant block {} from JSON: not an object",
+						index);
+					return;
+				}
+
+				for (uint32 i = 0; i < block.m_NumMembers; ++i)
+				{
+					const auto& member = block.m_Members[i];
+					LoadBlockMember(member, index, blockDesc);
+				}
+			}
+
+#define VISIT_CONSTANT(type)                                                                       \
+	json::Visit(                                                                                   \
+		instance.GetFragmentConstant<type>(blockIndex, constant.m_Offset),                         \
+		blockJson,                                                                                 \
+		constant.m_Name,                                                                           \
+		true);                                                                                     \
+	break
+
+			void LoadBlockMember(
+				const rdr::ShaderConstant& constant,
+				uint32 blockIndex,
+				const nlohmann::json& blockJson)
+			{
+				bool result = true;
+				switch (constant.m_Type)
+				{
+				case rdr::ShaderConstant::Float: result = VISIT_CONSTANT(float);
+				case rdr::ShaderConstant::Float2: result = VISIT_CONSTANT(float2);
+				case rdr::ShaderConstant::Float3: result = VISIT_CONSTANT(float3);
+				case rdr::ShaderConstant::Float4: result = VISIT_CONSTANT(float4);
+				case rdr::ShaderConstant::Int: result = VISIT_CONSTANT(int32);
+				case rdr::ShaderConstant::Int2: result = VISIT_CONSTANT(glm::ivec2);
+				case rdr::ShaderConstant::Int3: result = VISIT_CONSTANT(glm::ivec3);
+				case rdr::ShaderConstant::Int4: result = VISIT_CONSTANT(glm::ivec4);
+				case rdr::ShaderConstant::UInt: result = VISIT_CONSTANT(uint32);
+				case rdr::ShaderConstant::UInt2: result = VISIT_CONSTANT(glm::uvec2);
+				case rdr::ShaderConstant::UInt3: result = VISIT_CONSTANT(glm::uvec3);
+				case rdr::ShaderConstant::UInt4: result = VISIT_CONSTANT(glm::uvec4);
+				default:
+					APOLLO_LOG_ERROR(
+						"Failed to load parameter value for constant {} in block index {}: "
+						"unsupported type",
+						constant.m_Name,
+						blockIndex);
+					return;
+				}
+				if (!result)
+				{
+					APOLLO_LOG_ERROR(
+						"Failed to get parse value for parameter {} in block {}",
+						constant.m_Name,
+						blockIndex);
+				}
+			}
+#undef CONSTANT_TYPE_CASE
+
+			void operator()(const IAsset&)
+			{
+				if (m_ParamsDesc.is_null() || !instance.m_Material->IsLoaded())
+					return;
+
+				if (!m_ParamsDesc.is_array())
+				{
+					APOLLO_LOG_ERROR(
+						"Can't parse shader constant blocks from JSON for material instance: not "
+						"an array");
+					return;
+				}
+
+				const std::span fragConstantBlocks =
+					instance.m_Material->GetFragmentShader()->GetParameterBlocks();
+
+				for (uint32 i = 0; i < fragConstantBlocks.size(); ++i)
+				{
+					LoadConstantBlock(i, fragConstantBlocks[i]);
+				}
+			}
+		} callback{ instance };
+
+		if (!json::Visit(callback.m_ParamsDesc, json, "parameters", true))
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to parse material parameters from JSON for instance {}",
+				metadata.m_Name);
+			callback.m_ParamsDesc = nullptr;
+		}
+
+		instance.m_Material = manager->GetAsset<rdr::Material>(matId, std::move(callback));
+		if (!instance.m_Material)
+			return EAssetLoadResult::Failure;
+
+		if (instance.m_Material->IsLoaded())
+			return EAssetLoadResult::Success;
+		return EAssetLoadResult::TryAgain;
 	}
 } // namespace apollo::editor

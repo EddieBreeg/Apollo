@@ -4,5 +4,6 @@
 01K8FV7B760ERMPXD0CZ1J5X8J,fragmentShader,solidMeshFrag,assets/solidMesh.frag.hlsl
 01K6841M7W2D1J00QKJHHBDJG5,material,text,"assets/text.mat"
 01K8FV8FHRT60EZ0JACS752KN9,material,solidMesh,"assets/solidMesh.mat"
+01K8TYP16WV0Q775BPYV9AJD3C,materialInstance,cubeMat,"assets/cube.matinstance"
 01K77QW60RWKYCZFHVP704FV6B,fontAtlas,arial,"assets/arial.atlas"
 01K7VZZSR16FXR2NF8DNYSJQQ4,scene,main,main.scn

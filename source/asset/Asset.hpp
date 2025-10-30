@@ -18,6 +18,7 @@ namespace apollo {
 		VertexShader,
 		FragmentShader,
 		Material,
+		MaterialInstance,
 		FontAtlas,
 		Scene,
 		NTypes
