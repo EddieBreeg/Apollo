@@ -18,8 +18,7 @@ namespace apollo::rdr {
 		void Swap(GraphicsShader& other) noexcept
 		{
 			BaseType::Swap(other);
-			apollo::Swap(m_NumConstantBlocks, other.m_NumConstantBlocks);
-			apollo::Swap(m_ConstantBlocks, other.m_ConstantBlocks);
+			apollo::Swap(m_Info, other.m_Info);
 		}
 
 		GraphicsShader& operator=(GraphicsShader&& other) noexcept
@@ -32,8 +31,10 @@ namespace apollo::rdr {
 
 		[[nodiscard]] std::span<const ShaderConstantBlock> GetParameterBlocks() const noexcept
 		{
-			return { m_ConstantBlocks, m_NumConstantBlocks };
+			return { m_Info.m_Blocks, m_Info.m_NumUniformBuffers };
 		}
+
+		[[nodiscard]] uint32 GetNumSamplers() const noexcept { return m_Info.m_NumSamplers; }
 
 	protected:
 		GraphicsShader() = default;
@@ -43,12 +44,8 @@ namespace apollo::rdr {
 
 		GraphicsShader(GraphicsShader&& other)
 			: BaseType(std::move(other))
-			, m_NumConstantBlocks(other.m_NumConstantBlocks)
-		{
-			for (uint32 i = 0; i < m_NumConstantBlocks; ++i)
-				m_ConstantBlocks[i] = std::move(other.m_ConstantBlocks[i]);
-			other.m_NumConstantBlocks = 0;
-		}
+			, m_Info(std::move(other.m_Info))
+		{}
 
 		APOLLO_API GraphicsShader(
 			const ULID& id,
@@ -62,8 +59,7 @@ namespace apollo::rdr {
 			std::string_view source,
 			const char* entryPoint = "main");
 
-		uint32 m_NumConstantBlocks = 0;
-		ShaderConstantBlock m_ConstantBlocks[4];
+		ShaderInfo m_Info;
 	};
 
 	class VertexShader : public GraphicsShader
