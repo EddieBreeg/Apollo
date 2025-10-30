@@ -202,34 +202,27 @@ namespace apollo::rdr {
 		ReflectionContext ctx;
 		if (!ctx.Init(code, codeLen))
 			return;
-		ShaderInfo info{};
-		ctx.GetInfo(info);
-		if (info.m_Stage != stage)
+		ctx.GetInfo(m_Info);
+		if (m_Info.m_Stage != stage)
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to create shader from byte code: expected stage {}, got {}",
 				GetStageName(stage),
-				GetStageName(info.m_Stage));
-		}
-
-		while (m_NumConstantBlocks < info.m_NumUniformBuffers)
-		{
-			m_ConstantBlocks[m_NumConstantBlocks] = std::move(info.m_Blocks[m_NumConstantBlocks]);
-			++m_NumConstantBlocks;
+				GetStageName(m_Info.m_Stage));
 		}
 
 		const SDL_GPUShaderCreateInfo createInfo{
 			.code_size = codeLen,
 			.code = static_cast<const uint8*>(code),
-			.entrypoint = info.m_EntryPoint,
+			.entrypoint = m_Info.m_EntryPoint,
 #ifdef APOLLO_VULKAN
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
 #endif
-			.stage = g_Stages[int32(info.m_Stage)],
-			.num_samplers = info.m_NumSamplers,
-			.num_storage_textures = info.m_NumStorageTextures,
-			.num_storage_buffers = info.m_NumStorageBuffers,
-			.num_uniform_buffers = info.m_NumUniformBuffers,
+			.stage = g_Stages[int32(m_Info.m_Stage)],
+			.num_samplers = m_Info.m_NumSamplers,
+			.num_storage_textures = m_Info.m_NumStorageTextures,
+			.num_storage_buffers = m_Info.m_NumStorageBuffers,
+			.num_uniform_buffers = m_Info.m_NumUniformBuffers,
 		};
 		GPUDevice& device = Context::GetInstance()->GetDevice();
 		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
@@ -293,14 +286,7 @@ namespace apollo::rdr {
 		if (!ctx.Init(code.data(), codeLen))
 			return;
 
-		ShaderInfo info{};
-		ctx.GetInfo(info);
-
-		while (m_NumConstantBlocks < info.m_NumUniformBuffers)
-		{
-			m_ConstantBlocks[m_NumConstantBlocks] = std::move(info.m_Blocks[m_NumConstantBlocks]);
-			++m_NumConstantBlocks;
-		}
+		ctx.GetInfo(m_Info);
 
 		SDL_GPUShaderCreateInfo createInfo{
 			.code_size = codeLen,
@@ -308,10 +294,10 @@ namespace apollo::rdr {
 			.entrypoint = entryPoint,
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
 			.stage = g_Stages[ToUnderlying(stage)],
-			.num_samplers = info.m_NumSamplers,
-			.num_storage_textures = info.m_NumStorageTextures,
-			.num_storage_buffers = info.m_NumStorageBuffers,
-			.num_uniform_buffers = info.m_NumUniformBuffers,
+			.num_samplers = m_Info.m_NumSamplers,
+			.num_storage_textures = m_Info.m_NumStorageTextures,
+			.num_storage_buffers = m_Info.m_NumStorageBuffers,
+			.num_uniform_buffers = m_Info.m_NumUniformBuffers,
 		};
 		GPUDevice& device = Context::GetInstance()->GetDevice();
 		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
