@@ -126,6 +126,8 @@ namespace apollo {
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
 
+		ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+
 		m_RenderContext->BeginFrame();
 		m_AssetManager->Update();
 
