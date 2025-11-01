@@ -4,6 +4,7 @@
 #include <core/Singleton.hpp>
 
 #include "Device.hpp"
+#include "Pixel.hpp"
 
 struct SDL_Window;
 struct SDL_GPUCommandBuffer;
@@ -42,6 +43,11 @@ namespace apollo::rdr {
 		// Submits the main command buffer
 		APOLLO_API void EndFrame();
 
+		[[nodiscard]] EPixelFormat GetSwapchainTextureFormat() const noexcept
+		{
+			return m_SwapchainFormat;
+		}
+
 	private:
 		APOLLO_API Context(
 			EBackend backend,
@@ -57,5 +63,6 @@ namespace apollo::rdr {
 
 		SDL_GPUCommandBuffer* m_MainCommandBuffer = nullptr;
 		SDL_GPUTexture* m_SwapchainTexture = nullptr;
+		EPixelFormat m_SwapchainFormat = EPixelFormat::Invalid;
 	};
 } // namespace apollo::rdr

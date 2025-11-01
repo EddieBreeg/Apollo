@@ -1,4 +1,5 @@
 #include "Context.hpp"
+#include "Pixel.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>
@@ -31,6 +32,9 @@ namespace apollo::rdr {
 			m_Window.GetHandle(),
 			SDL_GPU_SWAPCHAINCOMPOSITION_SDR,
 			vSync ? SDL_GPU_PRESENTMODE_VSYNC : SDL_GPU_PRESENTMODE_IMMEDIATE);
+		m_SwapchainFormat = (EPixelFormat)SDL_GetGPUSwapchainTextureFormat(
+			m_Device.GetHandle(),
+			m_Window.GetHandle());
 	}
 
 	void Context::BeginFrame()

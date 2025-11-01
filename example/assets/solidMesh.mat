@@ -11,5 +11,10 @@
 	"depthStencilFormat": "d32float",
 	"rasterizer": {
 		"cullMode": "back"
-	}
+	},
+	"colorTargets": [
+		{
+			"format": "rgba8unorm_srgb"
+		}
+	]
 }

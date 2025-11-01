@@ -192,6 +192,11 @@ namespace apollo::editor {
 			return EAssetLoadResult::Failure;
 		}
 
+		const auto texturesIt = json.find("textures");
+		if (texturesIt != json.end())
+		{
+		}
+
 		struct MaterialCallback
 		{
 			rdr::MaterialInstance& instance;
@@ -199,7 +204,7 @@ namespace apollo::editor {
 
 			void LoadConstantBlock(uint32 index, const rdr::ShaderConstantBlock& block)
 			{
-				instance.m_BlockSizes[index] = block.m_Size;
+				instance.m_ConstantBlocks.m_BlockSizes[index] = block.m_Size;
 				constexpr uint32 maxBlockSize = sizeof(rdr::MaterialInstance::ConstantBlockStorage);
 				if (block.m_Size > maxBlockSize) [[unlikely]]
 				{
@@ -209,7 +214,7 @@ namespace apollo::editor {
 						index,
 						block.m_Size,
 						maxBlockSize);
-					instance.m_BlockSizes[index] = maxBlockSize;
+					instance.m_ConstantBlocks.m_BlockSizes[index] = maxBlockSize;
 				}
 
 				if (index >= m_ParamsDesc.size())

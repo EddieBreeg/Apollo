@@ -231,11 +231,7 @@ struct apollo::json::Converter<SDL_GPUColorTargetDescription>
 		else
 		{
 			auto* ctx = rdr::Context::GetInstance();
-			auto& window = ctx->GetWindow();
-			auto& device = ctx->GetDevice();
-			out_desc.format = SDL_GetGPUSwapchainTextureFormat(
-				device.GetHandle(),
-				window.GetHandle());
+			out_desc.format = (SDL_GPUTextureFormat)ctx->GetSwapchainTextureFormat();
 		}
 		out_desc.blend_state = SDL_GPUColorTargetBlendState{
 			.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,
@@ -430,10 +426,8 @@ namespace apollo::json {
 		if (it == json.end())
 		{
 			auto* ctx = rdr::Context::GetInstance();
-			auto& window = ctx->GetWindow();
-			auto& device = ctx->GetDevice();
 			g_ColorTargets[0] = SDL_GPUColorTargetDescription{
-				.format = SDL_GetGPUSwapchainTextureFormat(device.GetHandle(), window.GetHandle()),
+				.format = (SDL_GPUTextureFormat)ctx->GetSwapchainTextureFormat(),
 				.blend_state =
 					SDL_GPUColorTargetBlendState{
 						.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE,

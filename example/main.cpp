@@ -1,4 +1,5 @@
 #include "Camera.hpp"
+#include "Viewport.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>
@@ -38,12 +39,12 @@ namespace ImGui {
 }
 
 namespace apollo::demo {
-	glm::mat4x4 GetProjMatrix(uint32 width, uint32 height)
+	glm::mat4x4 GetProjMatrix(const Viewport& vp)
 	{
 		return glm::perspectiveFovRH(
 			0.5f * std::numbers::pi_v<float>,
-			float(width),
-			float(height),
+			vp.m_Viewport.w,
+			vp.m_Viewport.h,
 			0.01f,
 			100.f);
 	}
@@ -193,7 +194,7 @@ namespace apollo::demo {
 		apollo::rdr::Context& m_RenderContext;
 		apollo::AssetRef<Scene> m_Scene;
 		apollo::AssetRef<rdr::MaterialInstance> m_Material;
-		rdr::Texture2D m_DepthBuffer;
+		Viewport m_TargetViewport;
 		bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
@@ -202,6 +203,8 @@ namespace apollo::demo {
 		bool m_CameraLocked = true;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
+
+		void PostInit() { rdr::Context::GetInstance()->m_ClearBackBuffer = true; }
 
 		void ProcessSceneLoadFinished(
 			entt::registry& world,
@@ -227,22 +230,9 @@ namespace apollo::demo {
 		void ProcessInputs(entt::registry& world, const GameTime& time)
 		{
 			using namespace apollo::inputs;
-			const glm::uvec2 winSize = m_Window.GetSize();
-			glm::mat4x4 projMatrix = GetProjMatrix(winSize.x, winSize.y);
+
 			float2 mouseMotion = {};
 			constexpr float maxPitch = .49f * std::numbers::pi_v<float>;
-
-			if (!world.view<const inputs::WindowResizeEventComponent>()->empty())
-			{
-				m_DepthBuffer = rdr::Texture2D{
-					rdr::TextureSettings{
-						.m_Width = winSize.x,
-						.m_Height = winSize.y,
-						.m_Format = rdr::EPixelFormat::Depth32,
-						.m_Usage = rdr::ETextureUsageFlags::DepthStencilTarget,
-					},
-				};
-			}
 
 			{
 				const auto view = world.view<const inputs::KeyDownEventComponent>();
@@ -306,7 +296,7 @@ namespace apollo::demo {
 					maxPitch);
 			}
 
-			m_CamMatrix = projMatrix * m_Camera.GetLookAt();
+			m_CamMatrix = m_Camera.GetLookAt();
 		}
 
 		TestSystem(apollo::Window& window, apollo::rdr::Context& renderer)
@@ -314,31 +304,18 @@ namespace apollo::demo {
 			, m_RenderContext(renderer)
 		{
 			m_ModelMatrix = glm::translate(glm::identity<glm::mat4x4>(), { 0, 0, -1 });
-
-			glm::uvec2 winSize = m_Window.GetSize();
-			m_CamMatrix = GetProjMatrix(winSize.x, winSize.y);
-		}
-
-		void PostInit()
-		{
-			const auto winSize = m_Window.GetSize();
-			m_DepthBuffer = rdr::Texture2D{
-				rdr::TextureSettings{
-					.m_Width = winSize.x,
-					.m_Height = winSize.y,
-					.m_Format = rdr::EPixelFormat::Depth32,
-					.m_Usage = rdr::ETextureUsageFlags::DepthStencilTarget,
-				},
-			};
 		}
 
 		~TestSystem() {}
 
 		void DisplayUi(rdr::MaterialInstance* mat)
 		{
+			m_TargetViewport.Update();
+
 			ImGui::Begin("Camera Settings");
 			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
 			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
+			ImGui::Text("Press F1 to unlock/relock camera");
 			ImGui::End();
 
 			if (!mat)
@@ -381,29 +358,13 @@ namespace apollo::demo {
 
 			ProcessInputs(world, time);
 			DisplayUi(m_Material.Get());
+			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
+
 			if (m_AssetsReady)
 			{
-				const SDL_GPUColorTargetInfo targetInfo{
-					.texture = swapchainTexture,
-					.clear_color = { .1f, .1f, .1f, 1 },
-					.load_op = SDL_GPU_LOADOP_CLEAR,
-					.store_op = SDL_GPU_STOREOP_STORE,
-					.cycle = true,
-				};
-				const SDL_GPUDepthStencilTargetInfo depthBufInfo{
-					.texture = m_DepthBuffer.GetHandle(),
-					.clear_depth = 1.0f,
-					.load_op = SDL_GPU_LOADOP_CLEAR,
-					.store_op = SDL_GPU_STOREOP_STORE,
-					.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE,
-					.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
-				};
-
-				SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(
+				SDL_GPURenderPass* renderPass = m_TargetViewport.BeginPass(
 					mainCommandBuffer,
-					&targetInfo,
-					1,
-					&depthBufInfo);
+					{ .1f, .1f, .1f, 1 });
 
 				SDL_PushGPUVertexUniformData(
 					mainCommandBuffer,
