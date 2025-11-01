@@ -6,6 +6,7 @@
 			"hidden": true,
 			"binaryDir": "${sourceDir}/build/${presetName}",
 			"cacheVariables": {
+				"BUILD_SHARED_LIBS": "OFF",
 				"SDL_SHARED": "ON",
 				"SDL_STATIC": "OFF",
 				"SDL_AUDIO": "OFF",
