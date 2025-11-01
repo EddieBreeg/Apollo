@@ -20,6 +20,7 @@ namespace apollo::rdr {
 		~Context() = default;
 
 		float4 m_ClearColor{};
+		bool m_ClearBackBuffer = false;
 
 		GPUDevice& GetDevice() noexcept { return m_Device; }
 		Window& GetWindow() noexcept { return m_Window; }

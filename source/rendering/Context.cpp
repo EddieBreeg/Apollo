@@ -78,7 +78,7 @@ namespace apollo::rdr {
 					m_ClearColor.b,
 					m_ClearColor.a,
 				},
-			.load_op = SDL_GPU_LOADOP_LOAD,
+			.load_op = m_ClearBackBuffer ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD,
 			.store_op = SDL_GPU_STOREOP_STORE,
 		};
 
