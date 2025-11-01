@@ -90,18 +90,65 @@ namespace apollo::rdr {
 	{
 		Invalid = -1,
 
-		// unsigned 8-bit formats
+		// unsigned normalized float
+		A8_UNorm = 1,
 		R8_UNorm,
 		RG8_UNorm,
 		RGBA8_UNorm,
+		R16_UNorm,
+		RG16_UNorm,
+		RGBA16_UNorm,
+		RGB10A2_UNorm,
+		B5G6R5_UNorm,
+		BGR5A1_UNorm,
+		BGRA4_UNorm,
+		BGRA8_UNorm,
 
-		// signed 8-bit formats
-		R8_SNorm,
+		// signed normalized float formats
+		R8_SNorm = 21,
 		RG8_SNorm,
 		RGBA8_SNorm,
+		R16_SNorm,
+		RG16_SNorm,
+		RGBA16_SNorm,
+		// signed float formats
+		R16_Float,
+		RG16_Float,
+		RGBA16_Float,
+		R32_Float,
+		RG32_Float,
+		RGBA32_Float,
+
+		RG11B10_UFloat,
+
+		// UInt formats
+		R8_Uint,
+		RG8_Uint,
+		RGBA8_Uint,
+		R16_Uint,
+		RG16_Uint,
+		RGBA16_Uint,
+		R32_Uint,
+		RG32_Uint,
+		RGBA32_Uint,
+
+		// Int formats
+		R8_Int,
+		RG8_Int,
+		RGBA8_Int,
+		R16_Int,
+		RG16_Int,
+		RGBA16_Int,
+		R32_Int,
+		RG32_Int,
+		RGBA32_Int,
+
+		// sRGB unsigned normalized formats
+		RGBA8_UNorm_SRGB,
+		BGRA8_UNorm_SRGB,
 
 		// Depth/Stencil Formats
-		Depth16,
+		Depth16 = 58,
 		Depth24,
 		Depth32,
 		Depth24_Stencil8,

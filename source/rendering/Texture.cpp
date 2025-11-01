@@ -54,15 +54,6 @@ namespace {
 		}
 		return true;
 	}
-
-	constexpr SDL_GPUTextureFormat g_Formats[]{
-		SDL_GPU_TEXTUREFORMAT_R8_UNORM,			 SDL_GPU_TEXTUREFORMAT_R8G8_UNORM,
-		SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,	 SDL_GPU_TEXTUREFORMAT_R8_SNORM,
-		SDL_GPU_TEXTUREFORMAT_R8G8_SNORM,		 SDL_GPU_TEXTUREFORMAT_R8G8B8A8_SNORM,
-		SDL_GPU_TEXTUREFORMAT_D16_UNORM,		 SDL_GPU_TEXTUREFORMAT_D24_UNORM,
-		SDL_GPU_TEXTUREFORMAT_D32_FLOAT,		 SDL_GPU_TEXTUREFORMAT_D24_UNORM_S8_UINT,
-		SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT,
-	};
 } // namespace
 
 namespace apollo::rdr {
@@ -77,7 +68,7 @@ namespace apollo::rdr {
 		auto* device = Context::GetInstance()->GetDevice().GetHandle();
 		const SDL_GPUTextureCreateInfo info{
 			.type = SDL_GPU_TEXTURETYPE_2D,
-			.format = g_Formats[ToUnderlying(settings.m_Format)],
+			.format = (SDL_GPUTextureFormat)settings.m_Format,
 			.usage = SDL_GPUTextureUsageFlags(settings.m_Usage),
 			.width = settings.m_Width,
 			.height = settings.m_Height,
