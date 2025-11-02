@@ -18,3 +18,4 @@ deps/freetype2/**/meson.sln
 deps/freetype2/**/*.sh
 deps/freetype2/**/Makefile
 deps/freetype2/**/configure
+*.afdesign
