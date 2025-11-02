@@ -372,10 +372,7 @@ namespace apollo::demo {
 					&m_CamMatrix,
 					sizeof(glm::mat4x4));
 				m_Material->PushFragmentConstants(mainCommandBuffer);
-
-				SDL_BindGPUGraphicsPipeline(
-					renderPass,
-					static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetMaterial()->GetHandle()));
+				m_Material->Bind(renderPass);
 
 				const auto view = world.view<const MeshComponent, const TransformComponent>();
 				for (const auto entt : view)

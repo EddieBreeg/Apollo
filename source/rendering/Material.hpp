@@ -4,6 +4,7 @@
 
 #include "HandleWrapper.hpp"
 #include "Shader.hpp"
+#include "Texture.hpp"
 #include <asset/Asset.hpp>
 #include <asset/AssetRef.hpp>
 #include <core/Assert.hpp>
@@ -11,6 +12,8 @@
 struct SDL_GPUCommandBuffer;
 struct SDL_GPUGraphicsPipeline;
 struct SDL_GPUGraphicsPipelineCreateInfo;
+struct SDL_GPURenderPass;
+struct SDL_GPUSampler;
 
 namespace apollo {
 	struct AssetMetadata;
@@ -74,6 +77,10 @@ namespace apollo::rdr {
 	{
 	public:
 		using IAsset::IAsset;
+		APOLLO_API ~MaterialInstance();
+		APOLLO_API void Reset();
+
+		static constexpr uint32 s_MaxTextures = 16;
 
 		GET_ASSET_TYPE_IMPL(EAssetType::MaterialInstance);
 		[[nodiscard]] const Material* GetMaterial() const noexcept { return m_Material.Get(); }
@@ -83,10 +90,10 @@ namespace apollo::rdr {
 		{
 			APOLLO_ASSERT(blockIndex < 4, "Block index {} is out of bounds", blockIndex);
 			APOLLO_ASSERT(
-				(offset + sizeof(T)) <= m_BlockSizes[blockIndex],
+				(offset + sizeof(T)) <= m_ConstantBlocks.m_BlockSizes[blockIndex],
 				"Offset {} is out of bounds",
 				offset);
-			auto& block = m_FragmentConstants[blockIndex].m_Buf;
+			auto& block = m_ConstantBlocks.m_FragmentConstants[blockIndex].m_Buf;
 			return *reinterpret_cast<T*>(block + offset);
 		}
 
@@ -95,14 +102,18 @@ namespace apollo::rdr {
 		{
 			APOLLO_ASSERT(blockIndex < 4, "Block index {} is out of bounds", blockIndex);
 			APOLLO_ASSERT(
-				(offset + sizeof(T)) <= m_BlockSizes[blockIndex],
+				(offset + sizeof(T)) <= m_ConstantBlocks.m_BlockSizes[blockIndex],
 				"Offset {} is out of bounds",
 				offset);
-			auto& block = m_FragmentConstants[blockIndex].m_Buf;
+			auto& block = m_ConstantBlocks.m_FragmentConstants[blockIndex].m_Buf;
 			return *reinterpret_cast<T*>(block + offset);
 		}
 
-		APOLLO_API void PushFragmentConstants(SDL_GPUCommandBuffer* commandBuffer, uint32 blockIndex = 0);
+		APOLLO_API void PushFragmentConstants(
+			SDL_GPUCommandBuffer* commandBuffer,
+			uint32 blockIndex = 0);
+
+		APOLLO_API void Bind(SDL_GPURenderPass* renderPass);
 
 	private:
 		friend EAssetLoadResult editor::LoadMaterialInstance(
@@ -115,7 +126,17 @@ namespace apollo::rdr {
 		};
 
 		AssetRef<Material> m_Material;
-		uint32 m_BlockSizes[4] = { 0 };
-		ConstantBlockStorage m_FragmentConstants[4];
+		struct
+		{
+			uint32 m_BlockSizes[4] = { 0 };
+			ConstantBlockStorage m_FragmentConstants[4];
+		} m_ConstantBlocks;
+
+		struct TextureStorage
+		{
+			uint32 m_NumTextures = 0;
+			AssetRef<Texture2D> m_Textures[16] = {};
+			SDL_GPUSampler* m_Samplers[16] = { nullptr };
+		} m_VertexTextures, m_FragmentTextures;
 	};
 } // namespace apollo::rdr

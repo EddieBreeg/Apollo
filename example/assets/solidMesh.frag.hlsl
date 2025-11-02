@@ -1,19 +1,19 @@
 struct Fragment
 {
 	float4 Position: SV_POSITION;
-	float3 UV: TEXCOORD;
+	float2 UV: TEXCOORD;
 };
 
+Texture2D g_Color: register(t0, space2);
+SamplerState g_Sampler0: register(s0, space2);
 
 cbuffer Params: register(b0, space3)
 {
 	float4 Color;
-	uint Scale;
 };
 
 float4 main(Fragment frag): SV_TARGET
 {
-	int3 pos = floor(frag.UV * Scale);
-	float fac = float((pos.x + pos.y + pos.z) % 2);
-	return fac * Color;
+	float4 c = g_Color.Sample(g_Sampler0, frag.UV);
+	return Color * c;
 }

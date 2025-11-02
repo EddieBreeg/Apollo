@@ -8,7 +8,7 @@ struct Vertex3d
 struct Fragment
 {
 	float4 Position: SV_POSITION;
-	float3 UV: TEXCOORD;
+	float2 UV: TEXCOORD;
 };
 
 cbuffer Camera: register(b0, space1)
@@ -24,6 +24,6 @@ Fragment main(Vertex3d v)
 {
 	Fragment frag;
 	frag.Position = mul(VPMatrix, mul(ModelMatrix, float4(v.Position.xyz, 1)));
-	frag.UV = v.Position + 0.5;
+	frag.UV = v.UV;
 	return frag;
 }

@@ -108,6 +108,55 @@ namespace {
 		}
 		return EAssetLoadResult::Success;
 	}
+
+	template <uint32 N>
+	bool LoadTextures(
+		apollo::AssetRef<apollo::rdr::Texture2D> (&out_textures)[N],
+		SDL_GPUSampler* (&out_samplers)[N],
+		uint32& out_numTextures,
+		const nlohmann::json& json,
+		apollo::rdr::GPUDevice& device)
+	{
+		using namespace apollo;
+
+		if (!json.is_array())
+		{
+			APOLLO_LOG_ERROR("Failed to load textures from JSON: not an array");
+			return 0;
+		}
+		uint32 nMax = (uint32)json.size();
+
+		if (nMax > N)
+		{
+			APOLLO_LOG_WARN(
+				"JSON array size ({}) is over the maximum number of textures ({})",
+				nMax,
+				N);
+			nMax = N;
+		}
+
+		out_numTextures = 0;
+		while (out_numTextures < nMax)
+		{
+			const nlohmann::json& texDesc = json[out_numTextures];
+			if (!json::Visit(out_textures[out_numTextures], texDesc, "id"))
+			{
+				APOLLO_LOG_ERROR("Failed to load texture {}: missing/invalid ID", out_numTextures);
+				return false;
+			}
+			const SDL_GPUSamplerCreateInfo samplerInfo{
+				.min_filter = SDL_GPU_FILTER_LINEAR,
+				.mag_filter = SDL_GPU_FILTER_LINEAR,
+				.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR,
+				.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+				.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+				.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+			};
+			out_samplers[out_numTextures] = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
+			++out_numTextures;
+		}
+		return true;
+	}
 } // namespace
 
 namespace apollo::editor {
@@ -151,8 +200,33 @@ namespace apollo::editor {
 		{
 			if (instance.m_Material->IsLoading())
 				return EAssetLoadResult::TryAgain;
-			return instance.m_Material->IsLoaded() ? EAssetLoadResult::Success
-												   : EAssetLoadResult::Failure;
+
+			bool success = true;
+			if (!instance.m_Material->IsLoaded())
+			{
+				success = false;
+			}
+			for (uint32 i = 0; success && i < instance.m_VertexTextures.m_NumTextures; ++i)
+			{
+				if (!instance.m_VertexTextures.m_Textures[i] ||
+					!instance.m_VertexTextures.m_Textures[i]->IsLoaded())
+				{
+					success = false;
+				}
+			}
+			for (uint32 i = 0; success && i < instance.m_FragmentTextures.m_NumTextures; ++i)
+			{
+				if (!instance.m_FragmentTextures.m_Textures[i] ||
+					!instance.m_FragmentTextures.m_Textures[i]->IsLoaded())
+				{
+					success = false;
+				}
+			}
+			if (success)
+				return EAssetLoadResult::Success;
+
+			instance.Reset();
+			return EAssetLoadResult::Failure;
 		}
 
 		std::ifstream inFile{ metadata.m_FilePath, std::ios::binary };
@@ -192,9 +266,35 @@ namespace apollo::editor {
 			return EAssetLoadResult::Failure;
 		}
 
-		const auto texturesIt = json.find("textures");
+		auto texturesIt = json.find("vertexTextures");
+		auto* ctx = rdr::Context::GetInstance();
 		if (texturesIt != json.end())
 		{
+			const bool res = LoadTextures(
+				instance.m_VertexTextures.m_Textures,
+				instance.m_VertexTextures.m_Samplers,
+				instance.m_VertexTextures.m_NumTextures,
+				*texturesIt,
+				ctx->GetDevice());
+			if (!res)
+			{
+				instance.Reset();
+				return EAssetLoadResult::Failure;
+			}
+		}
+		if ((texturesIt = json.find("fragmentTextures")) != json.end())
+		{
+			const bool res = LoadTextures(
+				instance.m_FragmentTextures.m_Textures,
+				instance.m_FragmentTextures.m_Samplers,
+				instance.m_FragmentTextures.m_NumTextures,
+				*texturesIt,
+				ctx->GetDevice());
+			if (!res)
+			{
+				instance.Reset();
+				return EAssetLoadResult::Failure;
+			}
 		}
 
 		struct MaterialCallback
@@ -282,9 +382,9 @@ namespace apollo::editor {
 			}
 #undef CONSTANT_TYPE_CASE
 
-			void operator()(const IAsset&)
+			void LoadParams()
 			{
-				if (m_ParamsDesc.is_null() || !instance.m_Material->IsLoaded())
+				if (m_ParamsDesc.is_null())
 					return;
 
 				if (!m_ParamsDesc.is_array())
@@ -303,7 +403,16 @@ namespace apollo::editor {
 					LoadConstantBlock(i, fragConstantBlocks[i]);
 				}
 			}
-		} callback{ instance };
+
+			void operator()(const IAsset&)
+			{
+				if (!instance.m_Material->IsLoaded())
+					return;
+
+				LoadParams();
+			}
+		};
+		MaterialCallback callback{ instance };
 
 		if (!json::Visit(callback.m_ParamsDesc, json, "parameters", true))
 		{
