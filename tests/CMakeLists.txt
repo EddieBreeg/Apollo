@@ -11,6 +11,7 @@ SOURCES
 	HashTests.cpp
 	JsonTests.cpp
 	MathTests.cpp
+	MetaTests.cpp
 	QueueTests.cpp
 	RetainPtrTests.cpp
 	RectTests.cpp
