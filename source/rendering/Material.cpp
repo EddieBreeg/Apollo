@@ -23,12 +23,14 @@ namespace apollo::rdr {
 		for (uint32 i = 0; i < m_VertexTextures.m_NumTextures; ++i)
 		{
 			m_VertexTextures.m_Textures[i].Reset();
-			SDL_ReleaseGPUSampler(device, m_VertexTextures.m_Samplers[i]);
+			if (m_VertexTextures.m_Samplers[i])
+				SDL_ReleaseGPUSampler(device, m_VertexTextures.m_Samplers[i]);
 		}
 		for (uint32 i = 0; i < m_FragmentTextures.m_NumTextures; ++i)
 		{
 			m_FragmentTextures.m_Textures[i].Reset();
-			SDL_ReleaseGPUSampler(device, m_FragmentTextures.m_Samplers[i]);
+			if (m_FragmentTextures.m_Samplers[i])
+				SDL_ReleaseGPUSampler(device, m_FragmentTextures.m_Samplers[i]);
 		}
 		m_VertexTextures.m_NumTextures = 0;
 		m_FragmentTextures.m_NumTextures = 0;
@@ -53,6 +55,7 @@ namespace apollo::rdr {
 	{
 		if (!IsLoaded())
 			return;
+		auto* context = Context::GetInstance();
 
 		SDL_BindGPUGraphicsPipeline(
 			renderPass,
@@ -62,14 +65,17 @@ namespace apollo::rdr {
 		for (uint32 i = 0; i < m_VertexTextures.m_NumTextures; ++i)
 		{
 			bindings[i].texture = m_VertexTextures.m_Textures[i]->GetHandle();
-			bindings[i].sampler = m_VertexTextures.m_Samplers[i];
+			bindings[i].sampler = m_VertexTextures.m_Samplers[i] ? m_VertexTextures.m_Samplers[i]
+																 : context->GetDefaultSampler();
 		}
 		SDL_BindGPUVertexSamplers(renderPass, 0, bindings, m_VertexTextures.m_NumTextures);
 
 		for (uint32 i = 0; i < m_FragmentTextures.m_NumTextures; ++i)
 		{
 			bindings[i].texture = m_FragmentTextures.m_Textures[i]->GetHandle();
-			bindings[i].sampler = m_FragmentTextures.m_Samplers[i];
+			bindings[i].sampler = m_FragmentTextures.m_Samplers[i]
+									  ? m_FragmentTextures.m_Samplers[i]
+									  : context->GetDefaultSampler();
 		}
 		SDL_BindGPUFragmentSamplers(renderPass, 0, bindings, m_FragmentTextures.m_NumTextures);
 	}

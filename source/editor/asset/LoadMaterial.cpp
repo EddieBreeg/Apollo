@@ -10,6 +10,26 @@
 #include <rendering/Material.hpp>
 #include <rendering/Pipeline.hpp>
 
+NLOHMANN_JSON_SERIALIZE_ENUM(
+	SDL_GPUSamplerAddressMode,
+	{
+		{ SDL_GPU_SAMPLERADDRESSMODE_REPEAT, "repeat" },
+		{ SDL_GPU_SAMPLERADDRESSMODE_MIRRORED_REPEAT, "mirror" },
+		{ SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE, "campToEdge" },
+	});
+NLOHMANN_JSON_SERIALIZE_ENUM(
+	SDL_GPUSamplerMipmapMode,
+	{
+		{ SDL_GPU_SAMPLERMIPMAPMODE_NEAREST, "nearest" },
+		{ SDL_GPU_SAMPLERMIPMAPMODE_LINEAR, "linear" },
+	});
+NLOHMANN_JSON_SERIALIZE_ENUM(
+	SDL_GPUFilter,
+	{
+		{ SDL_GPU_FILTER_NEAREST, "nearest" },
+		{ SDL_GPU_FILTER_LINEAR, "linear" },
+	});
+
 namespace {
 	apollo::EAssetLoadResult ValidateShaderStates(
 		const apollo::rdr::GraphicsShader* vShader,
@@ -109,6 +129,27 @@ namespace {
 		return EAssetLoadResult::Success;
 	}
 
+#define VISIT_SAMPLER_PARAM(paramName, key)                                                        \
+	if (!apollo::json::Visit(out_info.paramName, json, key, true))                                 \
+	{                                                                                              \
+		APOLLO_LOG_WARN("Failed to parse sampler parameter '" key "' from JSON");                  \
+		return false;                                                                              \
+	}
+
+	bool Visit(SDL_GPUSamplerCreateInfo& out_info, const nlohmann::json& json)
+	{
+		VISIT_SAMPLER_PARAM(min_filter, "minFilter");
+		VISIT_SAMPLER_PARAM(mag_filter, "magFilter");
+		VISIT_SAMPLER_PARAM(mipmap_mode, "mipmapMode");
+		VISIT_SAMPLER_PARAM(address_mode_u, "addressModeU");
+		VISIT_SAMPLER_PARAM(address_mode_v, "addressModeV");
+		VISIT_SAMPLER_PARAM(address_mode_w, "addressModeW");
+
+		return true;
+	}
+
+#undef VISIT_SAMPLER_PARAM
+
 	template <uint32 N>
 	bool LoadTextures(
 		apollo::AssetRef<apollo::rdr::Texture2D> (&out_textures)[N],
@@ -144,7 +185,15 @@ namespace {
 				APOLLO_LOG_ERROR("Failed to load texture {}: missing/invalid ID", out_numTextures);
 				return false;
 			}
-			const SDL_GPUSamplerCreateInfo samplerInfo{
+
+			const auto it = texDesc.find("sampler");
+			if (it == texDesc.end() || it->is_null())
+			{
+				++out_numTextures;
+				continue;
+			}
+
+			SDL_GPUSamplerCreateInfo samplerInfo{
 				.min_filter = SDL_GPU_FILTER_LINEAR,
 				.mag_filter = SDL_GPU_FILTER_LINEAR,
 				.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR,
@@ -152,6 +201,8 @@ namespace {
 				.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
 				.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
 			};
+			Visit(samplerInfo, *it);
+
 			out_samplers[out_numTextures] = SDL_CreateGPUSampler(device.GetHandle(), &samplerInfo);
 			++out_numTextures;
 		}

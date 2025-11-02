@@ -8,6 +8,7 @@
 
 struct SDL_Window;
 struct SDL_GPUCommandBuffer;
+struct SDL_GPUSampler;
 struct SDL_GPUTexture;
 
 namespace apollo {
@@ -18,7 +19,7 @@ namespace apollo::rdr {
 	class Context : public Singleton<Context>
 	{
 	public:
-		~Context() = default;
+		APOLLO_API ~Context();
 
 		float4 m_ClearColor{};
 		bool m_ClearBackBuffer = false;
@@ -48,6 +49,8 @@ namespace apollo::rdr {
 			return m_SwapchainFormat;
 		}
 
+		[[nodiscard]] SDL_GPUSampler* GetDefaultSampler() noexcept { return m_DefaultSampler; }
+
 	private:
 		APOLLO_API Context(
 			EBackend backend,
@@ -64,5 +67,6 @@ namespace apollo::rdr {
 		SDL_GPUCommandBuffer* m_MainCommandBuffer = nullptr;
 		SDL_GPUTexture* m_SwapchainTexture = nullptr;
 		EPixelFormat m_SwapchainFormat = EPixelFormat::Invalid;
+		SDL_GPUSampler* m_DefaultSampler = nullptr;
 	};
 } // namespace apollo::rdr

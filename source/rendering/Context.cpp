@@ -11,12 +11,27 @@
 namespace apollo::rdr {
 	std::unique_ptr<Context> Context::s_Instance;
 
+	Context::~Context()
+	{
+		SDL_ReleaseGPUSampler(m_Device.GetHandle(), m_DefaultSampler);
+	}
+
 	Context::Context(EBackend backend, Window& window, bool gpuDebug, bool vSync)
 		: m_Device(backend, gpuDebug)
 		, m_Window(window)
 	{
 		if (!m_Device) [[unlikely]]
 			return;
+
+		const SDL_GPUSamplerCreateInfo defaultSamplerInfo{
+			.min_filter = SDL_GPU_FILTER_LINEAR,
+			.mag_filter = SDL_GPU_FILTER_LINEAR,
+			.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR,
+			.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+			.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+			.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+		};
+		m_DefaultSampler = SDL_CreateGPUSampler(m_Device.GetHandle(), &defaultSamplerInfo);
 
 		// it is valid to initialized the Context without a window, we can use offline rendering
 		if (!window)
