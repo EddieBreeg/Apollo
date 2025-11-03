@@ -36,3 +36,5 @@ Otherwise, you can still use the `_default` preset and specify your generator of
 You may also want to specify `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` if your intellisense relies on the `compile_commands.json` file.
 
 Finally, build the project with `cmake --build`. When using MSVC/Ninja, build presets are available for the different configurations. Otherwise you'll have to provide the `--config` flag yourself.
+
+Alternatively, the presets file also provides helpful workflows for automatically executing both the configure and build steps in a single command, for example: `cmake --workflow ninja_debug`.

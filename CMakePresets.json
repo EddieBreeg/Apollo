@@ -36,13 +36,17 @@
 		{
 			"name": "MSVC",
 			"inherits": "_default",
-			"generator": "Visual Studio 17 2022"
+			"generator": "Visual Studio 17 2022",
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
 		},
 		{
 			"name": "Ninja",
 			"generator": "Ninja Multi-Config",
 			"inherits": "_default",
-			"hidden": false,
 			"cacheVariables": {
 				"CMAKE_EXPORT_COMPILE_COMMANDS": "1"
 			}
@@ -78,6 +82,36 @@
 			"name": "ninja_release",
 			"configuration": "Release",
 			"configurePreset": "Ninja"
+		}
+	],
+	"workflowPresets": [
+		{
+			"name": "msvc_debug",
+			"description": "Configures and builds the project on Windows using MSVC in Debug mode",
+			"steps": [
+				{
+					"type": "configure",
+					"name": "MSVC"
+				},
+				{
+					"type": "build",
+					"name": "msvc_debug"
+				}
+			]
+		},
+		{
+			"name": "ninja_debug",
+			"description": "Configures and builds the project using Ninja Multi-Config in Debug mode",
+			"steps": [
+				{
+					"type": "configure",
+					"name": "Ninja"
+				},
+				{
+					"type": "build",
+					"name": "ninja_debug"
+				}
+			]
 		}
 	]
 }
