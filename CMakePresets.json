@@ -2,8 +2,7 @@
 	"version": 8,
 	"configurePresets": [
 		{
-			"name": "_base",
-			"hidden": true,
+			"name": "_default",
 			"binaryDir": "${sourceDir}/build/${presetName}",
 			"cacheVariables": {
 				"BUILD_SHARED_LIBS": "OFF",
@@ -36,13 +35,13 @@
 		},
 		{
 			"name": "MSVC",
-			"inherits": "_base",
+			"inherits": "_default",
 			"generator": "Visual Studio 17 2022"
 		},
 		{
 			"name": "Ninja",
 			"generator": "Ninja Multi-Config",
-			"inherits": "_base",
+			"inherits": "_default",
 			"hidden": false,
 			"cacheVariables": {
 				"CMAKE_EXPORT_COMPILE_COMMANDS": "1"
