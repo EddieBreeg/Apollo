@@ -169,18 +169,21 @@ struct apollo::json::Converter<SDL_GPUColorTargetBlendState>
 {
 	static bool FromJson(SDL_GPUColorTargetBlendState& out_state, const nlohmann::json& json) noexcept
 	{
-		if (!Visit(out_state.enable_blend, json, "enableBlend", true))
-			return false;
+		out_state.enable_blend = true;
+		out_state.color_write_mask = 0b1111;
 
-		if (!Visit(out_state.enable_color_write_mask, json, "enableWriteMask", true))
-			return false;
-
-		if (out_state.enable_color_write_mask &&
-			!Visit(out_state.color_write_mask, json, "colorWriteMask"))
-			return false;
-
-		if (!out_state.enable_blend)
-			return true;
+		{
+			if (const auto it = json.find("colorWriteMask"); it != json.end())
+			{
+				out_state.enable_color_write_mask = true;
+				if (!it->is_number_integer())
+				{
+					APOLLO_LOG_ERROR("Failed to parse blend state: color write mask is not an integer");
+					return false;
+				}
+				it->get_to(out_state.color_write_mask);
+			}
+		}
 
 		out_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
 		out_state.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
@@ -337,10 +340,10 @@ struct apollo::json::Converter<SDL_GPUDepthStencilState>
 			out_state.write_mask = 0xff;
 		}
 
-		if (!Visit(out_state.compare_mask, json, "compareMask", !out_state.enable_stencil_test))
+		if (!Visit(out_state.compare_mask, json, "compareMask", true))
 			return false;
 
-		return Visit(out_state.write_mask, json, "writeMask", !out_state.write_mask);
+		return Visit(out_state.write_mask, json, "writeMask", true);
 	}
 };
 
@@ -351,13 +354,14 @@ namespace apollo::json {
 	{
 		out_info.multisample_state.sample_count = SDL_GPU_SAMPLECOUNT_1;
 
+		// input state
 		if (!Visit(out_info.vertex_input_state, json, "input", true))
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to parse graphics pipeline description from JSON: invalid input state");
 			return false;
 		}
-
+		// primitive type
 		if (!Visit(out_info.primitive_type, json, "primitiveType", true) ||
 			out_info.primitive_type == (SDL_GPUPrimitiveType)-1)
 		{
@@ -365,7 +369,7 @@ namespace apollo::json {
 				"Failed to parse graphics pipeline description from JSON: invalid primitive type");
 			return false;
 		}
-
+		// rasterizer state
 		if (!Visit(out_info.rasterizer_state, json, "rasterizer", true))
 		{
 			APOLLO_LOG_ERROR(
@@ -373,6 +377,7 @@ namespace apollo::json {
 				"description");
 			return false;
 		}
+		// multisample state
 		if (!Visit(out_info.multisample_state.sample_count, json, "sampleCount", true) ||
 			out_info.multisample_state.sample_count == (SDL_GPUSampleCount)-1)
 		{
@@ -382,45 +387,36 @@ namespace apollo::json {
 
 			return false;
 		}
-		if (!Visit(out_info.depth_stencil_state, json, "depthStencil", true))
+		// depth-stencil state
 		{
-			APOLLO_LOG_ERROR(
-				"Failed to parse graphics pipeline description from JSON: invalid depth/stencil "
-				"description");
-
-			return false;
-		}
-
-		if (!Visit(
-				out_info.target_info.has_depth_stencil_target,
-				json,
-				"hasDepthStencilTarget",
-				true))
-		{
-			APOLLO_LOG_ERROR(
-				"Failed to parse graphics pipeline description from JSON: invalid value for "
-				"'hasDepthStencilTarget'");
-
-			return false;
-		}
-		if (out_info.target_info.has_depth_stencil_target)
-		{
-			const bool res = Visit(
-				out_info.target_info.depth_stencil_format,
-				json,
-				"depthStencilFormat");
-
-			if (!res ||
-				out_info.target_info.depth_stencil_format < SDL_GPU_TEXTUREFORMAT_D16_UNORM ||
-				out_info.target_info.depth_stencil_format > SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT)
+			const auto dsIter = json.find("depthStencil");
+			if ((out_info.target_info.has_depth_stencil_target = (dsIter != json.end())))
 			{
-				APOLLO_LOG_ERROR(
-					"Failed to parse graphics pipeline description from JSON: missing/invalid "
-					"depth/stencil format");
-				return false;
+				bool res = Converter<SDL_GPUDepthStencilState>::FromJson(
+					out_info.depth_stencil_state,
+					*dsIter);
+				if (!res)
+				{
+					APOLLO_LOG_ERROR(
+						"Failed to parse graphics pipeline description from JSON: invalid "
+						"depth/stencil "
+						"description");
+					return false;
+				}
+				res = Visit(out_info.target_info.depth_stencil_format, *dsIter, "format");
+				if (!res ||
+					out_info.target_info.depth_stencil_format < SDL_GPU_TEXTUREFORMAT_D16_UNORM ||
+					out_info.target_info.depth_stencil_format > SDL_GPU_TEXTUREFORMAT_D32_FLOAT_S8_UINT)
+				{
+					APOLLO_LOG_ERROR(
+						"Failed to parse graphics pipeline description from JSON: missing/invalid "
+						"depth/stencil format");
+					return false;
+				}
 			}
 		}
 
+		// color targets
 		out_info.target_info.color_target_descriptions = g_ColorTargets;
 		const auto it = json.find("colorTargets");
 		if (it == json.end())

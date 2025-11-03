@@ -106,22 +106,19 @@ namespace apollo::rdr {
 			"passOp": "incrementAndWrap",
 			"failOp": "invert",
 			"depthFailOp": "replace"
-		}
+		},
+		"format": "d24unorm_s8uint"
 	},
-	"hasDepthStencilTarget": true,
-	"depthStencilFormat": "d24unorm_s8uint",
 	"colorTargets": [
 		{
 			"format": "rgba8unorm",
 			"blending": {
-				"enableBlend": true,
 				"srcColorBlendFactor": "srcAlpha",
 				"dstColorBlendFactor": "oneMinusSrcAlpha",
 				"colorBlendOp": "add",
 				"srcAlphaBlendFactor": "one",
 				"dstAlphaBlendFactor": "zero",
 				"alphaBlendOp": "subtract",
-				"enableWriteMask": true,
 				"colorWriteMask": 15
 			}
 		},

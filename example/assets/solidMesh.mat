@@ -5,10 +5,9 @@
 	"depthStencil": {
 		"enableDepthTest": false,
 		"enableDepthWrite": false,
-		"compareOp": "less"
+		"compareOp": "less",
+		"format": "d32float"
 	},
-	"hasDepthStencilTarget": true,
-	"depthStencilFormat": "d32float",
 	"rasterizer": {
 		"cullMode": "back"
 	},
