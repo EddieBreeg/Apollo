@@ -4,6 +4,7 @@
 #include <core/Assert.hpp>
 #include <core/Enum.hpp>
 #include <core/Log.hpp>
+#include <core/NumConv.hpp>
 
 namespace {
 	constexpr SDL_GPUShaderStage g_Stages[] = {
@@ -247,7 +248,7 @@ namespace apollo::rdr {
 		const EShLanguage vkStage = vkStages[ToUnderlying(stage)];
 		glslang::TShader vkShader{ vkStage };
 		const char* tempPtr = hlsl.data();
-		const int32 tempLen = (int32)hlsl.length();
+		const int32 tempLen = NumCast<int32>(hlsl.length());
 		vkShader.setStringsWithLengths(&tempPtr, &tempLen, 1);
 		vkShader.setEntryPoint(entryPoint);
 		vkShader.setEnvInput(glslang::EShSourceHlsl, vkStage, glslang::EShClientVulkan, 100);

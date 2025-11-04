@@ -4,6 +4,7 @@
 #include <core/Errno.hpp>
 #include <core/Json.hpp>
 #include <core/Log.hpp>
+#include <core/NumConv.hpp>
 #include <core/ULID.hpp>
 #include <fstream>
 #include <rendering/Context.hpp>
@@ -165,7 +166,7 @@ namespace {
 			APOLLO_LOG_ERROR("Failed to load textures from JSON: not an array");
 			return 0;
 		}
-		uint32 nMax = (uint32)json.size();
+		uint32 nMax = apollo::NumCast<uint32>(json.size());
 
 		if (nMax > N)
 		{

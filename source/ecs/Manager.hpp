@@ -5,6 +5,7 @@
 #include "System.hpp"
 
 #include <core/Assert.hpp>
+#include <core/NumConv.hpp>
 #include <core/Singleton.hpp>
 #include <core/TypeInfo.hpp>
 #include <entt/entity/registry.hpp>
@@ -31,7 +32,7 @@ namespace apollo::ecs {
 		S& AddSystem(T&&... args)
 		{
 			APOLLO_ASSERT(
-				GetSystemIndex<S>() == (uint32)m_Systems.size(),
+				GetSystemIndex<S>() == NumCast<uint32>(m_Systems.size()),
 				"Trying to add ECS system twice");
 			return *m_Systems.emplace_back(SystemInstance::Create<S>(std::forward<T>(args)...))
 						.template GetAs<S>();

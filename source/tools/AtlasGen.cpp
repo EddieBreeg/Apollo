@@ -34,7 +34,7 @@ namespace {
 		}
 		else if constexpr (std::is_arithmetic_v<T>)
 		{
-			const uint32 len = (uint32)strlen(inout_args[0]);
+			const uint32 len = apollo::NumCast<uint32>(strlen(inout_args[0]));
 			const auto result = std::from_chars(inout_args[0], inout_args[0] + len, out_val);
 			if ((bool)result.ec)
 				return false;
@@ -44,14 +44,14 @@ namespace {
 			if (inout_args.size() < 2)
 				return false;
 
-			uint32 len = (uint32)strlen(inout_args[0]);
+			uint32 len = apollo::NumCast<uint32>(strlen(inout_args[0]));
 			uint32 first, last;
 			auto result = std::from_chars(inout_args[0], inout_args[0] + len, first);
 			if ((bool)result.ec)
 				return false;
 			inout_args = inout_args.subspan(1);
 
-			len = (uint32)strlen(inout_args[0]);
+			len = apollo::NumCast<uint32>(strlen(inout_args[0]));
 			result = std::from_chars(inout_args[0], inout_args[0] + len, last);
 			if ((bool)result.ec)
 				return false;

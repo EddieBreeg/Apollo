@@ -1,6 +1,7 @@
 #include "Window.hpp"
 
 #include "Log.hpp"
+#include "NumConv.hpp"
 
 #include <SDL3/SDL_video.h>
 
@@ -15,8 +16,8 @@ namespace apollo {
 
 		m_Handle = SDL_CreateWindow(
 			settings.m_Title,
-			(int32)settings.m_Width,
-			(int32)settings.m_Height,
+			NumCast<int32>(settings.m_Width),
+			NumCast<int32>(settings.m_Height),
 			flags);
 
 		DEBUG_CHECK(m_Handle)

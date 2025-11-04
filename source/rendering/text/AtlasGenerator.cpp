@@ -280,7 +280,7 @@ namespace apollo::rdr::txt {
 			if (!LoadGlyph(glyph, shape))
 				continue;
 
-			const uint32 index = uint32(out_glyphs.size());
+			const uint32 index = NumCast<uint32>(out_glyphs.size());
 			out_indices[range.GetIndex(ch)] = index;
 			tempIndices.emplace_back(index);
 
@@ -333,7 +333,7 @@ namespace apollo::rdr::txt {
 
 		const uint32 numThreads = threadPool.GetThreadCount();
 		std::latch latch{ numThreads };
-		const uint32 numGlyphs = (uint32)glyphs.size();
+		const uint32 numGlyphs = NumCast<uint32>(glyphs.size());
 		APOLLO_ASSERT(
 			shapes.size() == numGlyphs,
 			"Can't rasterize glyphs: glyphs.size() is {} but shapes.size() is {}",
@@ -341,7 +341,7 @@ namespace apollo::rdr::txt {
 			shapes.size());
 
 		APOLLO_LOG_TRACE("Running {} threads", numThreads);
-		const uint32 glyphsPerThread = (uint32)glyphs.size() / numThreads;
+		const uint32 glyphsPerThread = NumCast<uint32>(glyphs.size()) / numThreads;
 		uint32 jobStartIndex = 0;
 
 		for (uint32 i = 0; i < numThreads; ++i)

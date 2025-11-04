@@ -2,6 +2,7 @@
 #include <SDL3/SDL_gpu.h>
 #include <asset/AssetManager.hpp>
 #include <core/Assert.hpp>
+#include <core/NumConv.hpp>
 #include <rendering/Context.hpp>
 #include <rendering/Texture.hpp>
 
@@ -78,7 +79,7 @@ namespace apollo::editor {
 			{
 				uint8 r, g, b, a;
 			};
-			for (uint32 i = 0; i < uint32(width * height); ++i)
+			for (uint32 i = 0; i < NumCast<uint32>(width * height); ++i)
 			{
 				static_cast<RGBAPixel*>(bufMem)[i] = RGBAPixel{
 					data[3 * i],
@@ -95,15 +96,15 @@ namespace apollo::editor {
 		SDL_GPUTextureTransferInfo transferInfo{
 			.transfer_buffer = transferBuffer,
 			.offset = 0,
-			.pixels_per_row = uint32(width),
-			.rows_per_layer = uint32(height),
+			.pixels_per_row = NumCast<uint32>(width),
+			.rows_per_layer = NumCast<uint32>(height),
 		};
 		const SDL_GPUTextureRegion region{
 			.texture = tex.m_Handle,
 			.x = 0,
 			.y = 0,
-			.w = uint32(width),
-			.h = uint32(height),
+			.w = NumCast<uint32>(width),
+			.h = NumCast<uint32>(height),
 			.d = 1,
 		};
 

@@ -12,6 +12,7 @@ SOURCES
 	JsonTests.cpp
 	MathTests.cpp
 	MetaTests.cpp
+	NumConvTests.cpp
 	QueueTests.cpp
 	RetainPtrTests.cpp
 	RectTests.cpp
@@ -35,6 +36,7 @@ AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("Hash Tests" "${PROJECT_NAME}Tests" FILTERS "[hash]")
 AddTest("Container Tests" "${PROJECT_NAME}Tests" FILTERS "[containers]")
 AddTest("JSON Tests" "${PROJECT_NAME}Tests" FILTERS "[json]")
+AddTest("NumConv Tests" "${PROJECT_NAME}Tests" FILTERS "[num_conv]")
 AddTest("Poly Tests" "${PROJECT_NAME}Tests" FILTERS "[poly]")
 AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
 AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")

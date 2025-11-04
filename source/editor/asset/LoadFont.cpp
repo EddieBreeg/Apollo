@@ -82,7 +82,7 @@ namespace {
 			if (!apollo::json::Converter<Glyph>::FromJson(glyph, j))
 				continue;
 
-			out_indices[range.GetIndex(glyph.m_Char)] = (uint32)out_glyphs.size();
+			out_indices[range.GetIndex(glyph.m_Char)] = apollo::NumCast<uint32>(out_glyphs.size());
 			out_glyphs.emplace_back(glyph);
 		}
 		return true;
@@ -183,7 +183,7 @@ namespace apollo::editor {
 		SDL_GPUCopyPass* const copyPass = AssetLoader::GetCurrentCopyPass();
 		const SDL_GPUTransferBufferCreateInfo tBufferInfo{
 			.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
-			.size = uint32(sizeof(rdr::RGBAPixel<uint8>) * pixelCount),
+			.size = NumCast<uint32>(sizeof(rdr::RGBAPixel<uint8>) * pixelCount),
 		};
 		SDL_GPUDevice* device = rdr::Context::GetInstance()->GetDevice().GetHandle();
 

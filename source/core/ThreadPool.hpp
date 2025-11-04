@@ -2,6 +2,7 @@
 
 #include <PCH.hpp>
 
+#include "NumConv.hpp"
 #include "Queue.hpp"
 #include "UniqueFunction.hpp"
 #include <condition_variable>
@@ -53,7 +54,10 @@ namespace apollo::mt {
 			-> std::future<decltype(func(std::move(args)...))> requires(
 				std::is_invocable_v<F, Args...>);
 
-		[[nodiscard]] uint32 GetThreadCount() const noexcept { return (uint32)m_Threads.size(); }
+		[[nodiscard]] uint32 GetThreadCount() const noexcept
+		{
+			return NumCast<uint32>(m_Threads.size());
+		}
 
 		inline void Stop();
 

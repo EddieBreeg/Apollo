@@ -4,6 +4,7 @@
 #include <SDL3/SDL_video.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <core/App.hpp>
+#include <core/NumConv.hpp>
 #include <entry/Entry.hpp>
 #include <entt/entity/registry.hpp>
 
@@ -36,8 +37,8 @@ namespace {
 				{
 					entityWorld.emplace<WindowResizeEventComponent>(
 						eventEntity,
-						uint32(evt.window.data1),
-						uint32(evt.window.data2));
+						apollo::NumCast<uint32>(evt.window.data1),
+						apollo::NumCast<uint32>(evt.window.data2));
 				}
 				break;
 
