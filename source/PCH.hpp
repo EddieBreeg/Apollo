@@ -10,7 +10,7 @@
 extern "C" void* _alloca(size_t);
 #define alloca _alloca
 #else
-extern "C" void* alloca(size_t);
+#include <alloca.h>
 #endif
 
 #define Alloca(Type, n) static_cast<Type*>(alloca((n) * sizeof(Type)))

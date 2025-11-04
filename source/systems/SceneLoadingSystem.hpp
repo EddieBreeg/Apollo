@@ -1,7 +1,9 @@
-#include "SceneComponents.hpp"
 #include <PCH.hpp>
 
+#include "SceneComponents.hpp"
+
 namespace apollo {
+	class AssetManager;
 	class GameTime;
 
 	class SceneLoadingSystem
