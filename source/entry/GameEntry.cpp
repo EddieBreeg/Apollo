@@ -11,9 +11,11 @@ int main(int argc, const char** argv)
 		.m_AssetPath = std::filesystem::path(argv[0]).parent_path(),
 	};
 
-	apollo::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
+	apollo::EntryPoint entry{
+		.m_Args = std::span{ argv, size_t(argc) },
+		.m_AssetManagerSettings = assetManagerSettings,
+	};
 	apollo::GetEntryPoint(entry);
-	entry.m_Args = std::span{ argv, size_t(argc) };
 
 	auto& app = apollo::App::Init(entry);
 

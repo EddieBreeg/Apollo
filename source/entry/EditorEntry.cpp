@@ -33,9 +33,11 @@ int main(int argc, const char** argv)
 	auto& componentRegistry = apollo::ecs::ComponentRegistry::Init();
 	apollo::editor::RegisterComponents(componentRegistry);
 
-	apollo::EntryPoint entry{ .m_AssetManagerSettings = assetManagerSettings };
+	apollo::EntryPoint entry{
+		.m_Args = std::span{ argv, size_t(argc) },
+		.m_AssetManagerSettings = assetManagerSettings,
+	};
 	apollo::GetEntryPoint(entry);
-	entry.m_Args = std::span{ argv, size_t(argc) };
 
 	auto& app = apollo::App::Init(entry);
 

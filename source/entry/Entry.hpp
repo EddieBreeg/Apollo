@@ -21,9 +21,9 @@ namespace apollo {
 		uint32 m_WindowWidth = 1280;
 		uint32 m_WindowHeight = 720;
 
-		std::span<const char*> m_Args;
+		const std::span<const char*> m_Args;
 
-		EAppResult (*m_OnInit)(const EntryPoint&, App&);
+		EAppResult (*m_OnInit)(const EntryPoint&, App&) = nullptr;
 
 		AssetManagerSettings& m_AssetManagerSettings;
 	};
