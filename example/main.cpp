@@ -1,34 +1,4 @@
-#include "Camera.hpp"
-#include "Viewport.hpp"
-#include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_keyboard.h>
-#include <SDL3/SDL_mouse.h>
-#include <asset/AssetManager.hpp>
-#include <asset/Scene.hpp>
-#include <core/App.hpp>
-#include <core/Log.hpp>
-#include <core/Utf8.hpp>
-#include <core/Window.hpp>
-#include <ecs/ComponentRegistry.hpp>
-#include <ecs/Manager.hpp>
-#include <entry/Entry.hpp>
-#include <entt/entity/registry.hpp>
-#include <imgui.h>
-#include <numbers>
-#include <rendering/Bitmap.hpp>
-#include <rendering/Buffer.hpp>
-#include <rendering/Context.hpp>
-#include <rendering/Device.hpp>
-#include <rendering/Material.hpp>
-#include <rendering/Pixel.hpp>
-#include <rendering/Texture.hpp>
-#include <rendering/VertexTypes.hpp>
-#include <rendering/text/BatchRenderer.hpp>
-#include <rendering/text/FontAtlas.hpp>
-#include <systems/InputEventComponents.hpp>
-#include <systems/InputSystem.hpp>
-#include <systems/SceneComponents.hpp>
-#include <systems/TransformComponent.hpp>
+#include "DemoPCH.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -195,6 +165,7 @@ namespace apollo::demo {
 		apollo::AssetRef<Scene> m_Scene;
 		apollo::AssetRef<rdr::MaterialInstance> m_Material;
 		Viewport m_TargetViewport;
+		rdr::RenderPass m_RenderPass;
 		bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
@@ -302,6 +273,18 @@ namespace apollo::demo {
 		TestSystem(apollo::Window& window, apollo::rdr::Context& renderer)
 			: m_Window(window)
 			, m_RenderContext(renderer)
+			, m_RenderPass(
+				  rdr::RenderPassSettings{
+					  .m_NumColorTargets = 1,
+					  .m_ColorTargets = { rdr::ColorTargetSettings{
+						  .m_Texture = &m_TargetViewport.m_ColorTarget,
+						  .m_ClearColor = { .1f, .1f, .1f, 1.0f },
+					  } },
+					  .m_DepthStencilTarget =
+						  rdr::DepthStencilTargetSettings{
+							  .m_Texture = &m_TargetViewport.m_DepthStencilTarget,
+						  },
+				  })
 		{
 			m_ModelMatrix = glm::translate(glm::identity<glm::mat4x4>(), { 0, 0, -1 });
 		}
@@ -362,9 +345,9 @@ namespace apollo::demo {
 
 			if (m_AssetsReady)
 			{
-				SDL_GPURenderPass* renderPass = m_TargetViewport.BeginPass(
-					mainCommandBuffer,
-					{ .1f, .1f, .1f, 1 });
+				m_RenderPass.Begin(m_RenderContext);
+				SDL_GPURenderPass* renderPass = m_RenderPass.GetHandle();
+				SDL_SetGPUViewport(renderPass, &m_TargetViewport.m_Viewport);
 
 				SDL_PushGPUVertexUniformData(
 					mainCommandBuffer,
@@ -404,7 +387,7 @@ namespace apollo::demo {
 					}
 					SDL_DrawGPUIndexedPrimitives(renderPass, mesh.m_NumIndices, 1, 0, 0, 0);
 				}
-				SDL_EndGPURenderPass(renderPass);
+				m_RenderPass.End();
 			}
 		}
 	};

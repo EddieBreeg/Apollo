@@ -21,5 +21,6 @@ PROPERTIES ${COMMON_PROPERTIES}
 if(${APOLLO_EXAMPLE_MULTITHREADED})
 	target_compile_definitions(${PROJECT_NAME}Example PRIVATE USE_MULTITHREADING=1)
 endif(${APOLLO_EXAMPLE_MULTITHREADED})
+target_precompile_headers(${PROJECT_NAME}Example PRIVATE DemoPCH.hpp)
 
 # add_dependencies(${PROJECT_NAME}Example TextVertShader TextFragShader)

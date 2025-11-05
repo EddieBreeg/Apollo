@@ -6,6 +6,7 @@ target_sources(${PROJECT_NAME}Runtime PRIVATE
 	Device.cpp
 	Material.cpp
 	Pipeline.cpp
+	RenderPass.cpp
 	Texture.cpp
 	text/AtlasGenerator.cpp
 	text/FontAtlas.cpp

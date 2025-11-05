@@ -65,31 +65,6 @@ namespace apollo::demo {
 			ImGui::End();
 		}
 
-		SDL_GPURenderPass* BeginPass(SDL_GPUCommandBuffer* cmdBuffer, SDL_FColor clearColor = {})
-		{
-			const SDL_GPUColorTargetInfo targetInfo{
-				.texture = m_ColorTarget.GetHandle(),
-				.clear_color = clearColor,
-				.load_op = SDL_GPU_LOADOP_CLEAR,
-				.store_op = SDL_GPU_STOREOP_STORE,
-			};
-			const SDL_GPUDepthStencilTargetInfo depthStencilInfo{
-				.texture = m_DepthStencilTarget.GetHandle(),
-				.clear_depth = 1.0f,
-				.load_op = SDL_GPU_LOADOP_CLEAR,
-				.store_op = SDL_GPU_STOREOP_STORE,
-				.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE,
-				.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE,
-			};
-			SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(
-				cmdBuffer,
-				&targetInfo,
-				1,
-				&depthStencilInfo);
-			SDL_SetGPUViewport(pass, &m_Viewport);
-			return pass;
-		}
-
 	private:
 		void CreateTargets(uint32 w, uint32 h)
 		{
