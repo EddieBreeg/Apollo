@@ -1,0 +1,155 @@
+{
+	"$id": "/schema/materialInstance",
+	"title": "Material Instance",
+	"description": "Represents a material + all the settings associated with it (fragment shader constants, textures etc)",
+	"properties": {
+		"material": {
+			"type": "string",
+			"pattern": "[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}",
+			"description": "The material's ULID"
+		},
+		"parameters": {
+			"type": "object",
+			"description": "Fragment shader constant values"
+		},
+		"vertexTextures": {
+			"type": "array",
+			"description": "Vertex Shader textures/samplers",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The texture's ULID",
+						"type": "string",
+						"pattern": "[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}"
+					},
+					"sampler": {
+						"type": "object",
+						"description": "Sampling parameters",
+						"properties": {
+							"minFilter": {
+								"type": "string",
+								"enum": [
+									"nearest",
+									"linear"
+								]
+							},
+							"magFilter": {
+								"type": "string",
+								"enum": [
+									"nearest",
+									"linear"
+								]
+							},
+							"mipmapMode": {
+								"type": "string",
+								"enum": [
+									"nearest",
+									"linear"
+								]
+							},
+							"addressModeU": {
+								"type": "string",
+								"enum": [
+									"repeat",
+									"mirror",
+									"clampToEdge"
+								]
+							},
+							"addressModeV": {
+								"type": "string",
+								"enum": [
+									"repeat",
+									"mirror",
+									"clampToEdge"
+								]
+							},
+							"addressModeW": {
+								"type": "string",
+								"enum": [
+									"repeat",
+									"mirror",
+									"clampToEdge"
+								]
+							}
+						}
+					}
+				},
+				"required": [
+					"id"
+				]
+			}
+		},
+		"fragmentTextures": {
+			"type": "array",
+			"description": "Fragment Shader textures/samplers",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The texture's ULID",
+						"type": "string",
+						"pattern": "[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}"
+					},
+					"sampler": {
+						"type": "object",
+						"description": "Sampling parameters",
+						"properties": {
+							"minFilter": {
+								"type": "string",
+								"enum": [
+									"nearest",
+									"linear"
+								]
+							},
+							"magFilter": {
+								"type": "string",
+								"enum": [
+									"nearest",
+									"linear"
+								]
+							},
+							"mipmapMode": {
+								"type": "string",
+								"enum": [
+									"nearest",
+									"linear"
+								]
+							},
+							"addressModeU": {
+								"type": "string",
+								"enum": [
+									"repeat",
+									"mirror",
+									"clampToEdge"
+								]
+							},
+							"addressModeV": {
+								"type": "string",
+								"enum": [
+									"repeat",
+									"mirror",
+									"clampToEdge"
+								]
+							},
+							"addressModeW": {
+								"type": "string",
+								"enum": [
+									"repeat",
+									"mirror",
+									"clampToEdge"
+								]
+							}
+						}
+					}
+				},
+				"required": [
+					"id"
+				]
+			}
+		}
+	},
+	"required": [
+		"material"
+	]
+}

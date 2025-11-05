@@ -1,0 +1,114 @@
+{
+	"$id": "/schema/fontAtlas",
+	"description": "Font Atlas asset schema",
+	"properties": {
+		"range": {
+			"type": "object",
+			"description": "The range of unicode characters to load",
+			"properties": {
+				"first": {
+					"type": "integer",
+					"description": "First character in the range. Should be greater or equal to 32, which is the default",
+					"minimum": 32,
+					"default": 32
+				},
+				"last": {
+					"type": "integer",
+					"description": "Last character in the range. Should be greater or equal to 32. Defaults to 255.",
+					"minimum": 32,
+					"default": 255
+				}
+			}
+		},
+		"pixelSize": {
+			"type": "number",
+			"description": "The vertical resolution for the generated MSDF bitmaps. It isn't necessarily the actual height of the glyphs, but is used as a scaling factor from normalized EM units to pixels."
+		},
+		"fontFile": {
+			"type": "string",
+			"description": "Path to the font file to load"
+		},
+		"textureFile": {
+			"type": "string",
+			"description": "Optional path to the atlas texture file. If not provided, the texture will be generated at load time."
+		}
+	},
+	"required": [
+		"range",
+		"pixelSize",
+		"fontFile"
+	],
+	"dependentSchemas": {
+		"textureFile": {
+			"properties": {
+				"glyphs": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"description": "Information about a specific glyph: codepoint, bounding box, UVs etc",
+						"properties": {
+							"codepoint": {
+								"type": "integer",
+								"description": "The unicode codepoint of the glyph",
+								"minimum": 32
+							},
+							"advance": {
+								"type": "number",
+								"description": "The horizontal advance, in EM units"
+							},
+							"index": {
+								"type": "integer",
+								"description": "The internal glyph index within the font",
+								"minimum": 1
+							},
+							"offset": {
+								"type": "object",
+								"description": "The offset between in the current pen position and the glyph's origin, in EMs",
+								"properties": {
+									"x": {
+										"type": "number"
+									},
+									"y": {
+										"type": "number"
+									}
+								}
+							},
+							"uv": {
+								"type": "object",
+								"description": "The UV rectangle, in pixel coordinates",
+								"properties": {
+									"x0": {
+										"type": "integer",
+										"minimum": 0
+									},
+									"x1": {
+										"type": "integer",
+										"minimum": 0
+									},
+									"y0": {
+										"type": "integer",
+										"minimum": 0
+									},
+									"y1": {
+										"type": "integer",
+										"minimum": 0
+									}
+								}
+							}
+						},
+						"required": [
+							"codepoint",
+							"advance",
+							"index",
+							"offset",
+							"uv"
+						]
+					}
+				}
+			},
+			"required": [
+				"glyphs"
+			]
+		}
+	}
+}

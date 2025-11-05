@@ -1,0 +1,6 @@
+{
+	"title": "ulid",
+	"$id": "/schema/ulid",
+	"type": "string",
+	"pattern": "[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}"
+}
