@@ -18,7 +18,8 @@ namespace apollo::rdr {
 		DontCare,
 		NOperations
 	};
-	enum class EStoreOp : int8{
+	enum class EStoreOp : int8
+	{
 		Invalid = -1,
 		Store,
 		Resolve,
@@ -27,20 +28,22 @@ namespace apollo::rdr {
 		NOperations
 	};
 
-	struct ColorTargetSettings{
-		Texture2D* m_Texture = nullptr;
+	struct ColorTargetSettings
+	{
+		const Texture2D* m_Texture = nullptr;
 		ELoadOp m_LoadOp = ELoadOp::Clear;
 		EStoreOp m_StoreOp = EStoreOp::Store;
 		float4 m_ClearColor = {};
 	};
 
-	struct DepthStencilTargetSettings{
+	struct DepthStencilTargetSettings
+	{
 		ELoadOp m_LoadOp = ELoadOp::Clear;
 		EStoreOp m_StoreOp = EStoreOp::Store;
 		ELoadOp m_StencilLoadOp = ELoadOp::Clear;
 		EStoreOp m_StencilStoreOp = EStoreOp::Store;
 
-		Texture2D* m_Texture = nullptr;
+		const Texture2D* m_Texture = nullptr;
 		float m_ClearDepth = 1.0f;
 	};
 
