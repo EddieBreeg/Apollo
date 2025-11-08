@@ -167,7 +167,7 @@ namespace apollo::demo {
 		Viewport m_TargetViewport;
 		rdr::RenderPass m_RenderPass;
 		bool m_AssetsReady = false;
-		std::vector<rdr::GPUCommand> m_CommandQueue;
+		Queue<rdr::GPUCommand> m_CommandQueue;
 
 		float m_AntiAliasing = 1.0f;
 		float m_MouseSpeed = 3.0f;
@@ -318,6 +318,38 @@ namespace apollo::demo {
 			ImGui::End();
 		}
 
+		void EmitGPUCommands(SDL_GPUCommandBuffer* mainCommandBuffer, const entt::registry& world)
+		{
+			m_CommandQueue.AddEmplace(m_RenderPass);
+			m_CommandQueue.AddEmplace(m_TargetViewport.m_Rectangle);
+
+			SDL_PushGPUVertexUniformData(mainCommandBuffer, 0, &m_CamMatrix, sizeof(glm::mat4x4));
+			m_CommandQueue.AddEmplace(*m_Material);
+
+			const auto view = world.view<const MeshComponent, const TransformComponent>();
+			for (const auto entt : view)
+			{
+				const auto& mesh = view.get<const MeshComponent>(entt);
+				const auto& transform = view.get<const TransformComponent>(entt);
+				const auto modelMat = ComputeTransformMatrix(
+					transform.m_Position,
+					transform.m_Scale,
+					transform.m_Rotation);
+				SDL_PushGPUVertexUniformData(mainCommandBuffer, 1, &modelMat, sizeof(modelMat));
+
+				m_CommandQueue.AddEmplace(rdr::GPUCommand::BindVertexBuffers, mesh.m_VBuffer);
+
+				if (mesh.m_IBuffer)
+				{
+					m_CommandQueue.AddEmplace(rdr::GPUCommand::BindIndexBuffer, mesh.m_IBuffer);
+				}
+				m_CommandQueue.AddEmplace(
+					rdr::IndexedDrawCall{
+						.m_NumIndices = mesh.m_NumIndices,
+					});
+			}
+		}
+
 		void Update(entt::registry& world, const apollo::GameTime& time)
 		{
 			if (!m_Window) [[unlikely]]
@@ -340,50 +372,22 @@ namespace apollo::demo {
 			if (!swapchainTexture)
 				return;
 
-			m_CommandQueue.clear();
+			m_CommandQueue.Clear();
 
 			ProcessInputs(world, time);
 			DisplayUi(m_Material.Get());
 			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
 
-			if (m_AssetsReady)
+			if (!m_AssetsReady)
+				return;
+
+			EmitGPUCommands(mainCommandBuffer, world);
+
+			while (m_CommandQueue.GetSize())
 			{
-				m_CommandQueue.emplace_back(m_RenderPass);
-				m_CommandQueue.emplace_back(m_TargetViewport.m_Rectangle);
-
-				SDL_PushGPUVertexUniformData(
-					mainCommandBuffer,
-					0,
-					&m_CamMatrix,
-					sizeof(glm::mat4x4));
-				m_CommandQueue.emplace_back(*m_Material);
-
-				const auto view = world.view<const MeshComponent, const TransformComponent>();
-				for (const auto entt : view)
-				{
-					const auto& mesh = view.get<const MeshComponent>(entt);
-					const auto& transform = view.get<const TransformComponent>(entt);
-					const auto modelMat = ComputeTransformMatrix(
-						transform.m_Position,
-						transform.m_Scale,
-						transform.m_Rotation);
-					SDL_PushGPUVertexUniformData(mainCommandBuffer, 1, &modelMat, sizeof(modelMat));
-
-					m_CommandQueue.emplace_back(rdr::GPUCommand::BindVertexBuffers, mesh.m_VBuffer);
-
-					if (mesh.m_IBuffer)
-					{
-						m_CommandQueue.emplace_back(rdr::GPUCommand::BindIndexBuffer, mesh.m_IBuffer);
-					}
-					m_CommandQueue.emplace_back(
-						rdr::IndexedDrawCall{
-							.m_NumIndices = mesh.m_NumIndices,
-						});
-				}
-			}
-			for (rdr::GPUCommand& cmd: m_CommandQueue)
-			{
+				rdr::GPUCommand& cmd = m_CommandQueue.GetFront();
 				cmd(m_RenderContext);
+				m_CommandQueue.PopFront();
 			}
 		}
 	};
