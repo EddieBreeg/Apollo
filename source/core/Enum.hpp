@@ -125,12 +125,12 @@ namespace apollo {
 		/**
 		 * Returns true if any of the 1 bits in mask are set in the stored value, false otherwise
 		 */
-		[[nodiscard]] constexpr bool HasAny(E mask) noexcept { return bool(m_Value & mask); }
+		[[nodiscard]] constexpr bool HasAny(E mask) const noexcept { return bool(m_Value & mask); }
 
 		/**
 		 * Returns true if all of the 1 bits in mask are set in the stored value, false otherwise
 		 */
-		[[nodiscard]] constexpr bool HasAll(E mask) noexcept { return (m_Value & mask) == mask; }
+		[[nodiscard]] constexpr bool HasAll(E mask) const noexcept { return (m_Value & mask) == mask; }
 
 		/**
 		 * Sets the bits in mask to 1 in the stored value
