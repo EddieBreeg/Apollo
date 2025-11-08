@@ -1,5 +1,6 @@
 #include "Context.hpp"
 #include "Pixel.hpp"
+#include "RenderPass.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>
@@ -75,6 +76,15 @@ namespace apollo::rdr {
 		}
 	}
 
+	void Context::SwitchRenderPass(RenderPass* renderPass)
+	{
+		if (m_RenderPass)
+			m_RenderPass->End();
+
+		if ((m_RenderPass = renderPass))
+			m_RenderPass->Begin(*this);
+	}
+
 	void Context::ImGuiRenderPass()
 	{
 		DEBUG_CHECK(m_MainCommandBuffer)
@@ -83,6 +93,8 @@ namespace apollo::rdr {
 		}
 		if (!m_SwapchainTexture) [[unlikely]]
 			return;
+
+		SwitchRenderPass();
 
 		ImGui::Render();
 		auto* drawData = ImGui::GetDrawData();
@@ -116,6 +128,7 @@ namespace apollo::rdr {
 
 		if (m_MainCommandBuffer) [[likely]]
 		{
+			SwitchRenderPass();
 			SDL_SubmitGPUCommandBuffer(m_MainCommandBuffer);
 			m_MainCommandBuffer = nullptr;
 		}

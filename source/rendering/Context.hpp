@@ -16,6 +16,8 @@ namespace apollo {
 }
 
 namespace apollo::rdr {
+	class RenderPass;
+
 	class Context : public Singleton<Context>
 	{
 	public:
@@ -29,6 +31,14 @@ namespace apollo::rdr {
 
 		// Creates the main command buffer, and acquires the swapchain texture
 		APOLLO_API void BeginFrame();
+
+		/**
+		 * Switches render pass. If a render pass was currently in progress, End is called on it.
+		 * \param renderPass: The new render pass to switch to. If not nullptr, Begin is called on
+		 * it.
+		 */
+		APOLLO_API void SwitchRenderPass(RenderPass* renderPass = nullptr);
+		[[nodiscard]] RenderPass* GetCurrentRenderPass() noexcept { return m_RenderPass; }
 
 		// Returns null if called outside of BeginFrame/EndFrame
 		[[nodiscard]] SDL_GPUCommandBuffer* GetMainCommandBuffer() noexcept
@@ -68,5 +78,6 @@ namespace apollo::rdr {
 		SDL_GPUTexture* m_SwapchainTexture = nullptr;
 		EPixelFormat m_SwapchainFormat = EPixelFormat::Invalid;
 		SDL_GPUSampler* m_DefaultSampler = nullptr;
+		RenderPass* m_RenderPass = nullptr;
 	};
 } // namespace apollo::rdr
