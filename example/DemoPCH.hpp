@@ -19,6 +19,7 @@
 #include <numbers>
 #include <rendering/Bitmap.hpp>
 #include <rendering/Buffer.hpp>
+#include <rendering/Command.hpp>
 #include <rendering/Context.hpp>
 #include <rendering/Device.hpp>
 #include <rendering/Material.hpp>

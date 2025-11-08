@@ -13,8 +13,8 @@ namespace apollo::demo {
 	{
 		return glm::perspectiveFovRH(
 			0.5f * std::numbers::pi_v<float>,
-			vp.m_Viewport.w,
-			vp.m_Viewport.h,
+			vp.m_Rectangle.GetWidth(),
+			vp.m_Rectangle.GetHeight(),
 			0.01f,
 			100.f);
 	}
@@ -167,6 +167,7 @@ namespace apollo::demo {
 		Viewport m_TargetViewport;
 		rdr::RenderPass m_RenderPass;
 		bool m_AssetsReady = false;
+		std::vector<rdr::GPUCommand> m_CommandQueue;
 
 		float m_AntiAliasing = 1.0f;
 		float m_MouseSpeed = 3.0f;
@@ -339,23 +340,23 @@ namespace apollo::demo {
 			if (!swapchainTexture)
 				return;
 
+			m_CommandQueue.clear();
+
 			ProcessInputs(world, time);
 			DisplayUi(m_Material.Get());
 			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
 
 			if (m_AssetsReady)
 			{
-				m_RenderPass.Begin(m_RenderContext);
-				SDL_GPURenderPass* renderPass = m_RenderPass.GetHandle();
-				SDL_SetGPUViewport(renderPass, &m_TargetViewport.m_Viewport);
+				m_CommandQueue.emplace_back(m_RenderPass);
+				m_CommandQueue.emplace_back(m_TargetViewport.m_Rectangle);
 
 				SDL_PushGPUVertexUniformData(
 					mainCommandBuffer,
 					0,
 					&m_CamMatrix,
 					sizeof(glm::mat4x4));
-				m_Material->PushFragmentConstants(mainCommandBuffer);
-				m_Material->Bind(renderPass);
+				m_CommandQueue.emplace_back(*m_Material);
 
 				const auto view = world.view<const MeshComponent, const TransformComponent>();
 				for (const auto entt : view)
@@ -368,26 +369,21 @@ namespace apollo::demo {
 						transform.m_Rotation);
 					SDL_PushGPUVertexUniformData(mainCommandBuffer, 1, &modelMat, sizeof(modelMat));
 
-					const SDL_GPUBufferBinding vBinding{
-						.buffer = mesh.m_VBuffer.GetHandle(),
-						.offset = 0,
-					};
-					SDL_BindGPUVertexBuffers(renderPass, 0, &vBinding, 1);
+					m_CommandQueue.emplace_back(rdr::GPUCommand::BindVertexBuffers, mesh.m_VBuffer);
 
 					if (mesh.m_IBuffer)
 					{
-						const SDL_GPUBufferBinding iBinding{
-							.buffer = mesh.m_IBuffer.GetHandle(),
-							.offset = 0,
-						};
-						SDL_BindGPUIndexBuffer(
-							renderPass,
-							&iBinding,
-							SDL_GPU_INDEXELEMENTSIZE_32BIT);
+						m_CommandQueue.emplace_back(rdr::GPUCommand::BindIndexBuffer, mesh.m_IBuffer);
 					}
-					SDL_DrawGPUIndexedPrimitives(renderPass, mesh.m_NumIndices, 1, 0, 0, 0);
+					m_CommandQueue.emplace_back(
+						rdr::IndexedDrawCall{
+							.m_NumIndices = mesh.m_NumIndices,
+						});
 				}
-				m_RenderPass.End();
+			}
+			for (rdr::GPUCommand& cmd: m_CommandQueue)
+			{
+				cmd(m_RenderContext);
 			}
 		}
 	};

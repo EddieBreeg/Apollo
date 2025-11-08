@@ -58,7 +58,7 @@ namespace apollo::rdr {
 	{
 	public:
 		APOLLO_API RenderPass(const RenderPassSettings& settings);
-		APOLLO_API void Begin(Context& cmdBuffer);
+		APOLLO_API void Begin(Context& ctx);
 		APOLLO_API void End();
 
 		APOLLO_API ~RenderPass();

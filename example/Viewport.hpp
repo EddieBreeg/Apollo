@@ -14,7 +14,7 @@ namespace apollo::demo {
 		rdr::EPixelFormat m_ColorTargetFormat = rdr::EPixelFormat::RGBA8_UNorm_SRGB;
 		rdr::Texture2D m_ColorTarget;
 		rdr::Texture2D m_DepthStencilTarget;
-		SDL_GPUViewport m_Viewport;
+		RectF m_Rectangle;
 		float2 m_TargetSize;
 
 		void Update()
@@ -45,22 +45,17 @@ namespace apollo::demo {
 			bottomRight.x += winPos.x;
 			bottomRight.y += winPos.y;
 
-			ImGui::Text("Top Left: (%f, %f)", topLeft.x, topLeft.y);
-			ImGui::Text("Bottom Right: (%f, %f)", bottomRight.x, bottomRight.y);
-
-			m_Viewport.x = 0;
-			m_Viewport.y = 0;
-			m_Viewport.w = winSize.x;
-			m_Viewport.h = winSize.y;
-			m_Viewport.min_depth = 0.0f;
-			m_Viewport.max_depth = 1.0f;
+			m_Rectangle = {
+				.x1 = winSize.x,
+				.y1 = winSize.y,
+			};
 
 			ImGui::GetWindowDrawList()->AddImage(
 				(ImTextureID)m_ColorTarget.GetHandle(),
 				topLeft,
 				bottomRight,
 				{ 0, 0 },
-				{ m_Viewport.w / m_TargetSize.x, m_Viewport.h / m_TargetSize.y });
+				{ winSize.x / m_TargetSize.x, winSize.y / m_TargetSize.y });
 
 			ImGui::End();
 		}

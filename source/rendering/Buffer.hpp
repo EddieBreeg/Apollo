@@ -56,6 +56,25 @@ namespace apollo::rdr {
 
 		[[nodiscard]] uint32 GetSize() const noexcept { return m_Size; }
 
+		[[nodiscard]] EnumFlags<EBufferFlags> GetUsageFlags() const noexcept { return m_Flags; }
+
+		[[nodiscard]] bool IsVertexBuffer() const noexcept
+		{
+			return m_Flags.HasAny(EBufferFlags::Vertex);
+		}
+
+		[[nodiscard]] bool IsIndexBuffer() const noexcept
+		{
+			return m_Flags.HasAny(EBufferFlags::Index);
+		}
+
+		[[nodiscard]] bool IsStorageBuffer() const noexcept
+		{
+			return m_Flags.HasAny(
+				EBufferFlags::ComputeStorageRead | EBufferFlags::ComputeStorageWrite |
+				EBufferFlags::GraphicsStorage);
+		}
+
 	private:
 		EnumFlags<EBufferFlags> m_Flags;
 		uint32 m_Size = 0;
