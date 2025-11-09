@@ -318,12 +318,14 @@ namespace apollo::demo {
 			ImGui::End();
 		}
 
-		void EmitGPUCommands(SDL_GPUCommandBuffer* mainCommandBuffer, const entt::registry& world)
+		void EmitGPUCommands(const entt::registry& world)
 		{
+			m_CommandQueue.AddEmplace(
+				rdr::EShaderStage::Vertex,
+				m_CamMatrix);
 			m_CommandQueue.AddEmplace(m_RenderPass);
 			m_CommandQueue.AddEmplace(m_TargetViewport.m_Rectangle);
 
-			SDL_PushGPUVertexUniformData(mainCommandBuffer, 0, &m_CamMatrix, sizeof(glm::mat4x4));
 			m_CommandQueue.AddEmplace(*m_Material);
 
 			const auto view = world.view<const MeshComponent, const TransformComponent>();
@@ -335,8 +337,7 @@ namespace apollo::demo {
 					transform.m_Position,
 					transform.m_Scale,
 					transform.m_Rotation);
-				SDL_PushGPUVertexUniformData(mainCommandBuffer, 1, &modelMat, sizeof(modelMat));
-
+				m_CommandQueue.AddEmplace(rdr::EShaderStage::Vertex, modelMat, 1);
 				m_CommandQueue.AddEmplace(rdr::GPUCommand::BindVertexBuffers, mesh.m_VBuffer);
 
 				if (mesh.m_IBuffer)
@@ -381,7 +382,7 @@ namespace apollo::demo {
 			if (!m_AssetsReady)
 				return;
 
-			EmitGPUCommands(mainCommandBuffer, world);
+			EmitGPUCommands(world);
 
 			while (m_CommandQueue.GetSize())
 			{

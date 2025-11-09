@@ -13,6 +13,24 @@ namespace apollo::rdr {
 	template <>                                                                                    \
 	void GPUCommand::Impl<GPUCommand::ECommandType::type>(Context & ctx)
 
+	COMMAND_TYPE_IMPL(PushVertexShaderConstants)
+	{
+		SDL_PushGPUVertexUniformData(
+			ctx.GetMainCommandBuffer(),
+			m_Constants.m_Slot,
+			m_Constants.m_Data.m_Buffer,
+			m_Constants.m_Size);
+	}
+
+	COMMAND_TYPE_IMPL(PushFragmentShaderConstants)
+	{
+		SDL_PushGPUFragmentUniformData(
+			ctx.GetMainCommandBuffer(),
+			m_Constants.m_Slot,
+			m_Constants.m_Data.m_Buffer,
+			m_Constants.m_Size);
+	}
+
 	COMMAND_TYPE_IMPL(BeginRenderPass)
 	{
 		ctx.SwitchRenderPass(m_RenderPass);
@@ -138,6 +156,29 @@ namespace apollo::rdr {
 	}
 
 #undef COMMAND_TYPE_IMPL
+
+	GPUCommand::GPUCommand(EShaderStage stage, const void* data, size_t size, uint32 slot)
+	{
+		APOLLO_ASSERT(
+			size <= sizeof(ShaderConstantStorage),
+			"Data is too large for shader data constant block: {} bytes",
+			size);
+		APOLLO_ASSERT(slot < 4, "Shader constant block index {} is out of range", slot);
+
+		new (&m_Constants) ShaderConstantCommand{
+			.m_Data{ data, size },
+			.m_Size = static_cast<uint32>(size),
+			.m_Slot = slot,
+		};
+		switch (stage)
+		{
+		case EShaderStage::Vertex: m_Type = PushVertexShaderConstants; break;
+		case EShaderStage::Fragment: m_Type = PushFragmentShaderConstants; break;
+		default:
+			[[unlikely]] APOLLO_LOG_CRITICAL("Invalid shader stage {}", int32(stage));
+			DEBUG_BREAK();
+		}
+	}
 
 	GPUCommand::GPUCommand(ECommandType t, const Buffer& buf)
 		: m_Type(t)
