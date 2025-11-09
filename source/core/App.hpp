@@ -35,6 +35,7 @@ namespace apollo {
 		[[nodiscard]] EAppResult GetResultCode() const noexcept { return m_Result; }
 		[[nodiscard]] Window& GetMainWindow() noexcept { return m_Window; }
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
+		[[nodiscard]] rdr::Context* GetRenderContext() noexcept { return m_RenderContext; }
 
 		// Main loop. Blocks until the program comes to an end, e.g. after calling RequestAppQuit()
 		APOLLO_API EAppResult Run();

@@ -5,6 +5,7 @@
 #include "ShaderInfo.hpp"
 #include <span>
 
+struct ImDrawData;
 struct SDL_GPUGraphicsPipeline;
 
 namespace apollo::rdr {
@@ -28,6 +29,13 @@ namespace apollo::rdr {
 		uint32 m_FirstIndex = 0;
 		int32 m_VertexOffset = 0;
 		uint32 m_FirstInstance = 0;
+	};
+
+	struct ImGuiDrawCommand
+	{
+		ImDrawData* m_DrawData = nullptr;
+		float4 m_ClearColor = {};
+		bool m_ClearTarget = true;
 	};
 
 	struct ShaderConstantCommand
@@ -62,6 +70,7 @@ namespace apollo::rdr {
 			// Draw commands
 			DrawPrimitives,
 			DrawIndexedPrimitives,
+			DrawImGuiLayer,
 
 			NTypes
 		};
@@ -108,6 +117,11 @@ namespace apollo::rdr {
 			, m_Type(ECommandType::DrawIndexedPrimitives)
 		{}
 
+		explicit GPUCommand(const ImGuiDrawCommand& cmd) noexcept
+			: m_ImGuiDrawCall{ cmd }
+			, m_Type(DrawImGuiLayer)
+		{}
+
 		GPUCommand(const GPUCommand&) = default;
 		GPUCommand& operator=(const GPUCommand&) = default;
 		~GPUCommand() = default;
@@ -128,6 +142,7 @@ namespace apollo::rdr {
 			RectF m_Viewport;
 			DrawCall m_DrawCall;
 			IndexedDrawCall m_IndexedDrawCall;
+			ImGuiDrawCommand m_ImGuiDrawCall;
 		};
 		ECommandType m_Type;
 	};

@@ -132,7 +132,6 @@ namespace apollo {
 		m_AssetManager->Update();
 
 		m_ECSManager->Update(m_GameTime);
-		m_RenderContext->ImGuiRenderPass();
 
 		ImGui::EndFrame();
 

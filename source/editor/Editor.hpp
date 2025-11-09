@@ -6,6 +6,10 @@
 #include <filesystem>
 #include <span>
 
+namespace apollo::rdr {
+	class Context;
+}
+
 namespace apollo {
 	enum class EAppResult : int8;
 
@@ -20,7 +24,7 @@ namespace apollo::editor {
 	{
 	public:
 		~Editor() = default;
-		Editor(std::span<const char*> args);
+		Editor(std::span<const char*> args, rdr::Context& renderContext);
 
 		static EAppResult Init(const EntryPoint&, App&);
 
@@ -28,5 +32,6 @@ namespace apollo::editor {
 
 	private:
 		std::filesystem::path m_ProjectPath;
+		rdr::Context& m_RenderContext;
 	};
 } // namespace apollo::editor

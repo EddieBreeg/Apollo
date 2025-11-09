@@ -85,45 +85,14 @@ namespace apollo::rdr {
 			m_RenderPass->Begin(*this);
 	}
 
-	void Context::ImGuiRenderPass()
-	{
-		DEBUG_CHECK(m_MainCommandBuffer)
-		{
-			return;
-		}
-		if (!m_SwapchainTexture) [[unlikely]]
-			return;
-
-		SwitchRenderPass();
-
-		ImGui::Render();
-		auto* drawData = ImGui::GetDrawData();
-
-		ImGui_ImplSDLGPU3_PrepareDrawData(drawData, m_MainCommandBuffer);
-		const SDL_GPUColorTargetInfo targetInfo{
-			.texture = m_SwapchainTexture,
-			.clear_color =
-				SDL_FColor{
-					m_ClearColor.r,
-					m_ClearColor.g,
-					m_ClearColor.b,
-					m_ClearColor.a,
-				},
-			.load_op = m_ClearBackBuffer ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD,
-			.store_op = SDL_GPU_STOREOP_STORE,
-		};
-
-		SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(
-			m_MainCommandBuffer,
-			&targetInfo,
-			1,
-			nullptr);
-		ImGui_ImplSDLGPU3_RenderDrawData(drawData, m_MainCommandBuffer, pass);
-		SDL_EndGPURenderPass(pass);
-	}
-
 	void Context::EndFrame()
 	{
+		while (m_CommandQueue.GetSize())
+		{
+			m_CommandQueue.GetFront()(*this);
+			m_CommandQueue.PopFront();
+		}
+
 		m_SwapchainTexture = nullptr;
 
 		if (m_MainCommandBuffer) [[likely]]

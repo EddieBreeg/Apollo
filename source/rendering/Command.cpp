@@ -3,6 +3,7 @@
 #include "Context.hpp"
 #include "Material.hpp"
 #include "RenderPass.hpp"
+#include "backends/imgui_impl_sdlgpu3.h"
 #include <SDL3/SDL_gpu.h>
 #include <array>
 #include <core/Assert.hpp>
@@ -153,6 +154,39 @@ namespace apollo::rdr {
 			m_IndexedDrawCall.m_FirstIndex,
 			m_IndexedDrawCall.m_VertexOffset,
 			m_IndexedDrawCall.m_FirstInstance);
+	}
+
+	COMMAND_TYPE_IMPL(DrawImGuiLayer)
+	{
+		auto* const cmdBuffer = ctx.GetMainCommandBuffer();
+		auto* const swapChainTexture = ctx.GetSwapchainTexture();
+		
+		if (!swapChainTexture || !m_ImGuiDrawCall.m_DrawData) [[unlikely]]
+		return;
+
+		ctx.SwitchRenderPass();
+
+		ImGui_ImplSDLGPU3_PrepareDrawData(m_ImGuiDrawCall.m_DrawData, cmdBuffer);
+		const SDL_GPUColorTargetInfo targetInfo{
+			.texture = swapChainTexture,
+			.clear_color =
+				SDL_FColor{
+					m_ImGuiDrawCall.m_ClearColor.r,
+					m_ImGuiDrawCall.m_ClearColor.g,
+					m_ImGuiDrawCall.m_ClearColor.b,
+					m_ImGuiDrawCall.m_ClearColor.a,
+				},
+			.load_op = m_ImGuiDrawCall.m_ClearTarget ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD,
+			.store_op = SDL_GPU_STOREOP_STORE,
+		};
+
+		SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(
+			cmdBuffer,
+			&targetInfo,
+			1,
+			nullptr);
+		ImGui_ImplSDLGPU3_RenderDrawData(m_ImGuiDrawCall.m_DrawData, cmdBuffer, pass);
+		SDL_EndGPURenderPass(pass);
 	}
 
 #undef COMMAND_TYPE_IMPL

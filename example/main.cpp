@@ -167,7 +167,6 @@ namespace apollo::demo {
 		Viewport m_TargetViewport;
 		rdr::RenderPass m_RenderPass;
 		bool m_AssetsReady = false;
-		Queue<rdr::GPUCommand> m_CommandQueue;
 
 		float m_AntiAliasing = 1.0f;
 		float m_MouseSpeed = 3.0f;
@@ -175,8 +174,6 @@ namespace apollo::demo {
 		bool m_CameraLocked = true;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
-
-		void PostInit() { rdr::Context::GetInstance()->m_ClearBackBuffer = true; }
 
 		void ProcessSceneLoadFinished(
 			entt::registry& world,
@@ -320,13 +317,11 @@ namespace apollo::demo {
 
 		void EmitGPUCommands(const entt::registry& world)
 		{
-			m_CommandQueue.AddEmplace(
-				rdr::EShaderStage::Vertex,
-				m_CamMatrix);
-			m_CommandQueue.AddEmplace(m_RenderPass);
-			m_CommandQueue.AddEmplace(m_TargetViewport.m_Rectangle);
+			m_RenderContext.PushVertexShaderConstants(m_CamMatrix);
+			m_RenderContext.BeginRenderPass(m_RenderPass);
+			m_RenderContext.SetViewport(m_TargetViewport.m_Rectangle);
 
-			m_CommandQueue.AddEmplace(*m_Material);
+			m_RenderContext.BindMaterialInstance(*m_Material);
 
 			const auto view = world.view<const MeshComponent, const TransformComponent>();
 			for (const auto entt : view)
@@ -337,14 +332,14 @@ namespace apollo::demo {
 					transform.m_Position,
 					transform.m_Scale,
 					transform.m_Rotation);
-				m_CommandQueue.AddEmplace(rdr::EShaderStage::Vertex, modelMat, 1);
-				m_CommandQueue.AddEmplace(rdr::GPUCommand::BindVertexBuffers, mesh.m_VBuffer);
+				m_RenderContext.PushVertexShaderConstants(modelMat, 1);
+				m_RenderContext.BindVertexBuffer(mesh.m_VBuffer);
 
 				if (mesh.m_IBuffer)
 				{
-					m_CommandQueue.AddEmplace(rdr::GPUCommand::BindIndexBuffer, mesh.m_IBuffer);
+					m_RenderContext.BindIndexBuffer(mesh.m_IBuffer);
 				}
-				m_CommandQueue.AddEmplace(
+				m_RenderContext.DrawIndexedPrimitives(
 					rdr::IndexedDrawCall{
 						.m_NumIndices = mesh.m_NumIndices,
 					});
@@ -373,8 +368,6 @@ namespace apollo::demo {
 			if (!swapchainTexture)
 				return;
 
-			m_CommandQueue.Clear();
-
 			ProcessInputs(world, time);
 			DisplayUi(m_Material.Get());
 			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
@@ -383,13 +376,6 @@ namespace apollo::demo {
 				return;
 
 			EmitGPUCommands(world);
-
-			while (m_CommandQueue.GetSize())
-			{
-				rdr::GPUCommand& cmd = m_CommandQueue.GetFront();
-				cmd(m_RenderContext);
-				m_CommandQueue.PopFront();
-			}
 		}
 	};
 
