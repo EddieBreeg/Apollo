@@ -47,7 +47,7 @@ namespace apollo::rdr {
 		SDL_PushGPUFragmentUniformData(
 			cmdBuffer,
 			index,
-			m_ConstantBlocks.m_FragmentConstants[index].m_Buf,
+			m_ConstantBlocks.m_FragmentConstants[index].m_Buffer,
 			m_ConstantBlocks.m_BlockSizes[index]);
 	}
 

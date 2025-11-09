@@ -357,7 +357,7 @@ namespace apollo::editor {
 			void LoadConstantBlock(uint32 index, const rdr::ShaderConstantBlock& block)
 			{
 				instance.m_ConstantBlocks.m_BlockSizes[index] = block.m_Size;
-				constexpr uint32 maxBlockSize = sizeof(rdr::MaterialInstance::ConstantBlockStorage);
+				constexpr uint32 maxBlockSize = sizeof(rdr::ShaderConstantStorage);
 				if (block.m_Size > maxBlockSize) [[unlikely]]
 				{
 					APOLLO_LOG_WARN(

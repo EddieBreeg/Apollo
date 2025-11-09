@@ -1,7 +1,9 @@
 #pragma once
 
 #include <PCH.hpp>
+#include <core/Log.hpp>
 #include <memory>
+#include <span>
 #include <string>
 
 namespace apollo::rdr {
@@ -130,6 +132,50 @@ namespace apollo::rdr {
 		}
 	};
 
+	struct ShaderConstantStorage
+	{
+		ShaderConstantStorage() = default;
+
+		ShaderConstantStorage(const void* data, size_t size)
+		{
+			constexpr size_t maxSize = STATIC_ARRAY_SIZE(m_Buffer);
+			if (size > maxSize) [[unlikely]]
+			{
+				APOLLO_LOG_WARN(
+					"Data size {} is over the maximum allowed for a shader constant block ({}): "
+					"truncation will occur",
+					size,
+					maxSize);
+				size = maxSize;
+			}
+			memcpy(m_Buffer, data, size);
+		}
+
+		template <class T>
+		ShaderConstantStorage(std::span<const T> data)
+			: ShaderConstantStorage(data.data(), data.size_bytes())
+		{}
+
+		template <class T>
+		ShaderConstantStorage(const T& data)
+			: ShaderConstantStorage(&data, sizeof(data))
+		{}
+
+		template <class T>
+		T* GetAs(uint8 offset = 0)
+		{
+			return reinterpret_cast<T*>(m_Buffer + offset);
+		}
+
+		template <class T>
+		const T* GetAs(uint8 offset = 0) const
+		{
+			return reinterpret_cast<T*>(m_Buffer + offset);
+		}
+
+		alignas(std::max_align_t) uint8 m_Buffer[128];
+	};
+
 	struct ShaderInfo
 	{
 		uint32 m_NumSamplers = 0;
@@ -143,7 +189,8 @@ namespace apollo::rdr {
 
 		void Swap(ShaderInfo& other) noexcept
 		{
-			apollo::Swap(m_NumSamplers, other.m_NumSamplers);;
+			apollo::Swap(m_NumSamplers, other.m_NumSamplers);
+			;
 			apollo::Swap(m_NumStorageTextures, other.m_NumStorageTextures);
 			apollo::Swap(m_NumStorageBuffers, other.m_NumStorageBuffers);
 			apollo::Swap(m_NumUniformBuffers, other.m_NumUniformBuffers);

@@ -93,8 +93,7 @@ namespace apollo::rdr {
 				(offset + sizeof(T)) <= m_ConstantBlocks.m_BlockSizes[blockIndex],
 				"Offset {} is out of bounds",
 				offset);
-			auto& block = m_ConstantBlocks.m_FragmentConstants[blockIndex].m_Buf;
-			return *reinterpret_cast<T*>(block + offset);
+			return *m_ConstantBlocks.m_FragmentConstants[blockIndex].GetAs<T>(offset);
 		}
 
 		template <class T>
@@ -105,8 +104,7 @@ namespace apollo::rdr {
 				(offset + sizeof(T)) <= m_ConstantBlocks.m_BlockSizes[blockIndex],
 				"Offset {} is out of bounds",
 				offset);
-			auto& block = m_ConstantBlocks.m_FragmentConstants[blockIndex].m_Buf;
-			return *reinterpret_cast<T*>(block + offset);
+			return *m_ConstantBlocks.m_FragmentConstants[blockIndex].GetAs<T>(offset);
 		}
 
 		APOLLO_API void PushFragmentConstants(
@@ -120,16 +118,11 @@ namespace apollo::rdr {
 			IAsset& out_asset,
 			const AssetMetadata& metadata);
 
-		struct ConstantBlockStorage
-		{
-			alignas(std::max_align_t) uint8 m_Buf[128] = { 0 };
-		};
-
 		AssetRef<Material> m_Material;
 		struct
 		{
 			uint32 m_BlockSizes[4] = { 0 };
-			ConstantBlockStorage m_FragmentConstants[4];
+			ShaderConstantStorage m_FragmentConstants[4];
 		} m_ConstantBlocks;
 
 		struct TextureStorage
