@@ -99,7 +99,7 @@ namespace apollo::rdr {
 			: m_Pipeline(pipeline)
 			, m_Type(ECommandType::BindGraphicsPipeline)
 		{}
-		APOLLO_API explicit GPUCommand(MaterialInstance& mat) noexcept
+		APOLLO_API explicit GPUCommand(const MaterialInstance& mat) noexcept
 			: m_MaterialInstance(&mat)
 			, m_Type(ECommandType::BindMaterialInstance)
 		{}
@@ -136,7 +136,7 @@ namespace apollo::rdr {
 			ShaderConstantCommand m_Constants;
 			RenderPass* m_RenderPass;
 			SDL_GPUGraphicsPipeline* m_Pipeline;
-			MaterialInstance* m_MaterialInstance;
+			const MaterialInstance* m_MaterialInstance;
 			std::span<const Buffer> m_Buffers;
 			const Buffer* m_IBuffer;
 			RectF m_Viewport;

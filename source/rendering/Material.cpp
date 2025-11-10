@@ -41,7 +41,7 @@ namespace apollo::rdr {
 		Reset();
 	}
 
-	void MaterialInstance::PushFragmentConstants(SDL_GPUCommandBuffer* cmdBuffer, uint32 index)
+	void MaterialInstance::PushFragmentConstants(SDL_GPUCommandBuffer* cmdBuffer, uint32 index) const
 	{
 		APOLLO_ASSERT(index < 4, "Block index {} is out of bounds", index);
 		SDL_PushGPUFragmentUniformData(
@@ -51,7 +51,7 @@ namespace apollo::rdr {
 			m_ConstantBlocks.m_BlockSizes[index]);
 	}
 
-	void MaterialInstance::Bind(SDL_GPURenderPass* renderPass)
+	void MaterialInstance::Bind(SDL_GPURenderPass* renderPass) const
 	{
 		if (!IsLoaded())
 			return;

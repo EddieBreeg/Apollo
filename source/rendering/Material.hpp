@@ -109,9 +109,9 @@ namespace apollo::rdr {
 
 		APOLLO_API void PushFragmentConstants(
 			SDL_GPUCommandBuffer* commandBuffer,
-			uint32 blockIndex = 0);
+			uint32 blockIndex = 0) const;
 
-		APOLLO_API void Bind(SDL_GPURenderPass* renderPass);
+		APOLLO_API void Bind(SDL_GPURenderPass* renderPass) const;
 
 	private:
 		friend EAssetLoadResult editor::LoadMaterialInstance(

@@ -50,7 +50,7 @@ namespace apollo::rdr {
 			m_CommandQueue.AddEmplace(pipeline);
 		}
 
-		void BindMaterialInstance(MaterialInstance& mat) { m_CommandQueue.AddEmplace(mat); }
+		void BindMaterialInstance(const MaterialInstance& mat) { m_CommandQueue.AddEmplace(mat); }
 
 		void BindIndexBuffer(const Buffer& buffer)
 		{
