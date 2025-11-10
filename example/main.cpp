@@ -214,10 +214,12 @@ namespace apollo::demo {
 		{
 			m_TargetViewport.Update();
 
-			ImGui::Begin("Camera Settings");
+			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
 			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
 			ImGui::Text("Press F1 to unlock/relock camera");
+
+			ImGui::Checkbox("Show Depth/Stencil Content", &m_TargetViewport.m_ShowDepth);
 			ImGui::End();
 
 			// if (!mat)

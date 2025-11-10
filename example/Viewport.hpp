@@ -16,6 +16,7 @@ namespace apollo::demo {
 		rdr::Texture2D m_DepthStencilTarget;
 		RectF m_Rectangle;
 		float2 m_TargetSize;
+		bool m_ShowDepth = false;
 
 		void Update()
 		{
@@ -49,9 +50,11 @@ namespace apollo::demo {
 				.x1 = winSize.x,
 				.y1 = winSize.y,
 			};
+			const ImTextureID texId = (ImTextureID)(m_ShowDepth ? m_DepthStencilTarget.GetHandle()
+																: m_ColorTarget.GetHandle());
 
 			ImGui::GetWindowDrawList()->AddImage(
-				(ImTextureID)m_ColorTarget.GetHandle(),
+				texId,
 				topLeft,
 				bottomRight,
 				{ 0, 0 },
@@ -77,7 +80,8 @@ namespace apollo::demo {
 					.m_Width = w,
 					.m_Height = h,
 					.m_Format = rdr::EPixelFormat::Depth32,
-					.m_Usage = rdr::ETextureUsageFlags::DepthStencilTarget,
+					.m_Usage = rdr::ETextureUsageFlags::DepthStencilTarget |
+							   rdr::ETextureUsageFlags::Sampled,
 				},
 			};
 		}
