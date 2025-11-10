@@ -3,13 +3,8 @@
 
 namespace {
 	constexpr std::string_view g_TypeNames[] = {
-		"texture2d",
-		"vertexShader",
-		"fragmentShader",
-		"material",
-		"materialInstance",
-		"fontAtlas",
-		"scene",
+		"texture2d",		"vertexShader", "fragmentShader", "material",
+		"materialInstance", "mesh",			"fontAtlas",	  "scene",
 	};
 
 	static_assert(

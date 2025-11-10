@@ -23,6 +23,7 @@
 #include <rendering/Context.hpp>
 #include <rendering/Device.hpp>
 #include <rendering/Material.hpp>
+#include <rendering/Mesh.hpp>
 #include <rendering/Pixel.hpp>
 #include <rendering/RenderPass.hpp>
 #include <rendering/Texture.hpp>

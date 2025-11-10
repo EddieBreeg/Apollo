@@ -25,6 +25,7 @@ int main(int argc, const char** argv)
 	assetManagerSettings.m_LoadFragmentShader = apollo::editor::LoadFragmentShader;
 	assetManagerSettings.m_LoadMaterial = apollo::editor::LoadMaterial;
 	assetManagerSettings.m_LoadMaterialInstance = apollo::editor::LoadMaterialInstance;
+	assetManagerSettings.m_LoadMesh = apollo::editor::LoadMesh;
 	assetManagerSettings.m_LoadFont = apollo::editor::LoadFont;
 	assetManagerSettings.m_LoadScene = apollo::editor::LoadScene;
 

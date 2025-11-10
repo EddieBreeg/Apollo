@@ -10,10 +10,14 @@ SamplerState g_Sampler0: register(s0, space2);
 cbuffer Params: register(b0, space3)
 {
 	float4 Color;
+	float AlphaThreshold;
 };
 
 float4 main(Fragment frag): SV_TARGET
 {
 	float4 c = g_Color.Sample(g_Sampler0, frag.UV);
-	return Color * c;
+	if(c.r < AlphaThreshold)
+		discard;
+
+	return c * Color;
 }

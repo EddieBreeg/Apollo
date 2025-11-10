@@ -17,6 +17,7 @@ namespace {
 		{ apollo::StringHash{ "fragmentShader" }, apollo::EAssetType::FragmentShader },
 		{ apollo::StringHash{ "material" }, apollo::EAssetType::Material },
 		{ apollo::StringHash{ "materialInstance" }, apollo::EAssetType::MaterialInstance },
+		{ apollo::StringHash{ "mesh" }, apollo::EAssetType::Mesh },
 		{ apollo::StringHash{ "fontAtlas" }, apollo::EAssetType::FontAtlas },
 		{ apollo::StringHash{ "scene" }, apollo::EAssetType::Scene },
 	};

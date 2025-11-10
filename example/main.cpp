@@ -1,9 +1,5 @@
 #include "DemoPCH.hpp"
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
 }
@@ -96,77 +92,23 @@ namespace apollo::demo {
 
 	struct MeshComponent
 	{
+		AssetRef<rdr::Mesh> m_Mesh;
 		AssetRef<rdr::MaterialInstance> m_Material;
-		rdr::Buffer m_VBuffer;
-		rdr::Buffer m_IBuffer;
-		uint32 m_NumIndices = 0;
 
-		static constexpr ecs::ComponentReflection<&MeshComponent::m_Material> Reflection{
-			"mesh",
-			{ "material" },
-		};
+		static constexpr ecs::ComponentReflection<&MeshComponent::m_Mesh, &MeshComponent::m_Material>
+			Reflection{
+				"mesh",
+				{ "mesh", "material" },
+			};
 	};
-
-	bool LoadMesh(SDL_GPUCopyPass* copyPass, const char* path, MeshComponent& out_mesh)
-	{
-		Assimp::Importer importer;
-		const auto* scene = importer.ReadFile(
-			path,
-			aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FixInfacingNormals |
-				aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_FlipUVs);
-		if (!scene)
-		{
-			APOLLO_LOG_ERROR("Failed to load mesh from {}: {}", path, importer.GetErrorString());
-			return false;
-		}
-
-		if (!scene->HasMeshes())
-			return false;
-
-		const aiMesh* am = scene->mMeshes[0];
-
-		std::vector<rdr::Vertex3d> vertices;
-		vertices.reserve(am->mNumVertices);
-		std::vector<uint32> indices;
-		indices.reserve(am->mNumFaces * 3);
-
-		for (uint32 i = 0; i < am->mNumVertices; ++i)
-		{
-			const float3 pos{ am->mVertices[i].x, am->mVertices[i].y, am->mVertices[i].z };
-			const float3 nor{ am->mNormals[i].x, am->mNormals[i].y, am->mNormals[i].z };
-			const float2 uv{ am->mTextureCoords[0][i].x, am->mTextureCoords[0][i].y };
-			vertices.emplace_back(rdr::Vertex3d{ pos, nor, uv });
-		}
-
-		for (uint32 i = 0; i < am->mNumFaces; ++i)
-		{
-			const auto& face = am->mFaces[i];
-			for (uint32 j = 0; j < face.mNumIndices; ++j)
-			{
-				indices.emplace_back(face.mIndices[j]);
-			}
-		}
-		const uint32 vertSize = am->mNumVertices * sizeof(rdr::Vertex3d);
-		out_mesh.m_NumIndices = (uint32)indices.size();
-		const uint32 indSize = 4 * out_mesh.m_NumIndices;
-
-		out_mesh.m_VBuffer = rdr::Buffer(rdr::EBufferFlags::Vertex, vertSize);
-		out_mesh.m_IBuffer = rdr::Buffer(rdr::EBufferFlags::Index, 4 * (uint32)indices.size());
-		out_mesh.m_VBuffer.UploadData(copyPass, vertices.data(), vertSize);
-		out_mesh.m_IBuffer.UploadData(copyPass, indices.data(), indSize);
-		return true;
-	}
 
 	struct TestSystem
 	{
 		Camera m_Camera;
 		apollo::Window& m_Window;
 		apollo::rdr::Context& m_RenderContext;
-		apollo::AssetRef<Scene> m_Scene;
-		apollo::AssetRef<rdr::MaterialInstance> m_Material;
 		Viewport m_TargetViewport;
 		rdr::RenderPass m_RenderPass;
-		bool m_AssetsReady = false;
 
 		float m_AntiAliasing = 1.0f;
 		float m_MouseSpeed = 3.0f;
@@ -174,27 +116,6 @@ namespace apollo::demo {
 		bool m_CameraLocked = true;
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
-
-		void ProcessSceneLoadFinished(
-			entt::registry& world,
-			entt::entity sceneEntity,
-			SDL_GPUCopyPass* copyPass)
-		{
-			const auto* sceneComp = world.try_get<const SceneComponent>(sceneEntity);
-			DEBUG_CHECK(sceneComp)
-			{
-				APOLLO_LOG_ERROR("Missing SceneComponent");
-				return;
-			}
-			m_Scene = sceneComp->m_Scene;
-			const GameObject* object = m_Scene->GetGameObject("01K8EC89XVHA1N3ZRZTFGNMYT5"_ulid);
-			auto& mesh = world.get<MeshComponent>(object->m_Entity);
-			m_Material = mesh.m_Material;
-			if (!m_Material || !m_Material->IsLoaded())
-				return;
-
-			m_AssetsReady = LoadMesh(copyPass, "assets/Cube.obj", mesh);
-		}
 
 		void ProcessInputs(entt::registry& world, const GameTime& time)
 		{
@@ -289,7 +210,7 @@ namespace apollo::demo {
 
 		~TestSystem() {}
 
-		void DisplayUi(rdr::MaterialInstance* mat)
+		void DisplayUi()
 		{
 			m_TargetViewport.Update();
 
@@ -299,20 +220,20 @@ namespace apollo::demo {
 			ImGui::Text("Press F1 to unlock/relock camera");
 			ImGui::End();
 
-			if (!mat)
-				return;
+			// if (!mat)
+			// 	return;
 
-			char title[37] = {};
-			mat->GetId().ToChars(title);
+			// char title[37] = {};
+			// mat->GetId().ToChars(title);
 
-			if (!mat->IsLoaded())
-				return;
+			// if (!mat->IsLoaded())
+			// 	return;
 
-			ImGui::Begin(title);
+			// ImGui::Begin(title);
 
-			ImGui::SeparatorText("Fragment Shader Constants");
-			ShaderParamBlockWidget(*mat);
-			ImGui::End();
+			// ImGui::SeparatorText("Fragment Shader Constants");
+			// ShaderParamBlockWidget(*mat);
+			// ImGui::End();
 		}
 
 		void EmitGPUCommands(const entt::registry& world)
@@ -321,28 +242,38 @@ namespace apollo::demo {
 			m_RenderContext.BeginRenderPass(m_RenderPass);
 			m_RenderContext.SetViewport(m_TargetViewport.m_Rectangle);
 
-			m_RenderContext.BindMaterialInstance(*m_Material);
-
 			const auto view = world.view<const MeshComponent, const TransformComponent>();
 			for (const auto entt : view)
 			{
 				const auto& mesh = view.get<const MeshComponent>(entt);
+				if (!mesh.m_Mesh || !mesh.m_Material || !mesh.m_Mesh->IsLoaded() ||
+					!mesh.m_Material->IsLoaded())
+					continue;
+
+				m_RenderContext.BindMaterialInstance(*mesh.m_Material);
 				const auto& transform = view.get<const TransformComponent>(entt);
 				const auto modelMat = ComputeTransformMatrix(
 					transform.m_Position,
 					transform.m_Scale,
 					transform.m_Rotation);
 				m_RenderContext.PushVertexShaderConstants(modelMat, 1);
-				m_RenderContext.BindVertexBuffer(mesh.m_VBuffer);
+				m_RenderContext.BindVertexBuffer(mesh.m_Mesh->GetVertexBuffer());
 
-				if (mesh.m_IBuffer)
+				const rdr::Buffer& iBuffer = mesh.m_Mesh->GetIndexBuffer();
+
+				if (iBuffer)
 				{
-					m_RenderContext.BindIndexBuffer(mesh.m_IBuffer);
+					m_RenderContext.BindIndexBuffer(iBuffer);
+					m_RenderContext.DrawIndexedPrimitives(
+						rdr::IndexedDrawCall{
+							.m_NumIndices = mesh.m_Mesh->GetNumIndices(),
+						});
 				}
-				m_RenderContext.DrawIndexedPrimitives(
-					rdr::IndexedDrawCall{
-						.m_NumIndices = mesh.m_NumIndices,
-					});
+				else
+				{
+					m_RenderContext.DrawPrimitives(
+						rdr::DrawCall{ .m_NumVertices = mesh.m_Mesh->GetNumVertices() });
+				}
 			}
 		}
 
@@ -352,28 +283,13 @@ namespace apollo::demo {
 				return;
 
 			auto* swapchainTexture = m_RenderContext.GetSwapchainTexture();
-			auto* mainCommandBuffer = m_RenderContext.GetMainCommandBuffer();
-
-			if (!m_AssetsReady)
-			{
-				const auto view = world.view<const SceneLoadFinishedEventComponent>();
-				if (!view.empty())
-				{
-					SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(mainCommandBuffer);
-					ProcessSceneLoadFinished(world, *view->begin(), copyPass);
-					SDL_EndGPUCopyPass(copyPass);
-				}
-			}
 
 			if (!swapchainTexture)
 				return;
 
 			ProcessInputs(world, time);
-			DisplayUi(m_Material.Get());
+			DisplayUi();
 			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
-
-			if (!m_AssetsReady)
-				return;
 
 			EmitGPUCommands(world);
 		}

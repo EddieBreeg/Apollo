@@ -5,6 +5,7 @@
 #include "Scene.hpp"
 #include <core/Json.hpp>
 #include <rendering/Material.hpp>
+#include <rendering/Mesh.hpp>
 #include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
 #include <rendering/text/FontAtlas.hpp>
@@ -74,6 +75,7 @@ namespace apollo {
 			{&ConstructAsset<rdr::FragmentShader>, settings.m_LoadFragmentShader},
 			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
 			{&ConstructAsset<rdr::MaterialInstance>, settings.m_LoadMaterialInstance},
+			{&ConstructAsset<rdr::Mesh>, settings.m_LoadMesh},
 			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},
 			{&ConstructAsset<Scene>, settings.m_LoadScene},
 		 }

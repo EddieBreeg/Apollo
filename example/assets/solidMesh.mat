@@ -3,17 +3,24 @@
 	"fragmentShader": "01K8FV7B760ERMPXD0CZ1J5X8J",
 	"input": "vertex3d",
 	"depthStencil": {
-		"enableDepthTest": false,
-		"enableDepthWrite": false,
+		"enableDepthTest": true,
+		"enableDepthWrite": true,
 		"compareOp": "less",
 		"format": "d32float"
 	},
 	"rasterizer": {
-		"cullMode": "back"
 	},
 	"colorTargets": [
 		{
-			"format": "rgba8unorm_srgb"
+			"format": "rgba8unorm_srgb",
+			"blending": {
+				"srcColorBlendFactor": "srcAlpha",
+				"dstColorBlendFactor": "oneMinusSrcAlpha",
+				"colorBlendOp": "add",
+				"srcAlphaBlendFactor": "srcAlpha",
+				"dstAlphaBlendFactor": "oneMinusSrcAlpha",
+				"alphaBlendOp": "add"
+			}
 		}
 	]
 }

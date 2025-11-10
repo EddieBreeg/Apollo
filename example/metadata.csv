@@ -7,4 +7,5 @@
 01K8FV8FHRT60EZ0JACS752KN9,material,solidMesh,"assets/solidMesh.mat"
 01K8TYP16WV0Q775BPYV9AJD3C,materialInstance,cubeMat,"assets/cube.matinstance"
 01K77QW60RWKYCZFHVP704FV6B,fontAtlas,arial,"assets/arial.atlas"
+01K9Q8NY9E7XW9SA56KJV05A5X,mesh,cube,assets/Cube.obj
 01K7VZZSR16FXR2NF8DNYSJQQ4,scene,main,main.scn

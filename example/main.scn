@@ -23,7 +23,8 @@
 					}
 				},
 				"mesh": {
-					"material": "01K8TYP16WV0Q775BPYV9AJD3C"
+					"material": "01K8TYP16WV0Q775BPYV9AJD3C",
+					"mesh": "01K9Q8NY9E7XW9SA56KJV05A5X"
 				}
 			}
 		}
