@@ -63,6 +63,7 @@ namespace apollo::rdr {
 		{
 			return m_FragShader.Get();
 		}
+		[[nodiscard]] bool WritesToDepthBuffer() const noexcept { return m_HasDepthWrite; }
 
 	private:
 		friend EAssetLoadResult editor::LoadMaterial(
@@ -71,6 +72,7 @@ namespace apollo::rdr {
 
 		AssetRef<VertexShader> m_VertShader;
 		AssetRef<FragmentShader> m_FragShader;
+		bool m_HasDepthWrite = false;
 	};
 
 	class MaterialInstance : public IAsset

@@ -16,6 +16,26 @@ namespace apollo::demo {
 			100.f);
 	}
 
+	template <class UInt, uint8 P>
+	[[nodiscard]] UInt ToFixedPoint(float x)
+	{
+		const UInt pow2 = UInt(1) << P;
+		constexpr UInt mask = pow2 - 1;
+		const float rounding = x < 0 ? -0.5f : 0.5f;
+
+		return static_cast<UInt>((x * pow2 + rounding)) & mask;
+	}
+
+	uint64 CreateSortKey(const rdr::Material& mat, float3 pos, float3 camPos, float3 viewVector)
+	{
+		const float distance = glm::dot(pos - camPos, viewVector) / 100.f;
+		if (mat.WritesToDepthBuffer())
+		{
+			return ToFixedPoint<uint64, 24>(distance);
+		}
+		return (1ull << 32) | ToFixedPoint<uint64, 24>(-distance);
+	}
+
 	struct TestSystem
 	{
 		Camera m_Camera;
@@ -32,7 +52,11 @@ namespace apollo::demo {
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
 
-		void ProcessInputs(entt::registry& world, const GameTime& time)
+		void ProcessInputs(
+			entt::registry& world,
+			const GameTime& time,
+			const float3 fwd,
+			const float3 right)
 		{
 			using namespace apollo::inputs;
 
@@ -74,11 +98,11 @@ namespace apollo::demo {
 
 				if (lateralMovement)
 				{
-					m_Camera.m_Translate += m_Camera.GetRight() * moveSpeed * lateralMovement;
+					m_Camera.m_Translate += right * moveSpeed * lateralMovement;
 				}
 				if (fwdMovement)
 				{
-					m_Camera.m_Translate += m_Camera.GetForward() * moveSpeed * fwdMovement;
+					m_Camera.m_Translate += fwd * moveSpeed * fwdMovement;
 				}
 				if (vMovement)
 				{
@@ -130,23 +154,29 @@ namespace apollo::demo {
 			m_TargetViewport.Update();
 			m_Inspector.Update(world);
 
-			ImGui::Begin("Settings");
+			ImGui::Begin("Settings & Info");
 			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
 			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
 			ImGui::Text("Press F1 to unlock/relock camera");
 
 			ImGui::Checkbox("Show Inspector", &m_Inspector.m_ShowInspector);
 			ImGui::Checkbox("Show Depth/Stencil Content", &m_TargetViewport.m_ShowDepth);
+
+			ImGui::Text("Framerate: %f", ImGui::GetIO().Framerate);
 			ImGui::End();
 		}
 
-		void EmitGPUCommands(const entt::registry& world)
+		void EmitGPUCommands(const entt::registry& world, float3 viewVector)
 		{
 			m_RenderContext.PushVertexShaderConstants(m_CamMatrix);
 			m_RenderContext.BeginRenderPass(m_RenderPass);
 			m_RenderContext.SetViewport(m_TargetViewport.m_Rectangle);
-
 			const auto view = world.view<const MeshComponent, const TransformComponent>();
+
+			using ValT = std::pair<const MeshComponent*, const TransformComponent*>;
+			std::vector<ValT> meshes;
+			meshes.reserve(view.size_hint());
+
 			for (const auto entt : view)
 			{
 				const auto& mesh = view.get<const MeshComponent>(entt);
@@ -154,29 +184,50 @@ namespace apollo::demo {
 					!mesh.m_Material->IsLoaded())
 					continue;
 
-				m_RenderContext.BindMaterialInstance(*mesh.m_Material);
 				const auto& transform = view.get<const TransformComponent>(entt);
+				meshes.emplace_back(&mesh, &transform);
+			}
+			std::sort(
+				meshes.begin(),
+				meshes.end(),
+				[viewVector, camPos = m_Camera.m_Translate](const ValT& lhs, const ValT& rhs)
+				{
+					const uint64 k1 = CreateSortKey(
+						*lhs.first->m_Material->GetMaterial(),
+						lhs.second->m_Position,
+						camPos,
+						viewVector);
+					const uint64 k2 = CreateSortKey(
+						*rhs.first->m_Material->GetMaterial(),
+						rhs.second->m_Position,
+						camPos,
+						viewVector);
+					return k1 < k2;
+				});
+			for (const auto [mesh, transform] : meshes)
+			{
+				m_RenderContext.BindMaterialInstance(*mesh->m_Material);
 				const auto modelMat = ComputeTransformMatrix(
-					transform.m_Position,
-					transform.m_Scale,
-					transform.m_Rotation);
+					transform->m_Position,
+					transform->m_Scale,
+					transform->m_Rotation);
 				m_RenderContext.PushVertexShaderConstants(modelMat, 1);
-				m_RenderContext.BindVertexBuffer(mesh.m_Mesh->GetVertexBuffer());
+				m_RenderContext.BindVertexBuffer(mesh->m_Mesh->GetVertexBuffer());
 
-				const rdr::Buffer& iBuffer = mesh.m_Mesh->GetIndexBuffer();
+				const rdr::Buffer& iBuffer = mesh->m_Mesh->GetIndexBuffer();
 
 				if (iBuffer)
 				{
 					m_RenderContext.BindIndexBuffer(iBuffer);
 					m_RenderContext.DrawIndexedPrimitives(
 						rdr::IndexedDrawCall{
-							.m_NumIndices = mesh.m_Mesh->GetNumIndices(),
+							.m_NumIndices = mesh->m_Mesh->GetNumIndices(),
 						});
 				}
 				else
 				{
 					m_RenderContext.DrawPrimitives(
-						rdr::DrawCall{ .m_NumVertices = mesh.m_Mesh->GetNumVertices() });
+						rdr::DrawCall{ .m_NumVertices = mesh->m_Mesh->GetNumVertices() });
 				}
 			}
 		}
@@ -197,11 +248,14 @@ namespace apollo::demo {
 			if (!swapchainTexture)
 				return;
 
-			ProcessInputs(world, time);
+			const float3 fwdVec = m_Camera.GetForward();
+			const float3 rightVec = m_Camera.GetRight();
+
+			ProcessInputs(world, time, fwdVec, rightVec);
 			DisplayUi(world);
 			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
 
-			EmitGPUCommands(world);
+			EmitGPUCommands(world, fwdVec);
 		}
 	};
 

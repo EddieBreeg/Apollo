@@ -1,12 +1,12 @@
 {
-	"material": "01K8FV8FHRT60EZ0JACS752KN9",
+	"material": "01K9SEAQPYCF9Y7ES3XZCJTWJ3",
 	"parameters": [
 		{
 			"Color": {
 				"x": 1,
 				"y": 0.5,
 				"z": 0.5,
-				"w": 1
+				"w": 0.5
 			}
 		}
 	],

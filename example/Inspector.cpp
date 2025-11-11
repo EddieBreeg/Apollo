@@ -110,6 +110,10 @@ namespace {
 		if (!ImGui::TreeNode("Shader Parameters"))
 			return;
 
+		{
+			bool temp = material.GetMaterial()->WritesToDepthBuffer();
+			ImGui::Checkbox("Depth Write Enabled", &temp);
+		}
 		const auto* fragShader = material.GetMaterial()->GetFragmentShader();
 		const std::span blocks = fragShader->GetParameterBlocks();
 		for (uint32 i = 0; i < blocks.size(); ++i)

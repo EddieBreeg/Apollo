@@ -2,9 +2,11 @@
 01K6G8959Y1A6BM730HAQSS9PC,fragmentShader,textFrag,assets/text.frag.hlsl
 01K8FV6RFXGPN1H9K95KDNRHZZ,vertexShader,solidMeshVert,assets/solidMesh.vert.hlsl
 01K8FV7B760ERMPXD0CZ1J5X8J,fragmentShader,solidMeshFrag,assets/solidMesh.frag.hlsl
+01K9SEFNYM5HH5ZKDMCENW5GH5,fragmentShader,translucentMeshFrag,assets/translucentMesh.frag.hlsl
 01K6841M7W2D1J00QKJHHBDJG5,material,text,"assets/text.mat"
 01K91Y90AQYS03FNRNYWHKCYXY,texture2d,cubeColor,"assets/cube_color.png"
 01K8FV8FHRT60EZ0JACS752KN9,material,solidMesh,"assets/solidMesh.mat"
+01K9SEAQPYCF9Y7ES3XZCJTWJ3,material,translucentMesh,"assets/translucentMesh.mat"
 01K8TYP16WV0Q775BPYV9AJD3C,materialInstance,cubeMat,"assets/cube.matinstance"
 01K9QFDV6JM6SNRZE5SKKCN10Q,materialInstance,cube2Mat,"assets/cube2.matinstance"
 01K77QW60RWKYCZFHVP704FV6B,fontAtlas,arial,"assets/arial.atlas"

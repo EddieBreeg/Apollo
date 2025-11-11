@@ -1,0 +1,27 @@
+{
+	"vertexShader": "01K8FV6RFXGPN1H9K95KDNRHZZ",
+	"fragmentShader": "01K9SEFNYM5HH5ZKDMCENW5GH5",
+	"input": "vertex3d",
+	"depthStencil": {
+		"enableDepthTest": true,
+		"enableDepthWrite": false,
+		"compareOp": "less",
+		"format": "d32float"
+	},
+	"rasterizer": {
+		"cullMode": "back"
+	},
+	"colorTargets": [
+		{
+			"format": "rgba8unorm_srgb",
+			"blending": {
+				"srcColorBlendFactor": "srcAlpha",
+				"dstColorBlendFactor": "oneMinusSrcAlpha",
+				"colorBlendOp": "add",
+				"srcAlphaBlendFactor": "srcAlpha",
+				"dstAlphaBlendFactor": "oneMinusSrcAlpha",
+				"alphaBlendOp": "add"
+			}
+		}
+	]
+}
