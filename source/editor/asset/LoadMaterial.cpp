@@ -210,7 +210,7 @@ namespace apollo::editor {
 			mat.m_VertShader.Get(),
 			mat.m_FragShader.Get());
 
-		mat.m_HasDepthWrite = desc.depth_stencil_state.enable_depth_write;
+		mat.m_MaterialKey |= desc.depth_stencil_state.enable_depth_write << 15;
 
 		switch (result)
 		{
@@ -432,8 +432,10 @@ namespace apollo::editor {
 			}
 #undef CONSTANT_TYPE_CASE
 
-			void LoadParams(rdr::Material& material)
+			void DoLoad(rdr::Material& material)
 			{
+				m_Instance.m_Key = material.GenerateInstanceKey();
+
 				if (m_ParamsDesc.is_null())
 					return;
 
@@ -462,7 +464,7 @@ namespace apollo::editor {
 					return;
 				}
 
-				LoadParams(static_cast<rdr::Material&>(material));
+				DoLoad(static_cast<rdr::Material&>(material));
 			}
 		};
 		MaterialCallback callback{ instance };

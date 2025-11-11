@@ -26,14 +26,19 @@ namespace apollo::demo {
 		return static_cast<UInt>((x * pow2 + rounding)) & mask;
 	}
 
-	uint64 CreateSortKey(const rdr::Material& mat, float3 pos, float3 camPos, float3 viewVector)
+	uint64 CreateSortKey(
+		const rdr::MaterialInstance& mat,
+		float3 pos,
+		float3 camPos,
+		float3 viewVector)
 	{
+		const rdr::MaterialInstanceKey matKey = mat.GetKey();
 		const float distance = glm::dot(pos - camPos, viewVector) / 100.f;
-		if (mat.WritesToDepthBuffer())
+		if (matKey.WritesToDepthBuffer())
 		{
-			return ToFixedPoint<uint64, 24>(distance);
+			return ((uint64)matKey << 24) | ToFixedPoint<uint64, 24>(distance);
 		}
-		return (1ull << 32) | ToFixedPoint<uint64, 24>(-distance);
+		return BIT(54) | (ToFixedPoint<uint64, 24>(-distance) << 30) | (uint64)matKey;
 	}
 
 	struct TestSystem
@@ -193,12 +198,12 @@ namespace apollo::demo {
 				[viewVector, camPos = m_Camera.m_Translate](const ValT& lhs, const ValT& rhs)
 				{
 					const uint64 k1 = CreateSortKey(
-						*lhs.first->m_Material->GetMaterial(),
+						*lhs.first->m_Material,
 						lhs.second->m_Position,
 						camPos,
 						viewVector);
 					const uint64 k2 = CreateSortKey(
-						*rhs.first->m_Material->GetMaterial(),
+						*rhs.first->m_Material,
 						rhs.second->m_Position,
 						camPos,
 						viewVector);

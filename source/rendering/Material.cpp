@@ -2,7 +2,21 @@
 #include "Context.hpp"
 #include <SDL3/SDL_gpu.h>
 
+namespace {
+	std::atomic_uint16_t g_MaterialIndex = 0;
+
+	uint16 GenerateMaterialKey()
+	{
+		return g_MaterialIndex++ & 0x7FFF;
+	}
+} // namespace
+
 namespace apollo::rdr {
+	Material::Material(const ULID& id)
+		: IAsset(id)
+		, m_MaterialKey(GenerateMaterialKey())
+	{}
+
 	Material::~Material()
 	{
 		if (m_Handle)

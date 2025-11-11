@@ -26,26 +26,45 @@ namespace apollo::editor {
 } // namespace apollo::editor
 
 namespace apollo::rdr {
+	struct MaterialInstanceKey
+	{
+		MaterialInstanceKey() = default;
+		MaterialInstanceKey(uint32 val) noexcept
+			: m_Value(val)
+		{}
+
+		MaterialInstanceKey(const MaterialInstanceKey&) noexcept = default;
+		MaterialInstanceKey& operator=(const MaterialInstanceKey&) noexcept = default;
+
+		template <std::unsigned_integral UInt>
+		[[nodiscard]] operator UInt() const noexcept
+		{
+			return m_Value & ~s_DepthWriteBit;
+		}
+
+		[[nodiscard]] bool WritesToDepthBuffer() const noexcept
+		{
+			return m_Value & s_DepthWriteBit;
+		}
+
+		[[nodiscard]] uint16 GetMaterialIndex() const noexcept
+		{
+			return (m_Value >> 15) & s_IndexMask;
+		}
+		[[nodiscard]] uint16 GetInstanceIndex() const noexcept { return m_Value & s_IndexMask; }
+
+	private:
+		static constexpr uint32 s_DepthWriteBit = BIT(30);
+		static constexpr uint16 s_IndexMask = 0x7FFF;
+
+		uint32 m_Value = UINT32_MAX;
+	};
+
 	class Material : public IAsset, public _internal::HandleWrapper<void*>
 	{
 	public:
-		using IAsset::IAsset;
-		Material() = default;
-		Material(Material&& other)
-			: IAsset(other.m_Id)
-			, BaseType(std::move(other))
-			, m_VertShader(std::move(other.m_VertShader))
-			, m_FragShader(std::move(other.m_FragShader))
-		{}
+		APOLLO_API Material(const ULID& id = ULID::Generate());
 		APOLLO_API ~Material();
-
-		void Swap(Material& other) noexcept
-		{
-			BaseType::Swap(other);
-			m_VertShader.Swap(other.m_VertShader);
-			m_FragShader.Swap(other.m_FragShader);
-			std::swap(m_Id, other.m_Id);
-		}
 
 		Material& operator=(Material&& other) noexcept
 		{
@@ -63,7 +82,12 @@ namespace apollo::rdr {
 		{
 			return m_FragShader.Get();
 		}
-		[[nodiscard]] bool WritesToDepthBuffer() const noexcept { return m_HasDepthWrite; }
+
+		[[nodiscard]] MaterialInstanceKey GenerateInstanceKey() noexcept
+		{
+			return static_cast<MaterialInstanceKey>(
+				(static_cast<uint32>(m_MaterialKey) << 15) | (m_InstanceKey++ & 0x7FFF));
+		}
 
 	private:
 		friend EAssetLoadResult editor::LoadMaterial(
@@ -72,7 +96,8 @@ namespace apollo::rdr {
 
 		AssetRef<VertexShader> m_VertShader;
 		AssetRef<FragmentShader> m_FragShader;
-		bool m_HasDepthWrite = false;
+		uint16 m_MaterialKey;
+		std::atomic_uint16_t m_InstanceKey = 0;
 	};
 
 	class MaterialInstance : public IAsset
@@ -115,6 +140,8 @@ namespace apollo::rdr {
 
 		APOLLO_API void Bind(SDL_GPURenderPass* renderPass) const;
 
+		[[nodiscard]] MaterialInstanceKey GetKey() const noexcept { return m_Key; }
+
 	private:
 		friend EAssetLoadResult editor::LoadMaterialInstance(
 			IAsset& out_asset,
@@ -133,5 +160,7 @@ namespace apollo::rdr {
 			AssetRef<Texture2D> m_Textures[16] = {};
 			SDL_GPUSampler* m_Samplers[16] = { nullptr };
 		} m_VertexTextures, m_FragmentTextures;
+
+		MaterialInstanceKey m_Key;
 	};
 } // namespace apollo::rdr

@@ -107,13 +107,18 @@ namespace {
 		if (!material.IsLoaded())
 			return;
 
-		if (!ImGui::TreeNode("Shader Parameters"))
+		if (!ImGui::TreeNode("Material Info"))
 			return;
 
+		const auto key = material.GetKey();
 		{
-			bool temp = material.GetMaterial()->WritesToDepthBuffer();
+			bool temp = key.WritesToDepthBuffer();
 			ImGui::Checkbox("Depth Write Enabled", &temp);
 		}
+		ImGui::Text(
+			"Material Index: %u\nInstance Index: %u",
+			key.GetMaterialIndex(),
+			key.GetInstanceIndex());
 		const auto* fragShader = material.GetMaterial()->GetFragmentShader();
 		const std::span blocks = fragShader->GetParameterBlocks();
 		for (uint32 i = 0; i < blocks.size(); ++i)
