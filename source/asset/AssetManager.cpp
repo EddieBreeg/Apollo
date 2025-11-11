@@ -117,7 +117,8 @@ namespace apollo {
 			const auto it = m_Cache.find(id);
 			if (it != m_Cache.end())
 			{
-				const EAssetType actualType = it->second->GetType();
+				IAsset* const asset = it->second;
+				const EAssetType actualType = asset->GetType();
 				DEBUG_CHECK(actualType == type)
 				{
 					APOLLO_LOG_ERROR(
@@ -129,9 +130,22 @@ namespace apollo {
 				}
 
 				if (cbk)
-					cbk(*it->second);
+				{
+					if (asset->IsLoading())
+					{
+						m_Loader.AddRequest(
+							AssetLoadRequest{
+								.m_Asset = AssetRef{ asset },
+								.m_Callback = std::move(cbk),
+							});
+					}
+					else
+					{
+						cbk(*asset);
+					}
+				}
 
-				return it->second;
+				return asset;
 			}
 		}
 

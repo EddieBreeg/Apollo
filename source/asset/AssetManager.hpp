@@ -85,6 +85,11 @@ namespace apollo {
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 
+		/*
+		 * Retrieves an asset, with an optional callback to be invoked once the asset is loaded.
+		 * If the asset is already loaded, the callback will be invoked immediately, otherwise
+		 * there is no strong guarantee as to when this will happen.
+		 */
 		template <class A, class F>
 		AssetRef<A> GetAsset(const ULID& id, F&& callback) requires(
 			(std::is_base_of_v<IAsset, A>) && (A::AssetType > EAssetType::Invalid) &&

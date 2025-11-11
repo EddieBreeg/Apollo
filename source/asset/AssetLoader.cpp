@@ -14,12 +14,68 @@ namespace {
 namespace apollo {
 	EAssetLoadResult AssetLoadRequest::operator()()
 	{
-		DEBUG_CHECK(m_Asset && m_Import && m_Metadata)
+		APOLLO_ASSERT(m_Asset, "Null assert in load request");
+		APOLLO_ASSERT(m_Asset->GetState(), "Assset is in invalid state");
+
+		if (!m_Import && m_Callback)
 		{
+			// Here we're not actually trying to load the asset:
+			// we just want to invoke the callback
+			if (m_Asset->IsLoading())
+			{
+				return EAssetLoadResult::TryAgain;
+			}
+			m_Callback(*m_Asset);
+			return EAssetLoadResult::Success;
+		}
+
+		APOLLO_ASSERT(m_Metadata && m_Import, "Invalid asset load request");
+
+		if (!m_Asset->IsLoading()) [[unlikely]]
+		{
+			APOLLO_LOG_TRACE(
+				"Load Request for asset {}({}) was aborted",
+				m_Metadata->m_Name,
+				m_Metadata->m_Id);
+			if (m_Callback)
+				m_Callback(*m_Asset);
+
+			return EAssetLoadResult::Aborted;
+		}
+
+#ifdef APOLLO_DEV
+		if (!m_Asset->IsLoadingDeferred())
+		{
+			APOLLO_LOG_TRACE("Loading asset {}({})", m_Metadata->m_Name, m_Metadata->m_Id);
+		}
+#endif
+
+		const EAssetLoadResult result = m_Import(*m_Asset, *m_Metadata);
+		switch (result)
+		{
+		case EAssetLoadResult::Success:
+			m_Asset->SetState(EAssetState::Loaded);
+			APOLLO_LOG_TRACE(
+				"Asset {}({}) loaded successfully!",
+				m_Metadata->m_Name,
+				m_Metadata->m_Id);
+			break;
+		case EAssetLoadResult::Failure:
+			m_Asset->SetState(EAssetState::LoadingFailed);
+			APOLLO_LOG_ERROR("Asset {}({}) failed to load", m_Metadata->m_Name, m_Metadata->m_Id);
+			break;
+		case EAssetLoadResult::TryAgain:
+			m_Asset->SetState(EAssetState::Loading | EAssetState::LoadingDeferred);
+			return result;
+		default:
+			APOLLO_LOG_CRITICAL("Invalid Asset Load Result {}", int32(result));
 			return EAssetLoadResult::Failure;
 		}
 
-		return m_Import(*m_Asset, *m_Metadata);
+		if (m_Callback)
+			m_Callback(*m_Asset);
+
+		return result;
 	}
 
 	void AssetLoader::AddRequest(AssetLoadRequest req)
@@ -71,43 +127,11 @@ namespace apollo {
 			AssetLoadRequest request = m_Requests.PopAndGetFront();
 			lock.unlock();
 
-			if (!request.m_Asset || !request.m_Asset->IsLoading()) [[unlikely]]
-				continue;
-
-#ifdef APOLLO_DEV
-			if (!request.m_Asset->IsLoadingDeferred())
-			{
-				APOLLO_LOG_TRACE(
-					"Loading asset {}({})",
-					request.m_Metadata->m_Name,
-					request.m_Metadata->m_Id);
-			}
-#endif
 			const EAssetLoadResult result = request();
-
-			switch (result)
+			if (result == EAssetLoadResult::TryAgain)
 			{
-			case apollo::EAssetLoadResult::Success:
-				request.m_Asset->SetState(EAssetState::Loaded);
-				APOLLO_LOG_TRACE(
-					"Asset {}({}) loaded successfully!",
-					request.m_Metadata->m_Name,
-					request.m_Metadata->m_Id);
-				break;
-			case apollo::EAssetLoadResult::TryAgain:
-				request.m_Asset->SetState(EAssetState::Loading | EAssetState::LoadingDeferred);
 				m_Requests.AddEmplace(std::move(request));
-				break;
-			default:
-				request.m_Asset->SetState(EAssetState::Invalid);
-				APOLLO_LOG_ERROR(
-					"Asset {}({}) failed to load",
-					request.m_Metadata->m_Name,
-					request.m_Metadata->m_Id);
-				break;
 			}
-			if (request.m_Callback)
-				request.m_Callback(*request.m_Asset);
 		}
 
 		if (g_CopyPass) [[likely]]

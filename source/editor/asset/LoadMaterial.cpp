@@ -351,12 +351,12 @@ namespace apollo::editor {
 
 		struct MaterialCallback
 		{
-			rdr::MaterialInstance& instance;
+			rdr::MaterialInstance& m_Instance;
 			nlohmann::json m_ParamsDesc;
 
 			void LoadConstantBlock(uint32 index, const rdr::ShaderConstantBlock& block)
 			{
-				instance.m_ConstantBlocks.m_BlockSizes[index] = block.m_Size;
+				m_Instance.m_ConstantBlocks.m_BlockSizes[index] = block.m_Size;
 				constexpr uint32 maxBlockSize = sizeof(rdr::ShaderConstantStorage);
 				if (block.m_Size > maxBlockSize) [[unlikely]]
 				{
@@ -366,7 +366,7 @@ namespace apollo::editor {
 						index,
 						block.m_Size,
 						maxBlockSize);
-					instance.m_ConstantBlocks.m_BlockSizes[index] = maxBlockSize;
+					m_Instance.m_ConstantBlocks.m_BlockSizes[index] = maxBlockSize;
 				}
 
 				if (index >= m_ParamsDesc.size())
@@ -390,7 +390,7 @@ namespace apollo::editor {
 
 #define VISIT_CONSTANT(type)                                                                       \
 	json::Visit(                                                                                   \
-		instance.GetFragmentConstant<type>(blockIndex, constant.m_Offset),                         \
+		m_Instance.GetFragmentConstant<type>(blockIndex, constant.m_Offset),                       \
 		blockJson,                                                                                 \
 		constant.m_Name,                                                                           \
 		true);                                                                                     \
@@ -448,7 +448,7 @@ namespace apollo::editor {
 				}
 
 				const std::span fragConstantBlocks =
-					instance.m_Material->GetFragmentShader()->GetParameterBlocks();
+					m_Instance.m_Material->GetFragmentShader()->GetParameterBlocks();
 
 				for (uint32 i = 0; i < fragConstantBlocks.size(); ++i)
 				{
@@ -456,10 +456,13 @@ namespace apollo::editor {
 				}
 			}
 
-			void operator()(const IAsset&)
+			void operator()(const IAsset& material)
 			{
-				if (!instance.m_Material->IsLoaded())
+				if (!material.IsLoaded())
+				{
+					m_Instance.m_State = EAssetState::LoadingFailed;
 					return;
+				}
 
 				LoadParams();
 			}

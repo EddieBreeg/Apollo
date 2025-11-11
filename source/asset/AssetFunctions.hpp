@@ -20,6 +20,7 @@ namespace apollo {
 		Failure = 0,
 		Success = 1,
 		TryAgain = 2, // Indicates the load request should be attempted again later
+		Aborted = 3, // Loading was aborted for whatever reason
 	};
 
 	using AssetImportFunc = EAssetLoadResult(IAsset& out_asset, const AssetMetadata& metadata);

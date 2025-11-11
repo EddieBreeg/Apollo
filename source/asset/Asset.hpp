@@ -34,6 +34,7 @@ namespace apollo {
 		Loaded = BIT(2),
 		Unloading = BIT(3),
 		Unloaded = BIT(4),
+		LoadingFailed = BIT(5),
 	};
 
 	[[nodiscard]] APOLLO_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
@@ -74,8 +75,8 @@ namespace apollo {
 	private:
 		void SetState(EAssetState state) noexcept { m_State = state; }
 
-		friend class AssetLoader;
 		friend class AssetManager;
+		friend struct AssetLoadRequest;
 		friend struct AssetRetainTraits;
 	};
 
