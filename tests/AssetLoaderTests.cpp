@@ -73,7 +73,7 @@ namespace apollo::asset_ut {
 				ref,
 				&LoadDummy,
 				&g_DummyMeta,
-				UniqueFunction<void(const IAsset&)>{
+				UniqueFunction<void(IAsset&)>{
 					[&](const IAsset& asset)
 					{
 						state = asset.GetState();

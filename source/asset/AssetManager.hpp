@@ -66,13 +66,10 @@ namespace apollo {
 
 		template <class F>
 		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type, F&& callback)
-			requires(std::invocable<F, const IAsset&>)
+			requires(std::invocable<F, IAsset&>)
 		{
 			return AssetRef<IAsset>{
-				GetAssetImpl(
-					id,
-					type,
-					UniqueFunction<void(const IAsset&)>{ std::forward<F>(callback) }),
+				GetAssetImpl(id, type, UniqueFunction<void(IAsset&)>{ std::forward<F>(callback) }),
 			};
 		}
 
@@ -93,12 +90,12 @@ namespace apollo {
 		template <class A, class F>
 		AssetRef<A> GetAsset(const ULID& id, F&& callback) requires(
 			(std::is_base_of_v<IAsset, A>) && (A::AssetType > EAssetType::Invalid) &&
-			(A::AssetType < EAssetType::NTypes) && std::is_invocable_v<F, const IAsset&>)
+			(A::AssetType < EAssetType::NTypes) && std::is_invocable_v<F, IAsset&>)
 		{
 			IAsset* const ptr = GetAssetImpl(
 				id,
 				A::AssetType,
-				UniqueFunction<void(const IAsset&)>{ std::forward<F>(callback) });
+				UniqueFunction<void(IAsset&)>{ std::forward<F>(callback) });
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 
@@ -118,7 +115,7 @@ namespace apollo {
 		APOLLO_API IAsset* GetAssetImpl(
 			const ULID& id,
 			EAssetType type,
-			UniqueFunction<void(const IAsset&)> cbk = {});
+			UniqueFunction<void(IAsset&)> cbk = {});
 		APOLLO_API void RequestUnload(IAsset* res);
 
 		ULIDMap<AssetMetadata> m_MetadataBank;

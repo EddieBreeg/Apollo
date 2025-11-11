@@ -106,7 +106,7 @@ namespace apollo {
 	IAsset* AssetManager::GetAssetImpl(
 		const ULID& id,
 		EAssetType type,
-		UniqueFunction<void(const IAsset&)> cbk)
+		UniqueFunction<void(IAsset&)> cbk)
 	{
 		APOLLO_ASSERT(
 			type < EAssetType::NTypes && type > EAssetType::Invalid,

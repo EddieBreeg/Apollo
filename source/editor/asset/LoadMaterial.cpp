@@ -432,7 +432,7 @@ namespace apollo::editor {
 			}
 #undef CONSTANT_TYPE_CASE
 
-			void LoadParams()
+			void LoadParams(rdr::Material& material)
 			{
 				if (m_ParamsDesc.is_null())
 					return;
@@ -445,8 +445,8 @@ namespace apollo::editor {
 					return;
 				}
 
-				const std::span fragConstantBlocks =
-					m_Instance.m_Material->GetFragmentShader()->GetParameterBlocks();
+				const std::span
+					fragConstantBlocks = material.GetFragmentShader()->GetParameterBlocks();
 
 				for (uint32 i = 0; i < fragConstantBlocks.size(); ++i)
 				{
@@ -454,7 +454,7 @@ namespace apollo::editor {
 				}
 			}
 
-			void operator()(const IAsset& material)
+			void operator()(IAsset& material)
 			{
 				if (!material.IsLoaded())
 				{
@@ -462,7 +462,7 @@ namespace apollo::editor {
 					return;
 				}
 
-				LoadParams();
+				LoadParams(static_cast<rdr::Material&>(material));
 			}
 		};
 		MaterialCallback callback{ instance };

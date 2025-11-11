@@ -29,7 +29,7 @@ namespace apollo {
 		AssetRef<IAsset> m_Asset;
 		AssetImportFunc* m_Import = nullptr;
 		const AssetMetadata* m_Metadata = nullptr;
-		UniqueFunction<void(const IAsset&)> m_Callback;
+		UniqueFunction<void(IAsset&)> m_Callback;
 
 		EAssetLoadResult operator()();
 	};
