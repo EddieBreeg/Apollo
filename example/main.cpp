@@ -1,4 +1,5 @@
 #include "DemoPCH.hpp"
+#include "Inspector.hpp"
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -15,99 +16,13 @@ namespace apollo::demo {
 			100.f);
 	}
 
-	void ShaderParamWidget(
-		const rdr::ShaderConstant& param,
-		rdr::MaterialInstance& matInstance,
-		uint32 blockIndex = 0)
-	{
-		using namespace apollo::rdr;
-		const char* label = param.m_Name.c_str();
-
-		switch (param.m_Type)
-		{
-		case ShaderConstant::Float:
-			ImGui::DragFloat(
-				label,
-				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Float2:
-			ImGui::DragFloat2(
-				label,
-				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Float3:
-			ImGui::DragFloat3(
-				label,
-				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Float4:
-			ImGui::DragFloat4(
-				label,
-				&matInstance.GetFragmentConstant<float>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Int: [[fallthrough]];
-		case ShaderConstant::UInt:
-			ImGui::DragInt(
-				label,
-				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Int2: [[fallthrough]];
-		case ShaderConstant::UInt2:
-			ImGui::DragInt2(
-				label,
-				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Int3: [[fallthrough]];
-		case ShaderConstant::UInt3:
-			ImGui::DragInt3(
-				label,
-				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
-			return;
-		case ShaderConstant::Int4: [[fallthrough]];
-		case ShaderConstant::UInt4:
-			ImGui::DragInt4(
-				label,
-				&matInstance.GetFragmentConstant<int32>(blockIndex, param.m_Offset));
-			return;
-		default: ImGui::Text("%s (%s)", label, ShaderConstant::GetTypeName(param.m_Type)); return;
-		}
-	}
-
-	void ShaderParamBlockWidget(rdr::MaterialInstance& matInstance, uint32 blockIndex = 0)
-	{
-		const auto* fragShader = matInstance.GetMaterial()->GetFragmentShader();
-		const auto& block = fragShader->GetParameterBlocks()[blockIndex];
-		if (block.m_Name.length())
-			ImGui::SeparatorText(block.m_Name.c_str());
-		else
-			ImGui::Separator();
-
-		ImGui::Text("Total size: %u", block.m_Size);
-
-		for (uint32 i = 0; i < block.m_NumMembers; ++i)
-		{
-			ShaderParamWidget(block.m_Members[i], matInstance, blockIndex);
-		}
-	}
-
-	struct MeshComponent
-	{
-		AssetRef<rdr::Mesh> m_Mesh;
-		AssetRef<rdr::MaterialInstance> m_Material;
-
-		static constexpr ecs::ComponentReflection<&MeshComponent::m_Mesh, &MeshComponent::m_Material>
-			Reflection{
-				"mesh",
-				{ "mesh", "material" },
-			};
-	};
-
 	struct TestSystem
 	{
 		Camera m_Camera;
 		apollo::Window& m_Window;
 		apollo::rdr::Context& m_RenderContext;
 		Viewport m_TargetViewport;
+		Inspector m_Inspector;
 		rdr::RenderPass m_RenderPass;
 
 		float m_AntiAliasing = 1.0f;
@@ -210,32 +125,19 @@ namespace apollo::demo {
 
 		~TestSystem() {}
 
-		void DisplayUi()
+		void DisplayUi(entt::registry& world)
 		{
 			m_TargetViewport.Update();
+			m_Inspector.Update(world);
 
 			ImGui::Begin("Settings");
 			ImGui::SliderFloat("Mouse Speed", &m_MouseSpeed, .0f, 10.0f);
 			ImGui::SliderFloat("Move Speed", &m_MoveSpeed, .0f, 10.0f);
 			ImGui::Text("Press F1 to unlock/relock camera");
 
+			ImGui::Checkbox("Show Inspector", &m_Inspector.m_ShowInspector);
 			ImGui::Checkbox("Show Depth/Stencil Content", &m_TargetViewport.m_ShowDepth);
 			ImGui::End();
-
-			// if (!mat)
-			// 	return;
-
-			// char title[37] = {};
-			// mat->GetId().ToChars(title);
-
-			// if (!mat->IsLoaded())
-			// 	return;
-
-			// ImGui::Begin(title);
-
-			// ImGui::SeparatorText("Fragment Shader Constants");
-			// ShaderParamBlockWidget(*mat);
-			// ImGui::End();
 		}
 
 		void EmitGPUCommands(const entt::registry& world)
@@ -284,13 +186,19 @@ namespace apollo::demo {
 			if (!m_Window) [[unlikely]]
 				return;
 
+			if (const auto view = world.view<const SceneLoadFinishedEventComponent>(); view.size())
+			{
+				const entt::entity sceneEntity = *view.begin();
+				m_Inspector.m_Scene = world.get<const SceneComponent>(sceneEntity).m_Scene;
+			}
+
 			auto* swapchainTexture = m_RenderContext.GetSwapchainTexture();
 
 			if (!swapchainTexture)
 				return;
 
 			ProcessInputs(world, time);
-			DisplayUi();
+			DisplayUi(world);
 			m_CamMatrix = GetProjMatrix(m_TargetViewport) * m_CamMatrix;
 
 			EmitGPUCommands(world);

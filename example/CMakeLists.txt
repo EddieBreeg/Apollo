@@ -1,7 +1,5 @@
 include(Shaders)
 
-option(APOLLO_EXAMPLE_MULTITHREADED "Whether to allow multiple threads to rasterize glyphs" ON)
-
 AddShader(TextVertShader
 	vertex "assets/text.vert.hlsl" ".brk/_assetCache/text.vert"
 	DEBUG
@@ -13,6 +11,7 @@ AddShader(TextFragShader
 
 AddExecutable(${PROJECT_NAME}Example SOURCES
 	main.cpp
+	Inspector.cpp
 LINK PRIVATE ${PROJECT_NAME}::Editor SDL3::SDL3 freetype msdfgen-core assimp::assimp
 OPTIONS PRIVATE ${COMPILER_ARGS}
 PROPERTIES ${COMMON_PROPERTIES}

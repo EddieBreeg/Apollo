@@ -2,7 +2,7 @@
 	"gameObjects": [
 		{
 			"id": "01K8EC89XVHA1N3ZRZTFGNMYT5",
-			"name": "cube",
+			"name": "cube1",
 			"components": {
 				"transform": {
 					"position": {
@@ -24,6 +24,34 @@
 				},
 				"mesh": {
 					"material": "01K8TYP16WV0Q775BPYV9AJD3C",
+					"mesh": "01K9Q8NY9E7XW9SA56KJV05A5X"
+				}
+			}
+		},
+		{
+			"id": "01K9QES25H7A9TWBQM6C5X7Z8B",
+			"name": "cube2",
+			"components": {
+				"transform": {
+					"position": {
+						"x": 2,
+						"y": 0,
+						"z": -3
+					},
+					"scale": {
+						"x": 1,
+						"y": 1,
+						"z": 1
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0,
+						"w": 1
+					}
+				},
+				"mesh": {
+					"material": "01K9QFDV6JM6SNRZE5SKKCN10Q",
 					"mesh": "01K9Q8NY9E7XW9SA56KJV05A5X"
 				}
 			}

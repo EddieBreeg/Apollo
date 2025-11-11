@@ -173,7 +173,7 @@ namespace apollo::rdr {
 			return reinterpret_cast<T*>(m_Buffer + offset);
 		}
 
-		alignas(std::max_align_t) uint8 m_Buffer[128];
+		alignas(std::max_align_t) uint8 m_Buffer[128] = { 0 };
 	};
 
 	struct ShaderInfo

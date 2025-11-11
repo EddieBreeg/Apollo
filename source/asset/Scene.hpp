@@ -33,11 +33,16 @@ namespace apollo {
 	public:
 		using IAsset::IAsset;
 		GET_ASSET_TYPE_IMPL(EAssetType::Scene);
-		const GameObject* GetGameObject(const ULID& id) const noexcept
+		[[nodiscard]] const GameObject* GetGameObject(const ULID& id) const noexcept
 		{
 			if (const auto it = m_GameObjects.find(id); it != m_GameObjects.end())
 				return &it->second;
 			return nullptr;
+		}
+
+		[[nodiscard]] const ULIDMap<GameObject>& GetGameObjects() const noexcept
+		{
+			return m_GameObjects;
 		}
 
 	private:
