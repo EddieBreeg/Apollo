@@ -1,0 +1,22 @@
+{
+	"material": "01K9SEAQPYCF9Y7ES3XZCJTWJ3",
+	"parameters": [
+		{
+			"Color": {
+				"x": 1,
+				"y": 0.25,
+				"z": 0.5,
+				"w": 0.5
+			}
+		}
+	],
+	"fragmentTextures": [
+		{
+			"id": "01K91Y90AQYS03FNRNYWHKCYXY",
+			"sampler": {
+				"minFilter": "nearest",
+				"magFilter": "nearest"
+			}
+		}
+	]
+}

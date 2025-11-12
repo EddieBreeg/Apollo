@@ -55,6 +55,34 @@
 					"mesh": "01K9Q8NY9E7XW9SA56KJV05A5X"
 				}
 			}
+		},
+		{
+			"id": "01K9T0WA3KCXNY66J7JWF2V53G",
+			"name": "cube3",
+			"components": {
+				"transform": {
+					"position": {
+						"x": -2,
+						"y": 0,
+						"z": -3
+					},
+					"scale": {
+						"x": 1,
+						"y": 1,
+						"z": 1
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0,
+						"w": 1
+					}
+				},
+				"mesh": {
+					"material": "01K9T0Z16XZSB6MSYMN31YC3SG",
+					"mesh": "01K9Q8NY9E7XW9SA56KJV05A5X"
+				}
+			}
 		}
 	]
 }

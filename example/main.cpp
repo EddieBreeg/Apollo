@@ -26,19 +26,36 @@ namespace apollo::demo {
 		return static_cast<UInt>((x * pow2 + rounding)) & mask;
 	}
 
-	uint64 CreateSortKey(
-		const rdr::MaterialInstance& mat,
-		float3 pos,
-		float3 camPos,
-		float3 viewVector)
+	struct VisualElement
 	{
-		const rdr::MaterialInstanceKey matKey = mat.GetKey();
-		const float distance = glm::dot(pos - camPos, viewVector) / 100.f;
-		if (matKey.WritesToDepthBuffer())
+		VisualElement(
+			const MeshComponent& meshComp,
+			const TransformComponent& transform,
+			float3 camPos,
+			float3 viewVec)
+			: m_Transform(&transform)
+			, m_MeshComp(&meshComp)
 		{
-			return ((uint64)matKey << 24) | ToFixedPoint<uint64, 24>(distance);
+			const rdr::MaterialInstanceKey matKey = meshComp.m_Material->GetKey();
+			const float distance = glm::dot(transform.m_Position - camPos, viewVec) / 100.f;
+			if (matKey.WritesToDepthBuffer())
+			{
+				m_Key = ((uint64)matKey << 24) | ToFixedPoint<uint64, 24>(distance);
+			}
+			else
+			{
+				m_Key = BIT(54) | (ToFixedPoint<uint64, 24>(-distance) << 30) | (uint64)matKey;
+			}
 		}
-		return BIT(54) | (ToFixedPoint<uint64, 24>(-distance) << 30) | (uint64)matKey;
+
+		const TransformComponent* m_Transform;
+		const MeshComponent* m_MeshComp;
+		uint64 m_Key;
+	};
+
+	[[nodiscard]] bool operator<(const VisualElement& lhs, const VisualElement& rhs) noexcept
+	{
+		return lhs.m_Key < rhs.m_Key;
 	}
 
 	struct TestSystem
@@ -178,8 +195,7 @@ namespace apollo::demo {
 			m_RenderContext.SetViewport(m_TargetViewport.m_Rectangle);
 			const auto view = world.view<const MeshComponent, const TransformComponent>();
 
-			using ValT = std::pair<const MeshComponent*, const TransformComponent*>;
-			std::vector<ValT> meshes;
+			std::vector<VisualElement> meshes;
 			meshes.reserve(view.size_hint());
 
 			for (const auto entt : view)
@@ -190,49 +206,34 @@ namespace apollo::demo {
 					continue;
 
 				const auto& transform = view.get<const TransformComponent>(entt);
-				meshes.emplace_back(&mesh, &transform);
+				meshes.emplace_back(mesh, transform, m_Camera.m_Translate, viewVector);
 			}
-			std::sort(
-				meshes.begin(),
-				meshes.end(),
-				[viewVector, camPos = m_Camera.m_Translate](const ValT& lhs, const ValT& rhs)
-				{
-					const uint64 k1 = CreateSortKey(
-						*lhs.first->m_Material,
-						lhs.second->m_Position,
-						camPos,
-						viewVector);
-					const uint64 k2 = CreateSortKey(
-						*rhs.first->m_Material,
-						rhs.second->m_Position,
-						camPos,
-						viewVector);
-					return k1 < k2;
-				});
-			for (const auto [mesh, transform] : meshes)
+			std::sort(meshes.begin(), meshes.end());
+			for (const auto& element : meshes)
 			{
-				m_RenderContext.BindMaterialInstance(*mesh->m_Material);
+				m_RenderContext.BindMaterialInstance(*element.m_MeshComp->m_Material);
 				const auto modelMat = ComputeTransformMatrix(
-					transform->m_Position,
-					transform->m_Scale,
-					transform->m_Rotation);
+					element.m_Transform->m_Position,
+					element.m_Transform->m_Scale,
+					element.m_Transform->m_Rotation);
 				m_RenderContext.PushVertexShaderConstants(modelMat, 1);
-				m_RenderContext.BindVertexBuffer(mesh->m_Mesh->GetVertexBuffer());
+				m_RenderContext.BindVertexBuffer(element.m_MeshComp->m_Mesh->GetVertexBuffer());
 
-				const rdr::Buffer& iBuffer = mesh->m_Mesh->GetIndexBuffer();
+				const rdr::Buffer& iBuffer = element.m_MeshComp->m_Mesh->GetIndexBuffer();
 
 				if (iBuffer)
 				{
 					m_RenderContext.BindIndexBuffer(iBuffer);
 					m_RenderContext.DrawIndexedPrimitives(
 						rdr::IndexedDrawCall{
-							.m_NumIndices = mesh->m_Mesh->GetNumIndices(),
+							.m_NumIndices = element.m_MeshComp->m_Mesh->GetNumIndices(),
 						});
 				}
 				else
 				{
 					m_RenderContext.DrawPrimitives(
-						rdr::DrawCall{ .m_NumVertices = mesh->m_Mesh->GetNumVertices() });
+						rdr::DrawCall{
+							.m_NumVertices = element.m_MeshComp->m_Mesh->GetNumVertices() });
 				}
 			}
 		}
