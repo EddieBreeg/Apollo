@@ -21,8 +21,8 @@ namespace apollo {
 } // namespace apollo
 
 namespace apollo::editor {
-	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata);
-	EAssetLoadResult LoadMaterialInstance(IAsset& out_asset, const AssetMetadata& metadata);
+	template <class>
+	struct AssetHelper;
 } // namespace apollo::editor
 
 namespace apollo::rdr {
@@ -90,9 +90,7 @@ namespace apollo::rdr {
 		}
 
 	private:
-		friend EAssetLoadResult editor::LoadMaterial(
-			IAsset& out_asset,
-			const AssetMetadata& metadata);
+		friend struct editor::AssetHelper<Material>;
 
 		AssetRef<VertexShader> m_VertShader;
 		AssetRef<FragmentShader> m_FragShader;
@@ -143,9 +141,7 @@ namespace apollo::rdr {
 		[[nodiscard]] MaterialInstanceKey GetKey() const noexcept { return m_Key; }
 
 	private:
-		friend EAssetLoadResult editor::LoadMaterialInstance(
-			IAsset& out_asset,
-			const AssetMetadata& metadata);
+		friend struct editor::AssetHelper<MaterialInstance>;
 
 		AssetRef<Material> m_Material;
 		struct

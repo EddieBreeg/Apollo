@@ -10,7 +10,8 @@ namespace apollo {
 }
 
 namespace apollo::editor {
-	EAssetLoadResult LoadMesh(IAsset&, const AssetMetadata&);
+		template <class>
+	struct AssetHelper;
 }
 
 namespace apollo::rdr {
@@ -32,6 +33,6 @@ namespace apollo::rdr {
 		uint32 m_NumVertices = 0;
 		uint32 m_NumIndices = 0;
 
-		friend EAssetLoadResult editor::LoadMesh(IAsset&, const AssetMetadata&);
+		friend struct editor::AssetHelper<Mesh>;
 	};
 } // namespace apollo::rdr

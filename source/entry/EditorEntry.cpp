@@ -20,14 +20,19 @@ int main(int argc, const char** argv)
 	};
 	assetManagerSettings.m_MetadataImportFunc = &apollo::editor::ImporteAssetMetadata;
 
-	assetManagerSettings.m_LoadTexture2d = apollo::editor::LoadTexture2d;
-	assetManagerSettings.m_LoadVertexShader = apollo::editor::LoadVertexShader;
-	assetManagerSettings.m_LoadFragmentShader = apollo::editor::LoadFragmentShader;
-	assetManagerSettings.m_LoadMaterial = apollo::editor::LoadMaterial;
-	assetManagerSettings.m_LoadMaterialInstance = apollo::editor::LoadMaterialInstance;
-	assetManagerSettings.m_LoadMesh = apollo::editor::LoadMesh;
-	assetManagerSettings.m_LoadFont = apollo::editor::LoadFont;
-	assetManagerSettings.m_LoadScene = apollo::editor::LoadScene;
+	{
+		using namespace apollo;
+		using namespace apollo::editor;
+		using namespace apollo::rdr;
+		assetManagerSettings.m_LoadTexture2d = &AssetHelper<Texture2D>::Load;
+		assetManagerSettings.m_LoadVertexShader = &AssetHelper<VertexShader>::Load;
+		assetManagerSettings.m_LoadFragmentShader = &AssetHelper<FragmentShader>::Load;
+		assetManagerSettings.m_LoadMaterial = &AssetHelper<Material>::Load;
+		assetManagerSettings.m_LoadMaterialInstance = &AssetHelper<MaterialInstance>::Load;
+		assetManagerSettings.m_LoadMesh = &AssetHelper<Mesh>::Load;
+		assetManagerSettings.m_LoadFont = &AssetHelper<txt::FontAtlas>::Load;
+		assetManagerSettings.m_LoadScene = &AssetHelper<Scene>::Load;
+	}
 
 	// component registry is kinda special: the core engine runtime doesn't know about it, we need
 	// to initialize it here

@@ -15,7 +15,8 @@ namespace msdfgen {
 } // namespace msdfgen
 
 namespace apollo::editor {
-	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata);
+	template <class>
+	struct AssetHelper;
 }
 
 namespace apollo::mt {
@@ -136,8 +137,6 @@ namespace apollo::rdr::txt {
 		std::vector<uint32> m_Indices;
 		uint32 m_PixelSize = 64;
 
-		friend EAssetLoadResult apollo::editor::LoadFont(
-			IAsset& out_asset,
-			const AssetMetadata& metadata);
+		friend struct editor::AssetHelper<FontAtlas>;
 	};
 } // namespace apollo::rdr::txt

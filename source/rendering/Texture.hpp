@@ -13,7 +13,8 @@ namespace apollo {
 }
 
 namespace apollo::editor {
-	EAssetLoadResult LoadTexture2d(IAsset& out_texture, const AssetMetadata& metadata);
+	template <class>
+	struct AssetHelper;
 }
 
 namespace apollo::rdr {
@@ -79,6 +80,6 @@ namespace apollo::rdr {
 
 	private:
 		TextureSettings m_Settings;
-		friend EAssetLoadResult apollo::editor::LoadTexture2d(IAsset&, const AssetMetadata&);
+		friend struct editor::AssetHelper<Texture2D>;
 	};
 } // namespace apollo::rdr

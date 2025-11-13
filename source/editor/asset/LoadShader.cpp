@@ -77,11 +77,18 @@ namespace {
 } // namespace
 
 namespace apollo::editor {
-	EAssetLoadResult LoadVertexShader(IAsset& out_asset, const AssetMetadata& metadata)
+	template <>
+	EAssetLoadResult AssetHelper<rdr::VertexShader>::Load(
+		IAsset& out_asset,
+		const AssetMetadata& metadata)
 	{
 		return LoadShader(static_cast<rdr::VertexShader&>(out_asset), metadata);
 	}
-	EAssetLoadResult LoadFragmentShader(IAsset& out_asset, const AssetMetadata& metadata)
+
+	template <>
+	EAssetLoadResult AssetHelper<rdr::FragmentShader>::Load(
+		IAsset& out_asset,
+		const AssetMetadata& metadata)
 	{
 		return LoadShader(static_cast<rdr::FragmentShader&>(out_asset), metadata);
 	}

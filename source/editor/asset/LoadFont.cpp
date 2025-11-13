@@ -90,7 +90,10 @@ namespace {
 } // namespace
 
 namespace apollo::editor {
-	EAssetLoadResult LoadFont(IAsset& out_asset, const AssetMetadata& metadata)
+	template <>
+	EAssetLoadResult AssetHelper<rdr::txt::FontAtlas>::Load(
+		IAsset& out_asset,
+		const AssetMetadata& metadata)
 	{
 		using namespace rdr::txt;
 		auto& atlas = dynamic_cast<FontAtlas&>(out_asset);
@@ -145,7 +148,7 @@ namespace apollo::editor {
 		{
 			atlas.m_Glyphs.reserve(atlas.m_Range.GetSize());
 			atlas.m_Indices.resize(atlas.m_Range.GetSize(), UINT32_MAX);
-			const EAssetLoadResult loadRes = LoadTexture2d(
+			const EAssetLoadResult loadRes = AssetHelper<rdr::Texture2D>::Load(
 				atlas.m_Texture,
 				AssetMetadata{
 					.m_Id = ULID::Generate(),

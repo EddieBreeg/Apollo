@@ -10,7 +10,10 @@
 #include <stb_image.h>
 
 namespace apollo::editor {
-	EAssetLoadResult LoadTexture2d(IAsset& out_texture, const AssetMetadata& metadata)
+	template <>
+	EAssetLoadResult AssetHelper<rdr::Texture2D>::Load(
+		IAsset& out_texture,
+		const AssetMetadata& metadata)
 	{
 		const auto pathStr = metadata.m_FilePath.string();
 		int32 width = 0, height = 0;

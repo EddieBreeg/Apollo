@@ -11,7 +11,8 @@
 #include <vector>
 
 namespace apollo::editor {
-	EAssetLoadResult LoadScene(IAsset& out_asset, const AssetMetadata& metadata);
+	template <class A>
+	struct AssetHelper;
 }
 
 namespace apollo {
@@ -46,7 +47,7 @@ namespace apollo {
 		}
 
 	private:
-		friend EAssetLoadResult editor::LoadScene(IAsset& out_asset, const AssetMetadata& metadata);
+		friend struct editor::AssetHelper<Scene>;
 		ULIDMap<GameObject> m_GameObjects;
 	};
 } // namespace apollo

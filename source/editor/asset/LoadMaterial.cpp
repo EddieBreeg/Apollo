@@ -128,7 +128,8 @@ namespace {
 } // namespace
 
 namespace apollo::editor {
-	EAssetLoadResult LoadMaterial(IAsset& out_asset, const AssetMetadata& metadata)
+	template<>
+	EAssetLoadResult AssetHelper<rdr::Material>::Load(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		auto& mat = dynamic_cast<rdr::Material&>(out_asset);
 
@@ -243,7 +244,8 @@ namespace apollo::editor {
 		return EAssetLoadResult::Success;
 	}
 
-	EAssetLoadResult LoadMaterialInstance(IAsset& out_asset, const AssetMetadata& metadata)
+	template<>
+	EAssetLoadResult AssetHelper<rdr::MaterialInstance>::Load(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		auto& instance = dynamic_cast<rdr::MaterialInstance&>(out_asset);
 		if (instance.IsLoadingDeferred())

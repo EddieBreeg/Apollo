@@ -61,7 +61,8 @@ namespace {
 } // namespace
 
 namespace apollo::editor {
-	EAssetLoadResult LoadScene(IAsset& out_asset, const AssetMetadata& metadata)
+	template <>
+	EAssetLoadResult AssetHelper<Scene>::Load(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		std::ifstream file{ metadata.m_FilePath, std::ios::in };
 		if (!file.is_open())

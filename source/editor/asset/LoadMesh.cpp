@@ -16,7 +16,8 @@ namespace {
 }
 
 namespace apollo::editor {
-	EAssetLoadResult LoadMesh(IAsset& out_asset, const AssetMetadata& metadata)
+	template <>
+	EAssetLoadResult AssetHelper<rdr::Mesh>::Load(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		Assimp::Importer importer;
 		// I hate this, but Assimp takes in a C string, and stupid Windows uses wide strings so we
@@ -45,7 +46,6 @@ namespace apollo::editor {
 			const float2 uv{ am->mTextureCoords[0][i].x, am->mTextureCoords[0][i].y };
 			vertices.emplace_back(rdr::Vertex3d{ pos, nor, uv });
 		}
-
 
 		for (uint32 i = 0; i < am->mNumFaces; ++i)
 		{
