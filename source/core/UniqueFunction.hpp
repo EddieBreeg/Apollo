@@ -48,6 +48,11 @@ namespace apollo {
 		UniqueFunction(UniqueFunction&& other) noexcept;
 		UniqueFunction& operator=(UniqueFunction&& other) noexcept;
 
+		template <class F>
+		UniqueFunction& operator=(F&& other) noexcept(
+			std::is_nothrow_constructible_v<UniqueFunction, F>)
+			requires(IsInvocable<std::decay_t<F>>);
+
 		constexpr operator bool() const noexcept { return m_VTable; }
 
 		R operator()(auto&&... args)
@@ -56,6 +61,8 @@ namespace apollo {
 		}
 
 		void Swap(UniqueFunction& other) noexcept;
+
+		void Reset();
 
 		~UniqueFunction();
 
@@ -82,6 +89,14 @@ namespace apollo {
 			void* m_Ptr = nullptr;
 		};
 	};
+
+	template <class R, class... Args>
+	void UniqueFunction<R(Args...)>::Reset()
+	{
+		if (m_VTable.m_Destroy)
+			m_VTable.m_Destroy(GetPtr());
+		m_VTable = {};
+	}
 
 	template <class R, class... Args>
 	UniqueFunction<R(Args...)>::~UniqueFunction()
@@ -134,6 +149,16 @@ namespace apollo {
 	{
 		Swap(other);
 		return *this;
+	}
+
+	template <class R, class... Args>
+	template <class F>
+	UniqueFunction<R(Args...)>& UniqueFunction<R(Args...)>::operator=(F&& other) noexcept(
+		std::is_nothrow_constructible_v<UniqueFunction<R(Args...)>, F>)
+		requires(IsInvocable<std::decay_t<F>>)
+	{
+		this->~UniqueFunction();
+		return *new (this) UniqueFunction<R(Args...)>{ std::forward<F>(other) };
 	}
 
 	template <class R, class... Args>

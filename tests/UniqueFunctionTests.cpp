@@ -181,4 +181,24 @@ namespace apollo::poly::ut {
 			}
 		}
 	}
+
+	UF_TEST("Assignment test")
+	{
+		{
+			F1::s_DestructionCount = 0;
+			UniqueFunction<void()> f1;
+			f1 = F1{};
+			REQUIRE(F1::s_DestructionCount == 1);
+			CHECK(f1);
+		}
+		CHECK(F1::s_DestructionCount == 2);
+		{
+			UniqueFunction<void()> f1{ F1{} };
+			REQUIRE(f1);
+			F1::s_DestructionCount = 0;
+			f1 = F1{};
+			REQUIRE(F1::s_DestructionCount == 2);
+			CHECK(f1);
+		}
+	}
 } // namespace apollo::poly::ut
