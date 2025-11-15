@@ -72,6 +72,17 @@ namespace apollo::rdr {
 			return *this;
 		}
 
+		void Swap(Material& other) noexcept
+		{
+			BaseType::Swap(other);
+			m_VertShader.Swap(other.m_VertShader);
+			m_FragShader.Swap(other.m_FragShader);
+			apollo::Swap(m_MaterialKey, other.m_MaterialKey);
+			m_InstanceKey.store(
+				other.m_InstanceKey.exchange(m_InstanceKey.load(std::memory_order_relaxed)),
+				std::memory_order_relaxed);
+		}
+
 		GET_ASSET_TYPE_IMPL(EAssetType::Material);
 
 		[[nodiscard]] const VertexShader* GetVertexShader() const noexcept
@@ -130,6 +141,14 @@ namespace apollo::rdr {
 
 		[[nodiscard]] MaterialInstanceKey GetKey() const noexcept { return m_Key; }
 
+		void Swap(MaterialInstance& other) noexcept
+		{
+			m_Material.Swap(other.m_Material);
+			m_ConstantBlocks.Swap(other.m_ConstantBlocks);
+			m_VertexTextures.Swap(other.m_VertexTextures);
+			m_FragmentTextures.Swap(other.m_FragmentTextures);
+		}
+
 	private:
 		friend struct editor::AssetHelper<MaterialInstance>;
 
@@ -157,6 +176,13 @@ namespace apollo::rdr {
 			{
 				return reinterpret_cast<T*>(GetConstantPtr(block, offset, sizeof(T)));
 			}
+
+			void Swap(ConstantStorage& other) noexcept
+			{
+				m_Ptr.swap(other.m_Ptr);
+				apollo::Swap(m_Sizes, other.m_Sizes);
+				apollo::Swap(m_Offsets, other.m_Offsets);
+			}
 		};
 
 		AssetRef<Material> m_Material;
@@ -167,6 +193,14 @@ namespace apollo::rdr {
 			uint32 m_NumTextures = 0;
 			AssetRef<Texture2D> m_Textures[16] = {};
 			SDL_GPUSampler* m_Samplers[16] = { nullptr };
+
+			void Swap(TextureStorage& other) noexcept
+			{
+				apollo::Swap(m_NumTextures, other.m_NumTextures);
+				apollo::Swap(m_Textures, other.m_Textures);
+				apollo::Swap(m_Samplers, other.m_Samplers);
+			}
+
 		} m_VertexTextures, m_FragmentTextures;
 
 		MaterialInstanceKey m_Key;

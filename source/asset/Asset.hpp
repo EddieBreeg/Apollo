@@ -88,6 +88,16 @@ namespace apollo {
 	}
 
 	template <class A>
+	concept Asset = requires(A & lhs, A& rhs)
+	{
+		{ std::is_base_of_v<IAsset, A> };
+		{ sizeof(lhs) }->std::same_as<size_t>; // completeness test
+		{ std::is_same_v<decltype(A::AssetType), EAssetType> };
+		{ EAssetType::Invalid < A::AssetType && A::AssetType < EAssetType::NTypes };
+		{ lhs.Swap(rhs) };
+	};
+
+	template <Asset A>
 	IAsset* ConstructAsset(const ULID& id) requires(std::is_base_of_v<IAsset, A>)
 	{
 		return static_cast<IAsset*>(new A{ id });

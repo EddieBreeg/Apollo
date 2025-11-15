@@ -156,13 +156,13 @@ namespace apollo {
 			APOLLO_LOG_CRITICAL("Asset type {} is not implemented!", int32(type));
 			return nullptr;
 		}
-		const auto it = m_MetadataBank.find(id);
-		if (it == m_MetadataBank.end())
+		const auto* metadata = GetAssetMetadata(id);
+		if (!metadata)
 		{
 			APOLLO_LOG_ERROR("No asset found for id {}", id);
 			return nullptr;
 		}
-		auto ptr = info.m_Create(it->second.m_Id);
+		auto ptr = info.m_Create(id);
 		{
 			std::unique_lock lock{ m_Mutex };
 			m_Cache.emplace(id, ptr);
@@ -173,10 +173,19 @@ namespace apollo {
 			AssetLoadRequest{
 				AssetRef<IAsset>{ ptr },
 				info.m_Import,
-				&it->second,
+				metadata,
 				std::move(cbk),
 			});
 		return ptr;
+	}
+
+	const AssetMetadata* AssetManager::GetAssetMetadata(const ULID& id) const noexcept
+	{
+		if (const auto it = m_MetadataBank.find(id); it != m_MetadataBank.end())
+			return &it->second;
+
+		APOLLO_LOG_ERROR("Couldn't find metadata for asset {}", id);
+		return nullptr;
 	}
 
 	void AssetManager::RequestUnload(IAsset* ptr)

@@ -10,7 +10,7 @@ namespace apollo {
 }
 
 namespace apollo::editor {
-		template <class>
+	template <class>
 	struct AssetHelper;
 }
 
@@ -26,6 +26,14 @@ namespace apollo::rdr {
 		[[nodiscard]] const Buffer& GetIndexBuffer() const noexcept { return m_IBuffer; }
 		[[nodiscard]] uint32 GetNumVertices() const noexcept { return m_NumVertices; }
 		[[nodiscard]] uint32 GetNumIndices() const noexcept { return m_NumIndices; }
+
+		void Swap(Mesh& other) noexcept
+		{
+			m_VBuffer.Swap(other.m_VBuffer);
+			m_IBuffer.Swap(other.m_IBuffer);
+			apollo::Swap(m_NumVertices, other.m_NumVertices);
+			apollo::Swap(m_NumIndices, other.m_NumIndices);
+		}
 
 	private:
 		Buffer m_VBuffer;

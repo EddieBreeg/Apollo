@@ -73,10 +73,8 @@ namespace apollo {
 			};
 		}
 
-		template <class A>
-		AssetRef<A> GetAsset(const ULID& id) requires(
-			std::is_base_of_v<IAsset, A>&& A::AssetType > EAssetType::Invalid &&
-			A::AssetType < EAssetType::NTypes)
+		template <Asset A>
+		AssetRef<A> GetAsset(const ULID& id)
 		{
 			IAsset* const ptr = GetAssetImpl(id, A::AssetType);
 			return AssetRef<A>{ static_cast<A*>(ptr) };
@@ -87,10 +85,8 @@ namespace apollo {
 		 * If the asset is already loaded, the callback will be invoked immediately, otherwise
 		 * there is no strong guarantee as to when this will happen.
 		 */
-		template <class A, class F>
-		AssetRef<A> GetAsset(const ULID& id, F&& callback) requires(
-			(std::is_base_of_v<IAsset, A>) && (A::AssetType > EAssetType::Invalid) &&
-			(A::AssetType < EAssetType::NTypes) && std::is_invocable_v<F, IAsset&>)
+		template <Asset A, class F>
+		AssetRef<A> GetAsset(const ULID& id, F&& callback) requires(std::is_invocable_v<F, IAsset&>)
 		{
 			IAsset* const ptr = GetAssetImpl(
 				id,
@@ -98,6 +94,17 @@ namespace apollo {
 				UniqueFunction<void(IAsset&)>{ std::forward<F>(callback) });
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
+
+		template <Asset A, class... Args>
+		AssetRef<A> AddTempAsset(Args&&... args) requires(std::constructible_from<A, Args...>)
+		{
+			A* ptr = new A{ std::forward<Args>(args)... };
+			m_Cache.emplace(ptr->GetId(), ptr);
+			return AssetRef{ ptr };
+		}
+
+		[[nodiscard]] APOLLO_API const AssetMetadata* GetAssetMetadata(
+			const ULID& id) const noexcept;
 
 		APOLLO_API void Update();
 		const std::filesystem::path& GetAssetPath() const noexcept { return m_AssetsPath; }

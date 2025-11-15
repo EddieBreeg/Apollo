@@ -46,6 +46,11 @@ namespace apollo {
 			return m_GameObjects;
 		}
 
+		void Swap(Scene& other) noexcept
+		{
+			m_GameObjects.swap(other.m_GameObjects);
+		}
+
 	private:
 		friend struct editor::AssetHelper<Scene>;
 		ULIDMap<GameObject> m_GameObjects;
