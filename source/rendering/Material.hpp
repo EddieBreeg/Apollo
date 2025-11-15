@@ -113,23 +113,13 @@ namespace apollo::rdr {
 		template <class T>
 		T& GetFragmentConstant(uint32 blockIndex, uint32 offset)
 		{
-			APOLLO_ASSERT(blockIndex < 4, "Block index {} is out of bounds", blockIndex);
-			APOLLO_ASSERT(
-				(offset + sizeof(T)) <= m_ConstantBlocks.m_BlockSizes[blockIndex],
-				"Offset {} is out of bounds",
-				offset);
-			return *m_ConstantBlocks.m_FragmentConstants[blockIndex].GetAs<T>(offset);
+			return *m_ConstantBlocks.GetConstantPtr<T>(blockIndex, offset);
 		}
 
 		template <class T>
 		const T& GetFramgentConstant(uint32 blockIndex, uint32 offset) const
 		{
-			APOLLO_ASSERT(blockIndex < 4, "Block index {} is out of bounds", blockIndex);
-			APOLLO_ASSERT(
-				(offset + sizeof(T)) <= m_ConstantBlocks.m_BlockSizes[blockIndex],
-				"Offset {} is out of bounds",
-				offset);
-			return *m_ConstantBlocks.m_FragmentConstants[blockIndex].GetAs<T>(offset);
+			return *m_ConstantBlocks.GetConstantPtr<T>(blockIndex, offset);
 		}
 
 		APOLLO_API void PushFragmentConstants(
@@ -143,12 +133,34 @@ namespace apollo::rdr {
 	private:
 		friend struct editor::AssetHelper<MaterialInstance>;
 
-		AssetRef<Material> m_Material;
-		struct
+		struct ConstantStorage
 		{
-			uint32 m_BlockSizes[4] = { 0 };
-			ShaderConstantStorage m_FragmentConstants[4];
-		} m_ConstantBlocks;
+			APOLLO_API void Init(std::span<const ShaderConstantBlock> blocks);
+
+			std::unique_ptr<uint8[]> m_Ptr;
+			uint32 m_Sizes[4] = { 0 };
+			uint32 m_Offsets[4] = { 0 };
+
+			uint8* GetBlockStart(uint32 index);
+			const uint8* GetBlockStart(uint32 index) const;
+
+			APOLLO_API uint8* GetConstantPtr(uint32 block, uint32 offset, uint32 size);
+			APOLLO_API const uint8* GetConstantPtr(uint32 block, uint32 offset, uint32 size) const;
+
+			template <class T>
+			T* GetConstantPtr(uint32 block, uint32 offset = 0)
+			{
+				return reinterpret_cast<T*>(GetConstantPtr(block, offset, sizeof(T)));
+			}
+			template <class T>
+			const T* GetConstantPtr(uint32 block, uint32 offset = 0) const
+			{
+				return reinterpret_cast<T*>(GetConstantPtr(block, offset, sizeof(T)));
+			}
+		};
+
+		AssetRef<Material> m_Material;
+		ConstantStorage m_ConstantBlocks;
 
 		struct TextureStorage
 		{

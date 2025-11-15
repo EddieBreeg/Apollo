@@ -116,7 +116,8 @@ namespace apollo::demo {
 				const float vMovement = float(
 					keyStates[SDL_SCANCODE_Q] - keyStates[SDL_SCANCODE_E]);
 
-				const float moveSpeed = time.GetDelta().count() * m_MoveSpeed;
+				const float moveSpeed = time.GetDelta().count() * m_MoveSpeed *
+										(1.0f + keyStates[SDL_SCANCODE_LSHIFT]);
 
 				if (lateralMovement)
 				{

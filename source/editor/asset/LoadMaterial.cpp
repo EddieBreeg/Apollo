@@ -356,19 +356,6 @@ namespace apollo::editor {
 
 			void LoadConstantBlock(uint32 index, const rdr::ShaderConstantBlock& block)
 			{
-				m_Instance.m_ConstantBlocks.m_BlockSizes[index] = block.m_Size;
-				constexpr uint32 maxBlockSize = sizeof(rdr::ShaderConstantStorage);
-				if (block.m_Size > maxBlockSize) [[unlikely]]
-				{
-					APOLLO_LOG_WARN(
-						"Shader constant block {} has size {}, which is over the maximum limit of "
-						"{}. Truncation will occur",
-						index,
-						block.m_Size,
-						maxBlockSize);
-					m_Instance.m_ConstantBlocks.m_BlockSizes[index] = maxBlockSize;
-				}
-
 				if (index >= m_ParamsDesc.size())
 					return;
 
@@ -451,6 +438,7 @@ namespace apollo::editor {
 
 				const std::span
 					fragConstantBlocks = material.GetFragmentShader()->GetParameterBlocks();
+				m_Instance.m_ConstantBlocks.Init(fragConstantBlocks);
 
 				for (uint32 i = 0; i < fragConstantBlocks.size(); ++i)
 				{

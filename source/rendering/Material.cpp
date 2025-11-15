@@ -55,14 +55,72 @@ namespace apollo::rdr {
 		Reset();
 	}
 
+	void MaterialInstance::ConstantStorage::Init(std::span<const ShaderConstantBlock> blocks)
+	{
+		APOLLO_ASSERT(blocks.size() <= 4, "Too many shader constant blocks");
+		uint32 totalSize = 0;
+
+		for (size_t i = 0; i < blocks.size(); ++i)
+		{
+			const uint32 s = m_Sizes[i] = blocks[i].m_Size;
+			m_Offsets[i] = totalSize;
+			totalSize += s;
+		}
+		m_Ptr = std::make_unique<uint8[]>(totalSize);
+	}
+
+	uint8* MaterialInstance::ConstantStorage::GetBlockStart(uint32 index)
+	{
+		APOLLO_ASSERT(
+			index < 4 && m_Sizes[index],
+			"Constant block index {} is out out bounds",
+			index);
+		return m_Ptr.get() + m_Offsets[index];
+	}
+	const uint8* MaterialInstance::ConstantStorage::GetBlockStart(uint32 index) const
+	{
+		APOLLO_ASSERT(
+			index < 4 && m_Sizes[index],
+			"Constant block index {} is out out bounds",
+			index);
+		return m_Ptr.get() + m_Offsets[index];
+	}
+
+	uint8* MaterialInstance::ConstantStorage::GetConstantPtr(
+		uint32 block,
+		uint32 offset,
+		uint32 size)
+	{
+		uint8* blockStart = GetBlockStart(block);
+		APOLLO_ASSERT(
+			(offset + size) <= m_Sizes[block],
+			"Offset {} is out of bounds for block [{}]: block size is {} and variable size is {}",
+			offset,
+			block,
+			m_Sizes[block],
+			size);
+		return blockStart + offset;
+	}
+	const uint8* MaterialInstance::ConstantStorage::GetConstantPtr(
+		uint32 block,
+		uint32 offset,
+		uint32 size) const
+	{
+		const uint8* blockStart = GetBlockStart(block);
+		APOLLO_ASSERT(
+			(offset + size) <= m_Sizes[block],
+			"Offset {} is out of bounds for block [{}]: block size is {} and variable size is {}",
+			offset,
+			block,
+			m_Sizes[block],
+			size);
+		return blockStart + offset;
+	}
+
 	void MaterialInstance::PushFragmentConstants(SDL_GPUCommandBuffer* cmdBuffer, uint32 index) const
 	{
-		APOLLO_ASSERT(index < 4, "Block index {} is out of bounds", index);
-		SDL_PushGPUFragmentUniformData(
-			cmdBuffer,
-			index,
-			m_ConstantBlocks.m_FragmentConstants[index].m_Buffer,
-			m_ConstantBlocks.m_BlockSizes[index]);
+		const uint8* ptr = m_ConstantBlocks.GetBlockStart(index);
+		SDL_PushGPUFragmentUniformData(cmdBuffer, index, ptr, m_ConstantBlocks.m_Sizes[index]);
 	}
 
 	void MaterialInstance::Bind(SDL_GPURenderPass* renderPass) const
