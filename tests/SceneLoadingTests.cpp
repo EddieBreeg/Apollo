@@ -16,20 +16,32 @@ namespace apollo::scene_ut {
 	[[maybe_unused]] constexpr ULID g_AssetId1 = "01K8GV45XSRQ7DRN15KFESCFXY"_ulid;
 	[[maybe_unused]] constexpr ULID g_AssetId2 = "01K8K8AWNQZWN3XGJ07GTFN0ED"_ulid;
 
-	bool CreateMetadata(const std::filesystem::path&, ULIDMap<AssetMetadata>& out_bank)
+	struct AssetManager : public IAssetManager
 	{
-		out_bank.emplace(
-			std::pair{
-				g_AssetId1,
-				AssetMetadata{ .m_Id = g_AssetId1, .m_Type = EAssetType::Scene },
-			});
-		out_bank.emplace(
-			std::pair{
-				g_AssetId2,
-				AssetMetadata{ .m_Id = g_AssetId2, .m_Type = EAssetType::Scene },
-			});
-		return true;
-	}
+		AssetManager(AssetImportFunc* loadScene, rdr::GPUDevice& device, mt::ThreadPool& tp)
+			: IAssetManager({}, device, tp)
+			, m_TypeInfo{ &ConstructAsset<Scene>, loadScene }
+		{}
+
+		bool ImportMetadataBank() override
+		{
+			m_MetadataBank.emplace(
+				std::pair{
+					g_AssetId1,
+					AssetMetadata{ .m_Id = g_AssetId1, .m_Type = EAssetType::Scene },
+				});
+			m_MetadataBank.emplace(
+				std::pair{
+					g_AssetId2,
+					AssetMetadata{ .m_Id = g_AssetId2, .m_Type = EAssetType::Scene },
+				});
+			return true;
+		}
+
+		const AssetTypeInfo& GetTypeInfo(EAssetType) const override { return m_TypeInfo; }
+
+		const AssetTypeInfo m_TypeInfo;
+	};
 
 	EAssetLoadResult LoadScene(IAsset&, const AssetMetadata&)
 	{
@@ -43,7 +55,7 @@ namespace apollo::scene_ut {
 
 		// We artificially load a subscene within the one we're already loading
 		auto& tempWorld = SceneLoadingSystem::GetTempWorld();
-		auto subScene = AssetManager::GetInstance()->GetAsset<Scene>(g_AssetId2);
+		auto subScene = IAssetManager::GetInstance()->GetAsset<Scene>(g_AssetId2);
 		APOLLO_ASSERT(subScene, "Scene {} not found", g_AssetId2);
 		tempWorld.emplace<SceneComponent>(tempWorld.create(), std::move(subScene));
 		return EAssetLoadResult::Success;
@@ -57,14 +69,7 @@ namespace apollo::scene_ut {
 			, m_Semaphore(0)
 		{
 			APOLLO_LOG_INFO("Test Start");
-			m_AssetManager = &AssetManager::Init(
-				AssetManagerSettings{
-					.m_MetadataImportFunc = CreateMetadata,
-					.m_LoadScene = loadScene,
-					.m_AssetPath = "./assets",
-				},
-				m_Device,
-				m_ThreadPool);
+			m_AssetManager = &IAssetManager::Init<AssetManager>(loadScene, m_Device, m_ThreadPool);
 			m_AssetManager->ImportMetadataBank();
 			m_AssetManager->GetAssetLoader().RegisterCallback(
 				[this]()
@@ -83,7 +88,7 @@ namespace apollo::scene_ut {
 		{
 			APOLLO_LOG_INFO("Test End");
 			ecs::Manager::Shutdown();
-			AssetManager::Shutdown();
+			IAssetManager::Shutdown();
 		}
 
 		void Update()
@@ -96,7 +101,7 @@ namespace apollo::scene_ut {
 		mt::ThreadPool m_ThreadPool;
 		ecs::Manager& m_EcsManager;
 		rdr::GPUDevice m_Device;
-		AssetManager* m_AssetManager = nullptr;
+		IAssetManager* m_AssetManager = nullptr;
 		std::binary_semaphore m_Semaphore;
 		GameTime m_GameTime;
 	};

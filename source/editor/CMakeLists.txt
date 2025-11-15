@@ -9,6 +9,7 @@ SOURCES
 	asset/LoadScene.cpp
 	asset/LoadShader.cpp
 	asset/LoadTexture.cpp
+	asset/Manager.cpp
 	Editor.cpp
 	RegisterComponents.cpp
 	${EDITOR_HEADERS}

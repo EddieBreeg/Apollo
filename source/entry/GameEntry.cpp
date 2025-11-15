@@ -7,13 +7,9 @@
 
 int main(int argc, const char** argv)
 {
-	apollo::AssetManagerSettings assetManagerSettings{
-		.m_AssetPath = std::filesystem::path(argv[0]).parent_path(),
-	};
-
 	apollo::EntryPoint entry{
 		.m_Args = std::span{ argv, size_t(argc) },
-		.m_AssetManagerSettings = assetManagerSettings,
+		.m_AssetRoot = std::filesystem::path(argv[0]).parent_path(),
 	};
 	apollo::GetEntryPoint(entry);
 

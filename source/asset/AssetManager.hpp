@@ -6,7 +6,6 @@
 #include "AssetFunctions.hpp"
 #include "AssetLoader.hpp"
 #include "AssetRef.hpp"
-#include <core/Singleton.hpp>
 #include <core/ULID.hpp>
 
 #include <filesystem>
@@ -27,23 +26,6 @@ namespace apollo {
 		[[nodiscard]] operator bool() const noexcept { return m_Create && m_Import; }
 	};
 
-	struct AssetManagerSettings
-	{
-		AssetBankImportFunc* m_MetadataImportFunc = nullptr;
-
-		// Asset importers
-		AssetImportFunc* m_LoadTexture2d = nullptr;
-		AssetImportFunc* m_LoadVertexShader = nullptr;
-		AssetImportFunc* m_LoadFragmentShader = nullptr;
-		AssetImportFunc* m_LoadMaterial = nullptr;
-		AssetImportFunc* m_LoadMaterialInstance = nullptr;
-		AssetImportFunc* m_LoadMesh = nullptr;
-		AssetImportFunc* m_LoadFont = nullptr;
-		AssetImportFunc* m_LoadScene = nullptr;
-
-		std::filesystem::path m_AssetPath;
-	};
-
 	struct AssetMetadata
 	{
 		ULID m_Id;
@@ -53,11 +35,25 @@ namespace apollo {
 		EAssetType m_Type = EAssetType::Invalid;
 	};
 
-	class AssetManager : public Singleton<AssetManager>
+	class IAssetManager
 	{
 	public:
-		APOLLO_API ~AssetManager();
-		APOLLO_API bool ImportMetadataBank();
+		virtual APOLLO_API ~IAssetManager();
+		virtual bool ImportMetadataBank() = 0;
+
+		template <class ManagerType, class... Args>
+		static ManagerType& Init(Args&&... args) requires(
+			std::is_base_of_v<IAssetManager, ManagerType>&&
+				std::constructible_from<ManagerType, Args...>)
+		{
+			ManagerType* ptr = new ManagerType{ std::forward<Args>(args)... };
+			s_Instance.reset(ptr);
+			return *ptr;
+		}
+
+		[[nodiscard]] static IAssetManager* GetInstance() noexcept { return s_Instance.get(); }
+
+		static void Shutdown() { s_Instance.reset(); }
 
 		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type)
 		{
@@ -111,12 +107,12 @@ namespace apollo {
 
 		[[nodiscard]] AssetLoader& GetAssetLoader() noexcept { return m_Loader; }
 
-	private:
-		APOLLO_API AssetManager(
-			const AssetManagerSettings& settings,
+		APOLLO_API IAssetManager(
+			const std::filesystem::path& assetsPath,
 			rdr::GPUDevice& gpuDevice,
 			mt::ThreadPool& threadPool);
-		friend class Singleton<AssetManager>;
+
+	protected:
 		friend struct AssetRetainTraits;
 
 		APOLLO_API IAsset* GetAssetImpl(
@@ -125,9 +121,9 @@ namespace apollo {
 			UniqueFunction<void(IAsset&)> cbk = {});
 		APOLLO_API void RequestUnload(IAsset* res);
 
+		virtual const AssetTypeInfo& GetTypeInfo(EAssetType type) const = 0;
+
 		ULIDMap<AssetMetadata> m_MetadataBank;
-		AssetBankImportFunc* m_ImportBank = nullptr;
-		AssetTypeInfo m_TypeInfo[int32(EAssetType::NTypes)];
 		std::shared_mutex m_Mutex;
 		ULIDMap<IAsset*> m_Cache;
 
@@ -135,8 +131,7 @@ namespace apollo {
 		AssetLoader m_Loader;
 		Queue<IAsset*> m_UnloadQueue;
 
-		static APOLLO_API std::unique_ptr<AssetManager> s_Instance;
-		friend class Singleton<AssetManager>;
+		static APOLLO_API std::unique_ptr<IAssetManager> s_Instance;
 	};
 
 } // namespace apollo

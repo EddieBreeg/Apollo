@@ -75,7 +75,7 @@ namespace apollo {
 	private:
 		void SetState(EAssetState state) noexcept { m_State = state; }
 
-		friend class AssetManager;
+		friend class IAssetManager;
 		friend struct AssetLoadRequest;
 		friend struct AssetRetainTraits;
 	};

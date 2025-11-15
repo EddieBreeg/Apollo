@@ -6,6 +6,7 @@
 #include <ecs/ComponentRegistry.hpp>
 #include <editor/Editor.hpp>
 #include <editor/asset/AssetLoaders.hpp>
+#include <editor/asset/Manager.hpp>
 #include <filesystem>
 
 namespace apollo::editor {
@@ -14,34 +15,23 @@ namespace apollo::editor {
 
 int main(int argc, const char** argv)
 {
-	apollo::AssetManagerSettings assetManagerSettings{
-		.m_AssetPath = argc > 1 ? std::filesystem::absolute(argv[1])
-								: std::filesystem::current_path(),
-	};
-	assetManagerSettings.m_MetadataImportFunc = &apollo::editor::ImporteAssetMetadata;
-
-	{
-		using namespace apollo;
-		using namespace apollo::editor;
-		using namespace apollo::rdr;
-		assetManagerSettings.m_LoadTexture2d = &AssetHelper<Texture2D>::Load;
-		assetManagerSettings.m_LoadVertexShader = &AssetHelper<VertexShader>::Load;
-		assetManagerSettings.m_LoadFragmentShader = &AssetHelper<FragmentShader>::Load;
-		assetManagerSettings.m_LoadMaterial = &AssetHelper<Material>::Load;
-		assetManagerSettings.m_LoadMaterialInstance = &AssetHelper<MaterialInstance>::Load;
-		assetManagerSettings.m_LoadMesh = &AssetHelper<Mesh>::Load;
-		assetManagerSettings.m_LoadFont = &AssetHelper<txt::FontAtlas>::Load;
-		assetManagerSettings.m_LoadScene = &AssetHelper<Scene>::Load;
-	}
+	using namespace apollo;
 
 	// component registry is kinda special: the core engine runtime doesn't know about it, we need
 	// to initialize it here
 	auto& componentRegistry = apollo::ecs::ComponentRegistry::Init();
 	apollo::editor::RegisterComponents(componentRegistry);
 
-	apollo::EntryPoint entry{
+	EntryPoint entry{
 		.m_Args = std::span{ argv, size_t(argc) },
-		.m_AssetManagerSettings = assetManagerSettings,
+		.m_AssetRoot = argc > 1 ? std::filesystem::absolute(argv[1])
+								: std::filesystem::current_path(),
+		.m_InitAssetManager = [](const std::filesystem::path& path,
+								 rdr::GPUDevice& device,
+								 mt::ThreadPool& tp) -> IAssetManager&
+		{
+			return IAssetManager::Init<editor::AssetManager>(path, device, tp);
+		},
 	};
 	apollo::GetEntryPoint(entry);
 

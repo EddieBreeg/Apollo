@@ -13,7 +13,7 @@ namespace apollo {
 	{
 		if (ptr && !--ptr->m_RefCount)
 		{
-			auto* manager = AssetManager::GetInstance();
+			auto* manager = IAssetManager::GetInstance();
 			if (manager) [[likely]]
 			{
 				manager->RequestUnload(ptr);

@@ -10,7 +10,7 @@
 struct ImGuiContext;
 
 namespace apollo {
-	class AssetManager;
+	class IAssetManager;
 
 	namespace ecs {
 		class Manager;
@@ -58,7 +58,7 @@ namespace apollo {
 		Window m_Window;
 		rdr::Context* m_RenderContext = nullptr;
 		ecs::Manager* m_ECSManager = nullptr;
-		AssetManager* m_AssetManager = nullptr;
+		IAssetManager* m_AssetManager = nullptr;
 		ImGuiContext* m_ImGuiContext = nullptr;
 
 		EAppResult m_Result;

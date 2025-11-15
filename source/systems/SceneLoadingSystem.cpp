@@ -8,7 +8,7 @@ namespace {
 }
 
 namespace apollo {
-	SceneLoadingSystem::SceneLoadingSystem(AssetManager& manager)
+	SceneLoadingSystem::SceneLoadingSystem(IAssetManager& manager)
 		: m_AssetManager(manager)
 	{}
 	void SceneLoadingSystem::PostInit()

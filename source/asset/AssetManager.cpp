@@ -1,14 +1,7 @@
 #include "AssetManager.hpp"
 #include <core/Assert.hpp>
-#include <core/Log.hpp>
-
-#include "Scene.hpp"
 #include <core/Json.hpp>
-#include <rendering/Material.hpp>
-#include <rendering/Mesh.hpp>
-#include <rendering/Shader.hpp>
-#include <rendering/Texture.hpp>
-#include <rendering/text/FontAtlas.hpp>
+#include <core/Log.hpp>
 
 namespace {
 	void ProcessUnloadRequests(
@@ -42,9 +35,9 @@ namespace {
 } // namespace
 
 namespace apollo {
-	std::unique_ptr<AssetManager> AssetManager::s_Instance;
+	std::unique_ptr<IAssetManager> IAssetManager::s_Instance;
 
-	AssetManager::~AssetManager()
+	IAssetManager::~IAssetManager()
 	{
 		m_Loader.Clear();
 
@@ -67,43 +60,15 @@ namespace apollo {
 		}
 	}
 
-	AssetManager::AssetManager(const AssetManagerSettings& settings, rdr::GPUDevice& gpuDevice, mt::ThreadPool& tp)
-		: m_ImportBank(settings.m_MetadataImportFunc)
-		, m_TypeInfo{ 
-			{&ConstructAsset<rdr::Texture2D>, settings.m_LoadTexture2d},
-			{&ConstructAsset<rdr::VertexShader>, settings.m_LoadVertexShader},
-			{&ConstructAsset<rdr::FragmentShader>, settings.m_LoadFragmentShader},
-			{&ConstructAsset<rdr::Material>, settings.m_LoadMaterial},
-			{&ConstructAsset<rdr::MaterialInstance>, settings.m_LoadMaterialInstance},
-			{&ConstructAsset<rdr::Mesh>, settings.m_LoadMesh},
-			{&ConstructAsset<rdr::txt::FontAtlas>, settings.m_LoadFont},
-			{&ConstructAsset<Scene>, settings.m_LoadScene},
-		 }
-		, m_AssetsPath(settings.m_AssetPath)
+	IAssetManager::IAssetManager(
+		const std::filesystem::path& assetPath,
+		rdr::GPUDevice& gpuDevice,
+		mt::ThreadPool& tp)
+		: m_AssetsPath(assetPath)
 		, m_Loader(gpuDevice, tp)
 	{}
 
-	bool AssetManager::ImportMetadataBank()
-	{
-		DEBUG_CHECK(m_ImportBank)
-		{
-			APOLLO_LOG_CRITICAL(
-				"Called ImportMetadataBank on asset manager but bank import function is nullptr");
-			return false;
-		}
-		DEBUG_CHECK(!m_AssetsPath.empty())
-		{
-			APOLLO_LOG_CRITICAL(
-				"Called ImportMetadataBank on asset manager but asset folder path is empty");
-			return false;
-		}
-
-		APOLLO_LOG_INFO("Loading project assets metadata from {}", m_AssetsPath.string());
-		m_ImportBank(m_AssetsPath, m_MetadataBank);
-		return true;
-	}
-
-	IAsset* AssetManager::GetAssetImpl(
+	IAsset* IAssetManager::GetAssetImpl(
 		const ULID& id,
 		EAssetType type,
 		UniqueFunction<void(IAsset&)> cbk)
@@ -149,7 +114,7 @@ namespace apollo {
 			}
 		}
 
-		const AssetTypeInfo& info = m_TypeInfo[int32(type)];
+		const AssetTypeInfo& info = GetTypeInfo(type);
 
 		DEBUG_CHECK(info)
 		{
@@ -179,7 +144,7 @@ namespace apollo {
 		return ptr;
 	}
 
-	const AssetMetadata* AssetManager::GetAssetMetadata(const ULID& id) const noexcept
+	const AssetMetadata* IAssetManager::GetAssetMetadata(const ULID& id) const noexcept
 	{
 		if (const auto it = m_MetadataBank.find(id); it != m_MetadataBank.end())
 			return &it->second;
@@ -188,14 +153,14 @@ namespace apollo {
 		return nullptr;
 	}
 
-	void AssetManager::RequestUnload(IAsset* ptr)
+	void IAssetManager::RequestUnload(IAsset* ptr)
 	{
 		ptr->SetState(EAssetState::Unloading);
 		std::unique_lock lock{ m_Mutex };
 		m_UnloadQueue.AddEmplace(ptr);
 	}
 
-	void AssetManager::Update()
+	void IAssetManager::Update()
 	{
 		m_Loader.ProcessRequests();
 		ProcessUnloadRequests(m_UnloadQueue, m_Cache, m_Mutex);
@@ -208,7 +173,7 @@ namespace apollo {
 		std::string_view key,
 		bool isOptional)
 	{
-		auto* assetManager = AssetManager::GetInstance();
+		auto* assetManager = IAssetManager::GetInstance();
 		APOLLO_ASSERT(assetManager, "Asset manager has not been initialized");
 		ULID id;
 		const auto it = json.find(key);

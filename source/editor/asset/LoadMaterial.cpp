@@ -162,7 +162,7 @@ namespace apollo::editor {
 			return EAssetLoadResult::Success;
 		}
 
-		auto* manager = AssetManager::GetInstance();
+		auto* manager = IAssetManager::GetInstance();
 		if (!manager) [[unlikely]]
 		{
 			APOLLO_LOG_CRITICAL(
@@ -311,7 +311,7 @@ namespace apollo::editor {
 			return EAssetLoadResult::Failure;
 		}
 
-		AssetManager* manager = AssetManager::GetInstance();
+		IAssetManager* manager = IAssetManager::GetInstance();
 
 		if (!manager) [[unlikely]]
 		{

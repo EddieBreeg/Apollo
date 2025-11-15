@@ -4,8 +4,6 @@
 
 namespace apollo {
 	class Scene;
-
-	struct AssetManagerSettings;
 } // namespace apollo
 
 namespace apollo::rdr {

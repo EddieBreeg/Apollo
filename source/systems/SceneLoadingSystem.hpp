@@ -3,13 +3,13 @@
 #include "SceneComponents.hpp"
 
 namespace apollo {
-	class AssetManager;
+	class IAssetManager;
 	class GameTime;
 
 	class SceneLoadingSystem
 	{
 	public:
-		APOLLO_API SceneLoadingSystem(AssetManager& assetManager);
+		APOLLO_API SceneLoadingSystem(IAssetManager& assetManager);
 		APOLLO_API void PostInit();
 
 		~SceneLoadingSystem() = default;
@@ -29,7 +29,7 @@ namespace apollo {
 			Finished,
 		};
 
-		AssetManager& m_AssetManager;
+		IAssetManager& m_AssetManager;
 		entt::entity m_SceneEntity;
 		std::atomic<EState> m_State = EState::Default;
 	};

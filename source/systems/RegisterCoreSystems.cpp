@@ -5,7 +5,7 @@
 #include <systems/SceneLoadingSystem.hpp>
 
 namespace apollo {
-	void RegisterCoreSystems(App& app, ecs::Manager& manager, AssetManager& assetManager)
+	void RegisterCoreSystems(App& app, ecs::Manager& manager, IAssetManager& assetManager)
 	{
 		manager.AddSystem<inputs::System>(app);
 		manager.AddSystem<SceneLoadingSystem>(assetManager);

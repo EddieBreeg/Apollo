@@ -2,11 +2,19 @@
 
 #include <PCH.hpp>
 #include <span>
+#include <filesystem>
+
+namespace apollo::mt {
+	class ThreadPool;
+}
+
+namespace apollo::rdr {
+	class GPUDevice;
+}
 
 namespace apollo {
 	class App;
-
-	struct AssetManagerSettings;
+	class IAssetManager;
 
 	enum class EAppResult : int8
 	{
@@ -25,7 +33,11 @@ namespace apollo {
 
 		EAppResult (*m_OnInit)(const EntryPoint&, App&) = nullptr;
 
-		AssetManagerSettings& m_AssetManagerSettings;
+		std::filesystem::path m_AssetRoot;
+		IAssetManager& (*m_InitAssetManager)(
+			const std::filesystem::path& settings,
+			rdr::GPUDevice& gpuDevice,
+			mt::ThreadPool& threadPool) = nullptr;
 	};
 
 	extern void GetEntryPoint(EntryPoint& out_entry);

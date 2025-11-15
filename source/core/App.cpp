@@ -45,7 +45,7 @@ namespace {
 namespace apollo {
 	std::unique_ptr<App> App::s_Instance;
 
-	void RegisterCoreSystems(App& app, ecs::Manager& manager, AssetManager& assetManager);
+	void RegisterCoreSystems(App& app, ecs::Manager& manager, IAssetManager& assetManager);
 
 	App::App(const EntryPoint& entry)
 		: m_EntryPoint(entry)
@@ -84,12 +84,16 @@ namespace apollo {
 #else
 		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
 #endif
-		m_AssetManager = &AssetManager::Init(
-			entry.m_AssetManagerSettings,
-			m_RenderContext->GetDevice(),
+		auto& device = m_RenderContext->GetDevice();
+		APOLLO_ASSERT(
+			entry.m_InitAssetManager,
+			"No intialisation function provided for the asset manager");
+		m_AssetManager = &entry.m_InitAssetManager(
+			entry.m_AssetRoot,
+			device,
 			m_MainThreadPool);
 
-		m_ImGuiContext = InitImGui(m_Window.GetHandle(), m_RenderContext->GetDevice().GetHandle());
+		m_ImGuiContext = InitImGui(m_Window.GetHandle(), device.GetHandle());
 
 		m_ECSManager = &ecs::Manager::Init();
 		RegisterCoreSystems(*this, *m_ECSManager, *m_AssetManager);
@@ -153,7 +157,7 @@ namespace apollo {
 		APOLLO_LOG_INFO("Shutting down...");
 		ShutdownImGui();
 		ecs::Manager::Shutdown();
-		AssetManager::Shutdown();
+		IAssetManager::Shutdown();
 		rdr::Context::Shutdown();
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	}
