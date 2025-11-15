@@ -1,4 +1,4 @@
-#include "AssetLoaders.hpp"
+#include "AssetHelper.hpp"
 #include <asset/AssetManager.hpp>
 #include <asset/Scene.hpp>
 #include <core/Errno.hpp>

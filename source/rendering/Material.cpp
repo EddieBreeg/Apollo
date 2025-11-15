@@ -151,4 +151,24 @@ namespace apollo::rdr {
 		}
 		SDL_BindGPUFragmentSamplers(renderPass, 0, bindings, m_FragmentTextures.m_NumTextures);
 	}
+
+	bool MaterialInstance::IsLoaded() const noexcept
+	{
+		if (!IAsset::IsLoaded() || !m_Material || !m_Material->IsLoaded())
+			return false;
+
+		for (uint32 i = 0; i < m_VertexTextures.m_NumTextures; ++i)
+		{
+			if (!m_VertexTextures.m_Textures[i]->IsLoaded())
+				return false;
+		}
+
+		for (uint32 i = 0; i < m_FragmentTextures.m_NumTextures; ++i)
+		{
+			if (!m_FragmentTextures.m_Textures[i]->IsLoaded())
+				return false;
+		}
+
+		return true;
+	}
 } // namespace apollo::rdr

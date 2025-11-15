@@ -9,18 +9,11 @@
 		"format": "d32float"
 	},
 	"rasterizer": {
+		"cullMode": "none"
 	},
 	"colorTargets": [
 		{
-			"format": "rgba8unorm_srgb",
-			"blending": {
-				"srcColorBlendFactor": "srcAlpha",
-				"dstColorBlendFactor": "oneMinusSrcAlpha",
-				"colorBlendOp": "add",
-				"srcAlphaBlendFactor": "srcAlpha",
-				"dstAlphaBlendFactor": "oneMinusSrcAlpha",
-				"alphaBlendOp": "add"
-			}
+			"format": "rgba8unorm_srgb"
 		}
 	]
 }

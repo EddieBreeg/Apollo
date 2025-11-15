@@ -1,5 +1,6 @@
 #include "DemoPCH.hpp"
 #include "Inspector.hpp"
+#include <editor/asset/Manager.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -276,7 +277,9 @@ namespace apollo::demo {
 		auto& renderer = *apollo::rdr::Context::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
-		manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
+		auto& system = manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
+		system.m_Inspector.m_AssetManager = static_cast<editor::AssetManager*>(
+			IAssetManager::GetInstance());
 		auto& world = manager.GetEntityWorld();
 		world.emplace<SceneSwitchRequestComponent>(
 			world.create(),

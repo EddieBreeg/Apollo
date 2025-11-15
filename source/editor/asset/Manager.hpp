@@ -14,6 +14,8 @@ namespace apollo::editor {
 
 		bool ImportMetadataBank() override;
 
+		void RequestReload(IAsset& asset);
+
 	protected:
 		const AssetTypeInfo& GetTypeInfo(EAssetType type) const override;
 	};

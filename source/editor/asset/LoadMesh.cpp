@@ -1,4 +1,4 @@
-#include "AssetLoaders.hpp"
+#include "AssetHelper.hpp"
 #include <asset/AssetLoader.hpp>
 #include <asset/AssetManager.hpp>
 #include <assimp/Importer.hpp>

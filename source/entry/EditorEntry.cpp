@@ -5,7 +5,6 @@
 
 #include <ecs/ComponentRegistry.hpp>
 #include <editor/Editor.hpp>
-#include <editor/asset/AssetLoaders.hpp>
 #include <editor/asset/Manager.hpp>
 #include <filesystem>
 

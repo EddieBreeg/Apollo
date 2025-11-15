@@ -1,8 +1,9 @@
 #include "Manager.hpp"
-#include "AssetLoaders.hpp"
+#include "AssetHelper.hpp"
 #include <core/Errno.hpp>
 #include <core/Log.hpp>
 #include <core/StringHash.hpp>
+#include <core/ULIDFormatter.hpp>
 #include <fstream>
 
 #include <asset/Scene.hpp>
@@ -11,6 +12,7 @@
 #include <rendering/Shader.hpp>
 #include <rendering/Texture.hpp>
 #include <rendering/text/FontAtlas.hpp>
+
 namespace {
 	const apollo::StringHashMap<apollo::EAssetType> g_AssetTypeMap{
 		{ apollo::StringHash{ "texture2d" }, apollo::EAssetType::Texture2D },
@@ -136,7 +138,19 @@ namespace {
 		CreateTypeInfo<apollo::Scene>(),
 	};
 
+	constexpr void (*g_SwapFunctions[])(apollo::IAsset&, apollo::IAsset&) = {
+		&apollo::editor::AssetHelper<apollo::rdr::Texture2D>::Swap,
+		&apollo::editor::AssetHelper<apollo::rdr::VertexShader>::Swap,
+		&apollo::editor::AssetHelper<apollo::rdr::FragmentShader>::Swap,
+		&apollo::editor::AssetHelper<apollo::rdr::Material>::Swap,
+		&apollo::editor::AssetHelper<apollo::rdr::MaterialInstance>::Swap,
+		&apollo::editor::AssetHelper<apollo::rdr::Mesh>::Swap,
+		&apollo::editor::AssetHelper<apollo::rdr::txt::FontAtlas>::Swap,
+		&apollo::editor::AssetHelper<apollo::Scene>::Swap,
+	};
+
 	static_assert(STATIC_ARRAY_SIZE(g_TypeInfo) == size_t(apollo::EAssetType::NTypes));
+	static_assert(STATIC_ARRAY_SIZE(g_SwapFunctions) == size_t(apollo::EAssetType::NTypes));
 } // namespace
 
 namespace apollo::editor {
@@ -192,6 +206,48 @@ namespace apollo::editor {
 				metadata.m_Id);
 		}
 		return true;
+	}
+
+	void AssetManager::RequestReload(IAsset& asset)
+	{
+		const EAssetType type = asset.GetType();
+		APOLLO_ASSERT(
+			EAssetType::Invalid < type && type < EAssetType::NTypes,
+			"Invalid asset type {}",
+			int32(type));
+
+		DEBUG_CHECK(asset.IsLoaded())
+		{
+			APOLLO_LOG_WARN("Requested reload for asset {}, but asset is not loaded", asset.GetId());
+			return;
+		}
+
+		if (const AssetMetadata* metadata = GetAssetMetadata(asset.GetId()))
+		{
+			const AssetTypeInfo& typeInfo = g_TypeInfo[size_t(type)];
+			IAsset* tempAsset = typeInfo.m_Create(ULID::Generate());
+			m_Cache.emplace(tempAsset->GetId(), tempAsset);
+
+			SetAssetState(*tempAsset, EAssetState::Loading);
+			SetAssetState(asset, EAssetState::Loading);
+
+			m_Loader.AddRequest(
+				AssetLoadRequest{
+					.m_Asset = AssetRef{ tempAsset },
+					.m_Import = typeInfo.m_Import,
+					.m_Metadata = metadata,
+					.m_Callback =
+						UniqueFunction<void(IAsset&)>{
+							[&asset, swap = g_SwapFunctions[size_t(type)]](IAsset& tempAsset)
+							{
+								if (tempAsset.IsLoaded())
+									swap(asset, tempAsset);
+
+								SetAssetState(asset, EAssetState::Loaded);
+							},
+						},
+				});
+		}
 	}
 
 	const AssetTypeInfo& AssetManager::GetTypeInfo(EAssetType type) const

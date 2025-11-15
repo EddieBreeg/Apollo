@@ -78,12 +78,12 @@ namespace apollo::rdr {
 			m_VertShader.Swap(other.m_VertShader);
 			m_FragShader.Swap(other.m_FragShader);
 			apollo::Swap(m_MaterialKey, other.m_MaterialKey);
-			m_InstanceKey.store(
-				other.m_InstanceKey.exchange(m_InstanceKey.load(std::memory_order_relaxed)),
-				std::memory_order_relaxed);
 		}
 
 		GET_ASSET_TYPE_IMPL(EAssetType::Material);
+
+		[[nodiscard]] VertexShader* GetVertexShader() noexcept { return m_VertShader.Get(); }
+		[[nodiscard]] FragmentShader* GetFragmentShader() noexcept { return m_FragShader.Get(); }
 
 		[[nodiscard]] const VertexShader* GetVertexShader() const noexcept
 		{
@@ -119,6 +119,7 @@ namespace apollo::rdr {
 		static constexpr uint32 s_MaxTextures = 16;
 
 		GET_ASSET_TYPE_IMPL(EAssetType::MaterialInstance);
+		[[nodiscard]] Material* GetMaterial() noexcept { return m_Material.Get(); }
 		[[nodiscard]] const Material* GetMaterial() const noexcept { return m_Material.Get(); }
 
 		template <class T>
@@ -148,6 +149,8 @@ namespace apollo::rdr {
 			m_VertexTextures.Swap(other.m_VertexTextures);
 			m_FragmentTextures.Swap(other.m_FragmentTextures);
 		}
+
+		[[nodiscard]] APOLLO_API bool IsLoaded() const noexcept;
 
 	private:
 		friend struct editor::AssetHelper<MaterialInstance>;

@@ -5,7 +5,6 @@ SOURCES
 	asset/LoadFont.cpp
 	asset/LoadMaterial.cpp
 	asset/LoadMesh.cpp
-	asset/LoadMetadata.cpp
 	asset/LoadScene.cpp
 	asset/LoadShader.cpp
 	asset/LoadTexture.cpp

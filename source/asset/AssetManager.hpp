@@ -121,6 +121,11 @@ namespace apollo {
 			UniqueFunction<void(IAsset&)> cbk = {});
 		APOLLO_API void RequestUnload(IAsset* res);
 
+		static void SetAssetState(IAsset& asset, EAssetState state) noexcept
+		{
+			asset.SetState(state);
+		}
+
 		virtual const AssetTypeInfo& GetTypeInfo(EAssetType type) const = 0;
 
 		ULIDMap<AssetMetadata> m_MetadataBank;

@@ -1,5 +1,6 @@
 #include "Inspector.hpp"
 #include "DemoPCH.hpp"
+#include <editor/asset/Manager.hpp>
 #include <imgui.h>
 
 namespace {
@@ -102,7 +103,9 @@ namespace {
 		}
 	}
 
-	void MaterialWidget(apollo::rdr::MaterialInstance& material)
+	void MaterialWidget(
+		apollo::rdr::MaterialInstance& material,
+		apollo::editor::AssetManager* assetManager)
 	{
 		if (!material.IsLoaded())
 			return;
@@ -124,6 +127,14 @@ namespace {
 		for (uint32 i = 0; i < blocks.size(); ++i)
 		{
 			ShaderParamBlockWidget(material, blocks[i], i);
+		}
+
+		if (assetManager && ImGui::Button("Reload Material"))
+		{
+			auto* mat = material.GetMaterial();
+			assetManager->RequestReload(*mat->GetVertexShader());
+			assetManager->RequestReload(*mat->GetFragmentShader());
+			assetManager->RequestReload(*mat);
 		}
 
 		ImGui::TreePop();
@@ -179,7 +190,7 @@ namespace apollo::demo {
 		if (MeshComponent* meshComp = world.try_get<MeshComponent>(selection->m_Entity);
 			meshComp && meshComp->m_Material)
 		{
-			MaterialWidget(*meshComp->m_Material);
+			MaterialWidget(*meshComp->m_Material, m_AssetManager);
 		}
 
 		ImGui::End();

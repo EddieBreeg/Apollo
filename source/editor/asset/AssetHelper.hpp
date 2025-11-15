@@ -20,13 +20,15 @@ namespace apollo::rdr::txt {
 }
 
 namespace apollo::editor {
-	bool ImporteAssetMetadata(
-		const std::filesystem::path& assetRootPath,
-		ULIDMap<AssetMetadata>& out_metadata);
+	class AssetManager;
 
 	template <class A>
 	struct AssetHelper
 	{
 		static EAssetLoadResult Load(IAsset& out_asset, const AssetMetadata& metadata);
+		static void Swap(IAsset& lhs, IAsset& rhs)
+		{
+			static_cast<A&>(lhs).Swap(static_cast<A&>(rhs));
+		}
 	};
 } // namespace apollo::editor
