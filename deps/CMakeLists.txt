@@ -19,7 +19,7 @@ endif(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
 
 file(GLOB IMGUI_HEADERS "imgui/*.h")
 
-AddLibrary(imgui SOURCES
+AddLibrary(imgui TYPE STATIC SOURCES
 	imgui/imgui.cpp
 	imgui/imgui_draw.cpp
 	imgui/imgui_tables.cpp

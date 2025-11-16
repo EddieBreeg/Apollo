@@ -1,6 +1,6 @@
 file(GLOB_RECURSE EDITOR_HEADERS *.h *.hpp)
 
-AddLibrary(${PROJECT_NAME}EditorRuntime
+AddLibrary(${PROJECT_NAME}EditorRuntime TYPE STATIC
 SOURCES
 	asset/LoadFont.cpp
 	asset/LoadMaterial.cpp
