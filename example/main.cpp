@@ -218,7 +218,7 @@ namespace apollo::demo {
 					element.m_Transform->m_Position,
 					element.m_Transform->m_Scale,
 					element.m_Transform->m_Rotation);
-				m_RenderContext.PushVertexShaderConstants(modelMat, 1);
+				m_RenderContext.PushVertexShaderConstants(modelMat, 1u);
 				m_RenderContext.BindVertexBuffer(element.m_MeshComp->m_Mesh->GetVertexBuffer());
 
 				const rdr::Buffer& iBuffer = element.m_MeshComp->m_Mesh->GetIndexBuffer();

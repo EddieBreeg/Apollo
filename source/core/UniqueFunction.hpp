@@ -154,7 +154,7 @@ namespace apollo {
 	template <class R, class... Args>
 	template <class F>
 	UniqueFunction<R(Args...)>& UniqueFunction<R(Args...)>::operator=(F&& other) noexcept(
-		std::is_nothrow_constructible_v<UniqueFunction<R(Args...)>, F>)
+		std::is_nothrow_constructible_v<UniqueFunction, F>)
 		requires(IsInvocable<std::decay_t<F>>)
 	{
 		this->~UniqueFunction();
