@@ -98,6 +98,15 @@ namespace apollo::scene_ut {
 			m_GameTime.Update();
 		}
 
+		void UpdateAndLoad()
+		{
+			m_AssetManager->Update();
+			m_EcsManager.Update(m_GameTime);
+			m_GameTime.Update();
+			m_AssetManager->Update();
+			m_Semaphore.acquire();
+		}
+
 		mt::ThreadPool m_ThreadPool;
 		ecs::Manager& m_EcsManager;
 		rdr::GPUDevice m_Device;
@@ -174,9 +183,7 @@ namespace apollo::scene_ut {
 		TestHelper helper;
 		auto& world = helper.GetWorld();
 		world.emplace<SceneSwitchRequestComponent>(world.create(), g_AssetId1);
-		helper.Update();
-		helper.m_AssetManager->Update();
-		helper.m_Semaphore.acquire(); // wait for the loading to finish
+		helper.UpdateAndLoad();
 		helper.Update();
 
 		entt::entity sceneEntity;
@@ -209,9 +216,7 @@ namespace apollo::scene_ut {
 		TestHelper helper{ LoadSceneWithSubscene };
 		auto& world = helper.GetWorld();
 		world.emplace<SceneSwitchRequestComponent>(world.create(), g_AssetId1);
-		helper.Update();
-		helper.m_AssetManager->Update();
-		helper.m_Semaphore.acquire(); // wait for the loading to finish
+		helper.UpdateAndLoad();
 		helper.Update();
 
 		const SceneComponent* subSceneComp = nullptr;
@@ -244,9 +249,7 @@ namespace apollo::scene_ut {
 		world.emplace<SceneComponent>(world.create(), std::move(scene), true);
 		world.emplace<SceneSwitchRequestComponent>(world.create(), g_AssetId2);
 
-		helper.Update();
-		helper.m_AssetManager->Update();
-		helper.m_Semaphore.acquire(); // wait for the second scene to finish loading
+		helper.UpdateAndLoad();
 		helper.Update();
 		helper.m_AssetManager->Update();
 
@@ -258,6 +261,73 @@ namespace apollo::scene_ut {
 			CHECK(sceneComp.m_Scene);
 			CHECK(sceneComp.m_Scene->GetId() == g_AssetId2);
 			CHECK(sceneComp.m_Scene->IsLoaded());
+		}
+	}
+
+	SCENE_TEST("Switch from scene1 to scene1")
+	{
+		TestHelper helper;
+		auto& world = helper.GetWorld();
+		world.emplace<SceneSwitchRequestComponent>(world.create(), g_AssetId1);
+
+		helper.UpdateAndLoad();
+		helper.Update();
+		helper.m_AssetManager->Update();
+
+		world.emplace<SceneSwitchRequestComponent>(world.create(), g_AssetId1);
+		helper.UpdateAndLoad();
+		helper.Update();
+		helper.m_AssetManager->Update();
+
+		{
+			const auto view = world.view<const SceneComponent>();
+			REQUIRE(view.size() == 1);
+			const auto& sceneComp = *view->begin();
+			CHECK(sceneComp.m_IsRoot);
+			CHECK(sceneComp.m_Scene);
+			CHECK(sceneComp.m_Scene->GetId() == g_AssetId1);
+			CHECK(sceneComp.m_Scene->IsLoaded());
+		}
+	}
+
+	SCENE_TEST("Switch from scene1 to subscene")
+	{
+		TestHelper helper{ LoadSceneWithSubscene };
+		auto& world = helper.GetWorld();
+		world.emplace<SceneSwitchRequestComponent>(world.create(), g_AssetId1);
+		helper.UpdateAndLoad();
+		helper.Update();
+
+		const SceneComponent* subSceneComp = nullptr;
+		uint32 subSceneCount = 0;
+		{
+			const auto view = world.view<const SceneComponent>(
+				entt::exclude_t<SceneLoadFinishedEventComponent>{});
+			for (const auto subScene : view)
+			{
+				++subSceneCount;
+				subSceneComp = &view.get<const SceneComponent>(subScene);
+			}
+		}
+		REQUIRE(subSceneCount == 1);
+		REQUIRE(subSceneComp);
+		CHECK(!subSceneComp->m_IsRoot);
+		CHECK(subSceneComp->m_Scene);
+		CHECK(subSceneComp->m_Scene->GetId() == g_AssetId2);
+		CHECK(subSceneComp->m_Scene->IsLoaded());
+
+		world.emplace<SceneSwitchRequestComponent>(world.create(), subSceneComp->m_Scene->GetId());
+		helper.Update();
+		helper.Update();
+
+		{
+			const auto view = world.view<const SceneComponent>();
+			REQUIRE(view.size() == 1);
+			const SceneComponent& comp = *view->begin();
+			CHECK(comp.m_IsRoot);
+			REQUIRE(comp.m_Scene);
+			CHECK(comp.m_Scene->IsLoaded());
+			CHECK(comp.m_Scene->GetId() == g_AssetId2);
 		}
 	}
 

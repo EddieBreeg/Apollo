@@ -51,6 +51,12 @@ namespace apollo {
 			m_GameObjects.swap(other.m_GameObjects);
 		}
 
+		/**
+		* \warning: This should NOT be called on its own. To properly reload a scene, use the scene loading system
+		* \see [SceneSwitchRequestComponent](@ref SceneSwitchRequestComponent)
+		*/
+		APOLLO_API void ReloadDeferred(IAssetManager& assetManager);
+
 	private:
 		friend struct editor::AssetHelper<Scene>;
 		ULIDMap<GameObject> m_GameObjects;

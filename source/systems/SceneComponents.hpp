@@ -1,3 +1,5 @@
+#pragma once
+
 #include <PCH.hpp>
 #include <asset/AssetRef.hpp>
 #include <asset/Scene.hpp>

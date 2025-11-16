@@ -29,8 +29,11 @@ namespace apollo {
 			Finished,
 		};
 
+		void ProcessLoadFinished(entt::registry& world);
+		void StartLoading(entt::registry& world, const ULID& id);
+
 		IAssetManager& m_AssetManager;
-		entt::entity m_SceneEntity;
+		entt::entity m_SceneEntity = Unassigned<entt::entity>;
 		std::atomic<EState> m_State = EState::Default;
 	};
 } // namespace apollo

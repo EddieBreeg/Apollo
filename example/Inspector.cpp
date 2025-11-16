@@ -175,6 +175,13 @@ namespace apollo::demo {
 			return;
 		}
 
+		if (ImGui::Button("Reload Scene"))
+		{
+			world.emplace<SceneSwitchRequestComponent>(world.create(), m_Scene->GetId());
+			ImGui::End();
+			return;
+		}
+
 		const auto* selection = Outliner(m_Scene->GetGameObjects(), m_CurrentObject);
 		const bool selectionChanged = selection != m_CurrentObject;
 		m_CurrentObject = selection;

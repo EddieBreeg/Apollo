@@ -112,6 +112,12 @@ namespace apollo {
 			rdr::GPUDevice& gpuDevice,
 			mt::ThreadPool& threadPool);
 
+		template <Asset A>
+		[[nodiscard]] const AssetTypeInfo& GetTypeInfo() const
+		{
+			return GetTypeInfo(A::AssetType);
+		}
+
 	protected:
 		friend struct AssetRetainTraits;
 

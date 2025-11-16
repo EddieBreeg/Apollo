@@ -32,3 +32,5 @@ extern "C" void* _alloca(size_t);
 using RectF = apollo::Rectangle<float>;
 using RectI32 = apollo::Rectangle<int32>;
 using RectU32 = apollo::Rectangle<uint32>;
+
+#include <core/Unassigned.hpp>

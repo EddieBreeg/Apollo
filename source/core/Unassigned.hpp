@@ -1,5 +1,11 @@
 #pragma once
 
+#include <cstdint>
+
+namespace entt {
+	enum class entity : uint32_t;
+}
+
 namespace apollo {
 	/*
 	 * Represents an object which doesn't have a "valid" value. Useful for resource handles
@@ -11,6 +17,12 @@ namespace apollo {
 	struct UnassignedT<T*>
 	{
 		static constexpr T* Value = nullptr;
+	};
+
+	template <>
+	struct UnassignedT<entt::entity>
+	{
+		static constexpr entt::entity Value = entt::entity(UINT32_MAX);
 	};
 
 	template <class T>

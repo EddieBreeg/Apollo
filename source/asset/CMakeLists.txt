@@ -4,5 +4,6 @@ target_sources(${PROJECT_NAME}Runtime PRIVATE
 	AssetLoader.cpp
 	AssetRef.cpp
 	AssetManager.cpp
+	Scene.cpp
 	${ASSET_HEADERS}
 )
