@@ -40,18 +40,12 @@ namespace apollo::rdr {
 		bool m_ClearTarget = true;
 	};
 
-	struct ShaderConstantCommand
-	{
-		ShaderConstantStorage m_Data;
-		uint32 m_Size;
-		uint32 m_Slot = 0;
-	};
-
 	class GPUCommand
 	{
 	public:
-		enum ECommandType : uint8
+		enum ECommandType : int8
 		{
+			Invalid = -1,
 			// Shader constants
 			PushVertexShaderConstants,
 			PushFragmentShaderConstants,
@@ -91,21 +85,21 @@ namespace apollo::rdr {
 		{}
 
 		explicit GPUCommand(RenderPass& renderPass) noexcept
-			: m_RenderPass{ &renderPass }
+			: m_Storage{ .m_RenderPass = &renderPass }
 			, m_Type(ECommandType::BeginRenderPass)
 		{}
 
 		explicit GPUCommand(const RectF& viewport) noexcept
-			: m_Viewport{ viewport }
+			: m_Storage{ .m_Viewport{ viewport } }
 			, m_Type(ECommandType::SetViewport)
 		{}
 
 		APOLLO_API explicit GPUCommand(SDL_GPUGraphicsPipeline* pipeline) noexcept
-			: m_Pipeline(pipeline)
+			: m_Storage{ .m_Pipeline = pipeline }
 			, m_Type(ECommandType::BindGraphicsPipeline)
 		{}
 		APOLLO_API explicit GPUCommand(const MaterialInstance& mat) noexcept
-			: m_MaterialInstance(&mat)
+			: m_Storage{ .m_MaterialInstance = &mat }
 			, m_Type(ECommandType::BindMaterialInstance)
 		{}
 
@@ -113,29 +107,29 @@ namespace apollo::rdr {
 		APOLLO_API GPUCommand(ECommandType type, std::span<const Buffer> buffers);
 
 		explicit GPUCommand(const DrawCall& drawCall) noexcept
-			: m_DrawCall{ drawCall }
+			: m_Storage{ .m_DrawCall{ drawCall } }
 			, m_Type(ECommandType::DrawPrimitives)
 		{}
 
 		explicit GPUCommand(const IndexedDrawCall& drawCall) noexcept
-			: m_IndexedDrawCall{ drawCall }
+			: m_Storage{ .m_IndexedDrawCall{ drawCall } }
 			, m_Type(ECommandType::DrawIndexedPrimitives)
 		{}
 
 		explicit GPUCommand(const ImGuiDrawCommand& cmd) noexcept
-			: m_ImGuiDrawCall{ cmd }
+			: m_Storage{ .m_ImGuiDrawCall{ cmd } }
 			, m_Type(DrawImGuiLayer)
 		{}
 
 		template <meta::SmallTrivial F>
 		explicit GPUCommand(F&& cmd) noexcept requires(std::is_invocable_r_v<void, F, Context&>)
-			: m_Custom(std::forward<F>(cmd))
+			: m_Storage{ .m_Custom{ std::forward<F>(cmd) } }
 			, m_Type(ECommandType::Custom)
 		{}
 
-		GPUCommand(const GPUCommand&) = default;
-		GPUCommand& operator=(const GPUCommand&) = default;
-		~GPUCommand() = default;
+		APOLLO_API GPUCommand(GPUCommand&&) noexcept;
+		APOLLO_API GPUCommand& operator=(GPUCommand&& other) noexcept;
+		APOLLO_API ~GPUCommand();
 
 		APOLLO_API void operator()(Context& ctx);
 
@@ -155,8 +149,15 @@ namespace apollo::rdr {
 			void (*m_Invoke)(void*, Context&);
 		};
 
-		union {
-			ShaderConstantCommand m_Constants;
+		struct ShaderConstantCommand
+		{
+			uint32 m_Size;
+			uint32 m_Slot = 0;
+			alignas(std::max_align_t) uint8 m_Buffer[1];
+		};
+
+		union Storage {
+			ShaderConstantCommand* m_Constants;
 			RenderPass* m_RenderPass;
 			SDL_GPUGraphicsPipeline* m_Pipeline;
 			const MaterialInstance* m_MaterialInstance;
@@ -167,7 +168,8 @@ namespace apollo::rdr {
 			IndexedDrawCall m_IndexedDrawCall;
 			ImGuiDrawCommand m_ImGuiDrawCall;
 			CustomCommand m_Custom;
-		};
+			char _unused;
+		} m_Storage;
 		ECommandType m_Type;
 	};
 } // namespace apollo::rdr

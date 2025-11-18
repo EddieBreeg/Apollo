@@ -18,23 +18,23 @@ namespace apollo::rdr {
 	{
 		SDL_PushGPUVertexUniformData(
 			ctx.GetMainCommandBuffer(),
-			m_Constants.m_Slot,
-			m_Constants.m_Data.m_Buffer,
-			m_Constants.m_Size);
+			m_Storage.m_Constants->m_Slot,
+			m_Storage.m_Constants->m_Buffer,
+			m_Storage.m_Constants->m_Size);
 	}
 
 	COMMAND_TYPE_IMPL(PushFragmentShaderConstants)
 	{
 		SDL_PushGPUFragmentUniformData(
 			ctx.GetMainCommandBuffer(),
-			m_Constants.m_Slot,
-			m_Constants.m_Data.m_Buffer,
-			m_Constants.m_Size);
+			m_Storage.m_Constants->m_Slot,
+			m_Storage.m_Constants->m_Buffer,
+			m_Storage.m_Constants->m_Size);
 	}
 
 	COMMAND_TYPE_IMPL(BeginRenderPass)
 	{
-		ctx.SwitchRenderPass(m_RenderPass);
+		ctx.SwitchRenderPass(m_Storage.m_RenderPass);
 	}
 
 	COMMAND_TYPE_IMPL(SetViewport)
@@ -42,10 +42,10 @@ namespace apollo::rdr {
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 		const SDL_GPUViewport vp{
-			.x = m_Viewport.x0,
-			.y = m_Viewport.y0,
-			.w = m_Viewport.GetWidth(),
-			.h = m_Viewport.GetHeight(),
+			.x = m_Storage.m_Viewport.x0,
+			.y = m_Storage.m_Viewport.y0,
+			.w = m_Storage.m_Viewport.GetWidth(),
+			.h = m_Storage.m_Viewport.GetHeight(),
 			.min_depth = 0.0f,
 			.max_depth = 1.0f,
 		};
@@ -55,15 +55,15 @@ namespace apollo::rdr {
 	{
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
-		SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_Pipeline);
+		SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_Storage.m_Pipeline);
 	}
 
 	COMMAND_TYPE_IMPL(BindMaterialInstance)
 	{
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
-		m_MaterialInstance->PushFragmentConstants(ctx.GetMainCommandBuffer());
-		m_MaterialInstance->Bind(renderPass->GetHandle());
+		m_Storage.m_MaterialInstance->PushFragmentConstants(ctx.GetMainCommandBuffer());
+		m_Storage.m_MaterialInstance->Bind(renderPass->GetHandle());
 	}
 
 	COMMAND_TYPE_IMPL(BindVertexBuffers)
@@ -71,18 +71,18 @@ namespace apollo::rdr {
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 
-		auto* bindings = Alloca(SDL_GPUBufferBinding, m_Buffers.size());
-		for (size_t i = 0; i < m_Buffers.size(); ++i)
+		auto* bindings = Alloca(SDL_GPUBufferBinding, m_Storage.m_Buffers.size());
+		for (size_t i = 0; i < m_Storage.m_Buffers.size(); ++i)
 		{
 			bindings[i] = {
-				.buffer = m_Buffers[i].GetHandle(),
+				.buffer = m_Storage.m_Buffers[i].GetHandle(),
 			};
 		}
 		SDL_BindGPUVertexBuffers(
 			renderPass->GetHandle(),
 			0,
 			bindings,
-			NumCast<uint32>(m_Buffers.size()));
+			NumCast<uint32>(m_Storage.m_Buffers.size()));
 	}
 
 	COMMAND_TYPE_IMPL(BindIndexBuffer)
@@ -90,7 +90,7 @@ namespace apollo::rdr {
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 		const SDL_GPUBufferBinding binding{
-			.buffer = m_IBuffer->GetHandle(),
+			.buffer = m_Storage.m_IBuffer->GetHandle(),
 		};
 		SDL_BindGPUIndexBuffer(renderPass->GetHandle(), &binding, SDL_GPU_INDEXELEMENTSIZE_32BIT);
 	}
@@ -100,17 +100,17 @@ namespace apollo::rdr {
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 
-		auto* bindings = Alloca(SDL_GPUBuffer*, m_Buffers.size());
-		for (size_t i = 0; i < m_Buffers.size(); ++i)
+		auto* bindings = Alloca(SDL_GPUBuffer*, m_Storage.m_Buffers.size());
+		for (size_t i = 0; i < m_Storage.m_Buffers.size(); ++i)
 		{
-			bindings[i] = m_Buffers[i].GetHandle();
+			bindings[i] = m_Storage.m_Buffers[i].GetHandle();
 		}
 
 		SDL_BindGPUVertexStorageBuffers(
 			renderPass->GetHandle(),
 			0,
 			bindings,
-			NumCast<uint32>(m_Buffers.size()));
+			NumCast<uint32>(m_Storage.m_Buffers.size()));
 	}
 
 	COMMAND_TYPE_IMPL(BindFragmentStorageBuffers)
@@ -118,17 +118,17 @@ namespace apollo::rdr {
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 
-		auto* bindings = Alloca(SDL_GPUBuffer*, m_Buffers.size());
-		for (size_t i = 0; i < m_Buffers.size(); ++i)
+		auto* bindings = Alloca(SDL_GPUBuffer*, m_Storage.m_Buffers.size());
+		for (size_t i = 0; i < m_Storage.m_Buffers.size(); ++i)
 		{
-			bindings[i] = m_Buffers[i].GetHandle();
+			bindings[i] = m_Storage.m_Buffers[i].GetHandle();
 		}
 
 		SDL_BindGPUFragmentStorageBuffers(
 			renderPass->GetHandle(),
 			0,
 			bindings,
-			NumCast<uint32>(m_Buffers.size()));
+			NumCast<uint32>(m_Storage.m_Buffers.size()));
 	}
 
 	COMMAND_TYPE_IMPL(DrawPrimitives)
@@ -137,10 +137,10 @@ namespace apollo::rdr {
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 		SDL_DrawGPUPrimitives(
 			renderPass->GetHandle(),
-			m_DrawCall.m_NumVertices,
-			m_DrawCall.m_NumInstances,
-			m_DrawCall.m_FistVertex,
-			m_DrawCall.m_FistInstance);
+			m_Storage.m_DrawCall.m_NumVertices,
+			m_Storage.m_DrawCall.m_NumInstances,
+			m_Storage.m_DrawCall.m_FistVertex,
+			m_Storage.m_DrawCall.m_FistInstance);
 	}
 
 	COMMAND_TYPE_IMPL(DrawIndexedPrimitives)
@@ -149,11 +149,11 @@ namespace apollo::rdr {
 		APOLLO_ASSERT(renderPass, "SetViewport command called, but no render pass in progress");
 		SDL_DrawGPUIndexedPrimitives(
 			renderPass->GetHandle(),
-			m_IndexedDrawCall.m_NumIndices,
-			m_IndexedDrawCall.m_NumInstances,
-			m_IndexedDrawCall.m_FirstIndex,
-			m_IndexedDrawCall.m_VertexOffset,
-			m_IndexedDrawCall.m_FirstInstance);
+			m_Storage.m_IndexedDrawCall.m_NumIndices,
+			m_Storage.m_IndexedDrawCall.m_NumInstances,
+			m_Storage.m_IndexedDrawCall.m_FirstIndex,
+			m_Storage.m_IndexedDrawCall.m_VertexOffset,
+			m_Storage.m_IndexedDrawCall.m_FirstInstance);
 	}
 
 	COMMAND_TYPE_IMPL(DrawImGuiLayer)
@@ -161,38 +161,40 @@ namespace apollo::rdr {
 		auto* const cmdBuffer = ctx.GetMainCommandBuffer();
 		auto* const swapChainTexture = ctx.GetSwapchainTexture();
 
-		if (!swapChainTexture || !m_ImGuiDrawCall.m_DrawData) [[unlikely]]
+		if (!swapChainTexture || !m_Storage.m_ImGuiDrawCall.m_DrawData) [[unlikely]]
 			return;
 
 		ctx.SwitchRenderPass();
 
-		ImGui_ImplSDLGPU3_PrepareDrawData(m_ImGuiDrawCall.m_DrawData, cmdBuffer);
+		ImGui_ImplSDLGPU3_PrepareDrawData(m_Storage.m_ImGuiDrawCall.m_DrawData, cmdBuffer);
 		const SDL_GPUColorTargetInfo targetInfo{
 			.texture = swapChainTexture,
 			.clear_color =
 				SDL_FColor{
-					m_ImGuiDrawCall.m_ClearColor.r,
-					m_ImGuiDrawCall.m_ClearColor.g,
-					m_ImGuiDrawCall.m_ClearColor.b,
-					m_ImGuiDrawCall.m_ClearColor.a,
+					m_Storage.m_ImGuiDrawCall.m_ClearColor.r,
+					m_Storage.m_ImGuiDrawCall.m_ClearColor.g,
+					m_Storage.m_ImGuiDrawCall.m_ClearColor.b,
+					m_Storage.m_ImGuiDrawCall.m_ClearColor.a,
 				},
-			.load_op = m_ImGuiDrawCall.m_ClearTarget ? SDL_GPU_LOADOP_CLEAR : SDL_GPU_LOADOP_LOAD,
+			.load_op = m_Storage.m_ImGuiDrawCall.m_ClearTarget ? SDL_GPU_LOADOP_CLEAR
+															   : SDL_GPU_LOADOP_LOAD,
 			.store_op = SDL_GPU_STOREOP_STORE,
 		};
 
 		SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(cmdBuffer, &targetInfo, 1, nullptr);
-		ImGui_ImplSDLGPU3_RenderDrawData(m_ImGuiDrawCall.m_DrawData, cmdBuffer, pass);
+		ImGui_ImplSDLGPU3_RenderDrawData(m_Storage.m_ImGuiDrawCall.m_DrawData, cmdBuffer, pass);
 		SDL_EndGPURenderPass(pass);
 	}
 
 	COMMAND_TYPE_IMPL(Custom)
 	{
-		m_Custom.m_Invoke(m_Custom.m_Buf, ctx);
+		m_Storage.m_Custom.m_Invoke(m_Storage.m_Custom.m_Buf, ctx);
 	}
 
 #undef COMMAND_TYPE_IMPL
 
 	GPUCommand::GPUCommand(EShaderStage stage, const void* data, size_t size, uint32 slot)
+		: m_Storage{ ._unused = 0 }
 	{
 		APOLLO_ASSERT(
 			size <= sizeof(ShaderConstantStorage),
@@ -200,11 +202,13 @@ namespace apollo::rdr {
 			size);
 		APOLLO_ASSERT(slot < 4, "Shader constant block index {} is out of range", slot);
 
-		new (&m_Constants) ShaderConstantCommand{
-			.m_Data{ data, size },
+		const size_t allocSize = sizeof(ShaderConstantCommand) + size - 1;
+		m_Storage.m_Constants = static_cast<ShaderConstantCommand*>(::operator new(allocSize));
+		new (m_Storage.m_Constants) ShaderConstantCommand{
 			.m_Size = static_cast<uint32>(size),
 			.m_Slot = slot,
 		};
+		memcpy(m_Storage.m_Constants->m_Buffer, data, size);
 		switch (stage)
 		{
 		case EShaderStage::Vertex: m_Type = PushVertexShaderConstants; break;
@@ -216,7 +220,8 @@ namespace apollo::rdr {
 	}
 
 	GPUCommand::GPUCommand(ECommandType t, const Buffer& buf)
-		: m_Type(t)
+		: m_Storage{ ._unused = 0 }
+		, m_Type(t)
 	{
 		APOLLO_ASSERT(buf, "Passed null buffer to GPU command");
 		switch (t)
@@ -225,7 +230,7 @@ namespace apollo::rdr {
 			APOLLO_ASSERT(
 				buf.IsIndexBuffer(),
 				"Command type is BindIndexBuffer but buffer is not an index buffer");
-			m_IBuffer = &buf;
+			m_Storage.m_IBuffer = &buf;
 			return;
 #ifdef APOLLO_DEV
 		case ECommandType::BindVertexBuffers:
@@ -247,11 +252,11 @@ namespace apollo::rdr {
 #endif
 		}
 
-		m_Buffers = std::span{ &buf, 1 };
+		m_Storage.m_Buffers = std::span{ &buf, 1 };
 	}
 
 	GPUCommand::GPUCommand(ECommandType type, std::span<const Buffer> buffers)
-		: m_Buffers{ buffers }
+		: m_Storage{ .m_Buffers{ buffers } }
 		, m_Type(type)
 	{
 		if (buffers.empty()) [[unlikely]]
@@ -281,8 +286,32 @@ namespace apollo::rdr {
 #endif
 	}
 
+	GPUCommand::GPUCommand(GPUCommand&& other) noexcept
+		: m_Storage(other.m_Storage)
+		, m_Type(other.m_Type)
+	{}
+
+	GPUCommand& GPUCommand::operator=(GPUCommand&& other) noexcept
+	{
+		this->~GPUCommand();
+		m_Storage = other.m_Storage;
+		m_Type = other.m_Type;
+		other.m_Type = ECommandType::Invalid;
+		return *this;
+	}
+
+	GPUCommand::~GPUCommand()
+	{
+		if (m_Type == ECommandType::PushVertexShaderConstants ||
+			m_Type == ECommandType::PushFragmentShaderConstants)
+		{
+			::operator delete(m_Storage.m_Constants);
+		}
+	}
+
 	void GPUCommand::operator()(Context& ctx)
 	{
+		APOLLO_ASSERT(m_Type != ECommandType::Invalid, "Attempting to invoke invalid GPU command");
 		static constexpr std::array impl = []<size_t... Types>(std::index_sequence<Types...>)
 		{
 			using ArrayType = std::array<void (GPUCommand::*)(Context&), sizeof...(Types)>;
