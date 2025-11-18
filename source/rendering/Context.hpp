@@ -84,6 +84,12 @@ namespace apollo::rdr {
 		void DrawIndexedPrimitives(const IndexedDrawCall& call) { m_CommandQueue.AddEmplace(call); }
 		void DrawImGuiLayer(const ImGuiDrawCommand& call) { m_CommandQueue.AddEmplace(call); }
 
+		template <class F>
+		void AddCustomCommand(F&& cmd)
+		{
+			m_CommandQueue.AddEmplace(std::forward<F>(cmd));
+		}
+
 		// Returns null if called outside of BeginFrame/EndFrame
 		[[nodiscard]] SDL_GPUCommandBuffer* GetMainCommandBuffer() noexcept
 		{
@@ -102,6 +108,7 @@ namespace apollo::rdr {
 
 		[[nodiscard]] SDL_GPUSampler* GetDefaultSampler() noexcept { return m_DefaultSampler; }
 
+		[[nodiscard]] RenderPass* GetCurrentRenderPass() noexcept { return m_RenderPass; }
 	private:
 		/**
 		 * Switches render pass. If a render pass was currently in progress, End is called on
@@ -110,7 +117,6 @@ namespace apollo::rdr {
 		 * on it.
 		 */
 		APOLLO_API void SwitchRenderPass(RenderPass* renderPass = nullptr);
-		[[nodiscard]] RenderPass* GetCurrentRenderPass() noexcept { return m_RenderPass; }
 
 		APOLLO_API Context(
 			EBackend backend,

@@ -3,6 +3,8 @@
 #include <PCH.hpp>
 
 #include "ShaderInfo.hpp"
+#include <core/Poly.hpp>
+#include <core/TypeTraits.hpp>
 #include <span>
 
 struct ImDrawData;
@@ -72,6 +74,9 @@ namespace apollo::rdr {
 			DrawIndexedPrimitives,
 			DrawImGuiLayer,
 
+			// Custom callback command
+			Custom,
+
 			NTypes
 		};
 
@@ -122,6 +127,12 @@ namespace apollo::rdr {
 			, m_Type(DrawImGuiLayer)
 		{}
 
+		template <meta::SmallTrivial F>
+		explicit GPUCommand(F&& cmd) noexcept requires(std::is_invocable_r_v<void, F, Context&>)
+			: m_Custom(std::forward<F>(cmd))
+			, m_Type(ECommandType::Custom)
+		{}
+
 		GPUCommand(const GPUCommand&) = default;
 		GPUCommand& operator=(const GPUCommand&) = default;
 		~GPUCommand() = default;
@@ -131,6 +142,18 @@ namespace apollo::rdr {
 	private:
 		template <ECommandType Type>
 		void Impl(Context& ctx);
+
+		struct CustomCommand
+		{
+			template <class F>
+			CustomCommand(F&& func)
+				: m_Invoke(&poly::Invoke<std::decay_t<F>>)
+			{
+				new (m_Buf) std::decay_t<F>{ std::forward<F>(func) };
+			}
+			alignas(std::max_align_t) char m_Buf[2 * sizeof(void*)];
+			void (*m_Invoke)(void*, Context&);
+		};
 
 		union {
 			ShaderConstantCommand m_Constants;
@@ -143,6 +166,7 @@ namespace apollo::rdr {
 			DrawCall m_DrawCall;
 			IndexedDrawCall m_IndexedDrawCall;
 			ImGuiDrawCommand m_ImGuiDrawCall;
+			CustomCommand m_Custom;
 		};
 		ECommandType m_Type;
 	};

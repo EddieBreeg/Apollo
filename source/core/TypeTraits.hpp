@@ -81,4 +81,10 @@ namespace apollo::meta {
 	requires(std::is_member_function_pointer_v<decltype(&F::operator())>) struct FunctionTraits<F>
 		: public FunctionTraits<decltype(&F::operator())>
 	{};
+
+	template <class T>
+	concept Trivial = std::is_trivially_destructible_v<T> && std::is_trivially_copyable_v<T>;
+
+	template <class T>
+	concept SmallTrivial = Trivial<T> && (sizeof(T) <= (2 * sizeof(void*)));
 } // namespace apollo::meta

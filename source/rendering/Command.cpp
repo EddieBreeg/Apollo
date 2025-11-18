@@ -160,9 +160,9 @@ namespace apollo::rdr {
 	{
 		auto* const cmdBuffer = ctx.GetMainCommandBuffer();
 		auto* const swapChainTexture = ctx.GetSwapchainTexture();
-		
+
 		if (!swapChainTexture || !m_ImGuiDrawCall.m_DrawData) [[unlikely]]
-		return;
+			return;
 
 		ctx.SwitchRenderPass();
 
@@ -180,13 +180,14 @@ namespace apollo::rdr {
 			.store_op = SDL_GPU_STOREOP_STORE,
 		};
 
-		SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(
-			cmdBuffer,
-			&targetInfo,
-			1,
-			nullptr);
+		SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(cmdBuffer, &targetInfo, 1, nullptr);
 		ImGui_ImplSDLGPU3_RenderDrawData(m_ImGuiDrawCall.m_DrawData, cmdBuffer, pass);
 		SDL_EndGPURenderPass(pass);
+	}
+
+	COMMAND_TYPE_IMPL(Custom)
+	{
+		m_Custom.m_Invoke(m_Custom.m_Buf, ctx);
 	}
 
 #undef COMMAND_TYPE_IMPL

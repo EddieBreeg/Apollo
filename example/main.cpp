@@ -75,6 +75,8 @@ namespace apollo::demo {
 		glm::mat4x4 m_CamMatrix = glm::identity<glm::mat4x4>();
 		glm::mat4x4 m_ModelMatrix;
 
+		std::vector<VisualElement> m_VisualElements;
+
 		void ProcessInputs(
 			entt::registry& world,
 			const GameTime& time,
@@ -197,8 +199,8 @@ namespace apollo::demo {
 			m_RenderContext.SetViewport(m_TargetViewport.m_Rectangle);
 			const auto view = world.view<const MeshComponent, const TransformComponent>();
 
-			std::vector<VisualElement> meshes;
-			meshes.reserve(view.size_hint());
+			m_VisualElements.clear();
+			m_VisualElements.reserve(view.size_hint());
 
 			for (const auto entt : view)
 			{
@@ -208,36 +210,52 @@ namespace apollo::demo {
 					continue;
 
 				const auto& transform = view.get<const TransformComponent>(entt);
-				meshes.emplace_back(mesh, transform, m_Camera.m_Translate, viewVector);
+				m_VisualElements.emplace_back(mesh, transform, m_Camera.m_Translate, viewVector);
 			}
-			std::sort(meshes.begin(), meshes.end());
-			for (const auto& element : meshes)
-			{
-				m_RenderContext.BindMaterialInstance(*element.m_MeshComp->m_Material);
-				const auto modelMat = ComputeTransformMatrix(
-					element.m_Transform->m_Position,
-					element.m_Transform->m_Scale,
-					element.m_Transform->m_Rotation);
-				m_RenderContext.PushVertexShaderConstants(modelMat, 1u);
-				m_RenderContext.BindVertexBuffer(element.m_MeshComp->m_Mesh->GetVertexBuffer());
+			std::sort(m_VisualElements.begin(), m_VisualElements.end());
 
-				const rdr::Buffer& iBuffer = element.m_MeshComp->m_Mesh->GetIndexBuffer();
+			m_RenderContext.AddCustomCommand(
+				[&](rdr::Context& ctx)
+				{
+					auto* pass = ctx.GetCurrentRenderPass()->GetHandle();
+					auto* const cmdBuffer = ctx.GetMainCommandBuffer();
 
-				if (iBuffer)
-				{
-					m_RenderContext.BindIndexBuffer(iBuffer);
-					m_RenderContext.DrawIndexedPrimitives(
-						rdr::IndexedDrawCall{
-							.m_NumIndices = element.m_MeshComp->m_Mesh->GetNumIndices(),
-						});
-				}
-				else
-				{
-					m_RenderContext.DrawPrimitives(
-						rdr::DrawCall{
-							.m_NumVertices = element.m_MeshComp->m_Mesh->GetNumVertices() });
-				}
-			}
+					for (const auto& e : m_VisualElements)
+					{
+						e.m_MeshComp->m_Material->Bind(pass);
+						e.m_MeshComp->m_Material->PushFragmentConstants(cmdBuffer);
+						const auto modelMat = ComputeTransformMatrix(
+							e.m_Transform->m_Position,
+							e.m_Transform->m_Scale,
+							e.m_Transform->m_Rotation);
+						SDL_PushGPUVertexUniformData(cmdBuffer, 1u, &modelMat, sizeof(modelMat));
+						const auto& vBuffer = e.m_MeshComp->m_Mesh->GetVertexBuffer();
+						SDL_GPUBufferBinding binding{ .buffer = vBuffer.GetHandle() };
+						SDL_BindGPUVertexBuffers(pass, 0, &binding, 1);
+						const auto& iBuffer = e.m_MeshComp->m_Mesh->GetIndexBuffer();
+						if (iBuffer)
+						{
+							binding.buffer = iBuffer.GetHandle();
+							SDL_BindGPUIndexBuffer(pass, &binding, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+							SDL_DrawGPUIndexedPrimitives(
+								pass,
+								e.m_MeshComp->m_Mesh->GetNumIndices(),
+								1,
+								0,
+								0,
+								0);
+						}
+						else
+						{
+							SDL_DrawGPUPrimitives(
+								pass,
+								e.m_MeshComp->m_Mesh->GetNumVertices(),
+								1,
+								0,
+								0);
+						}
+					}
+				});
 		}
 
 		void Update(entt::registry& world, const apollo::GameTime& time)
