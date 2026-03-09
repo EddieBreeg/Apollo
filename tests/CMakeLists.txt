@@ -5,6 +5,7 @@ SOURCES
 	main.cpp
 	AssetLoaderTests.cpp
 	BitmapTests.cpp
+	CoroutineTests.cpp
 	ComponentRegistryTests.cpp
 	EnumTests.cpp
 	GraphicsPipelineTests.cpp
@@ -32,6 +33,7 @@ OPTIONS PRIVATE ${COMPILER_ARGS}
 
 AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
 AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
+AddTest("Coroutine Tests" "${PROJECT_NAME}Tests" FILTERS "[coroutine]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("Hash Tests" "${PROJECT_NAME}Tests" FILTERS "[hash]")
 AddTest("Container Tests" "${PROJECT_NAME}Tests" FILTERS "[containers]")
