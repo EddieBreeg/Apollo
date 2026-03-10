@@ -18,9 +18,9 @@ namespace apollo::asset_ut {
 		GET_ASSET_TYPE_IMPL(EAssetType::Invalid);
 	};
 
-	EAssetLoadResult LoadDummy(IAsset&, const AssetMetadata&)
+	AssetLoadTask LoadDummy(IAsset&, const AssetMetadata&)
 	{
-		return EAssetLoadResult::Success;
+		co_return true;
 	}
 
 	struct Helper
@@ -55,7 +55,7 @@ namespace apollo::asset_ut {
 		helper.m_Loader.AddRequest(
 			AssetLoadRequest{
 				ref,
-				&LoadDummy,
+				LoadDummy(*ref, g_DummyMeta),
 				&g_DummyMeta,
 			});
 		helper.m_Loader.ProcessRequests();
@@ -71,7 +71,7 @@ namespace apollo::asset_ut {
 		helper.m_Loader.AddRequest(
 			AssetLoadRequest{
 				ref,
-				&LoadDummy,
+				LoadDummy(*ref, g_DummyMeta),
 				&g_DummyMeta,
 				UniqueFunction<void(IAsset&)>{
 					[&](const IAsset& asset)

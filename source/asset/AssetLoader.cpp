@@ -12,12 +12,22 @@ namespace {
 } // namespace
 
 namespace apollo {
+	EAssetLoadResult AssetLoadTask::operator()()
+	{
+		APOLLO_ASSERT(m_Handle, "Called a null task");
+		if (m_Handle.promise().CanResume())
+		{
+			m_Handle.resume();
+		}
+		return m_Handle.promise().GetResult();
+	}
+
 	EAssetLoadResult AssetLoadRequest::operator()()
 	{
 		APOLLO_ASSERT(m_Asset, "Null assert in load request");
 		APOLLO_ASSERT(m_Asset->GetState(), "Assset is in invalid state");
 
-		if (!m_Import && m_Callback)
+		if (!m_Task && m_Callback)
 		{
 			// Here we're not actually trying to load the asset:
 			// we just want to invoke the callback
@@ -29,7 +39,7 @@ namespace apollo {
 			return EAssetLoadResult::Success;
 		}
 
-		APOLLO_ASSERT(m_Metadata && m_Import, "Invalid asset load request");
+		APOLLO_ASSERT(m_Metadata && m_Task, "Invalid asset load request");
 
 		if (!m_Asset->IsLoading()) [[unlikely]]
 		{
@@ -50,7 +60,7 @@ namespace apollo {
 		}
 #endif
 
-		const EAssetLoadResult result = m_Import(*m_Asset, *m_Metadata);
+		const EAssetLoadResult result = m_Task();
 		switch (result)
 		{
 		case EAssetLoadResult::Success:

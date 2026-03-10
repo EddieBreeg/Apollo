@@ -62,7 +62,7 @@ namespace {
 
 namespace apollo::editor {
 	template <>
-	EAssetLoadResult AssetHelper<Scene>::Load(IAsset& out_asset, const AssetMetadata& metadata)
+	AssetLoadTask AssetHelper<Scene>::LoadAsync(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		std::ifstream file{ metadata.m_FilePath, std::ios::in };
 		if (!file.is_open())
@@ -71,24 +71,23 @@ namespace apollo::editor {
 				"Failed to load scene from {}: {}",
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 		const nlohmann::json j = nlohmann::json::parse(file, nullptr, false);
 		if (j.is_discarded())
 		{
 			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 
 		nlohmann::json objectsJson;
 		// if no game objects: valid, we just have an empty scene
 		if (!json::Visit(objectsJson, j, "gameObjects"))
-			return EAssetLoadResult::Success;
-
+			co_return false;
 		if (!objectsJson.is_array())
 		{
 			APOLLO_LOG_ERROR("Failed to load game objects from JSON: not an array");
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 
 		Scene& scene = static_cast<Scene&>(out_asset);
@@ -102,6 +101,6 @@ namespace apollo::editor {
 			if (LoadGameObject(object, world, o, registry))
 				scene.m_GameObjects.emplace(object.m_Id, std::move(object));
 		}
-		return EAssetLoadResult::Success;
+		co_return true;
 	}
 } // namespace apollo::editor

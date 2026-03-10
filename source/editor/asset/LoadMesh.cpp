@@ -17,7 +17,7 @@ namespace {
 
 namespace apollo::editor {
 	template <>
-	EAssetLoadResult AssetHelper<rdr::Mesh>::Load(IAsset& out_asset, const AssetMetadata& metadata)
+	AssetLoadTask AssetHelper<rdr::Mesh>::LoadAsync(IAsset& out_asset, const AssetMetadata& metadata)
 	{
 		Assimp::Importer importer;
 		// I hate this, but Assimp takes in a C string, and stupid Windows uses wide strings so we
@@ -27,7 +27,7 @@ namespace apollo::editor {
 		if (!scene)
 		{
 			APOLLO_LOG_ERROR("Failed to load mesh from: {}", importer.GetErrorString());
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 
 		rdr::Mesh& mesh = static_cast<rdr::Mesh&>(out_asset);
@@ -68,6 +68,6 @@ namespace apollo::editor {
 		mesh.m_VBuffer.UploadData(copyPass, vertices.data(), vertSize);
 		mesh.m_IBuffer.UploadData(copyPass, indices.data(), indSize);
 
-		return EAssetLoadResult::Success;
+		co_return true;
 	}
 } // namespace apollo::editor

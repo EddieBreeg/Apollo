@@ -25,10 +25,26 @@ namespace apollo::editor {
 	template <class A>
 	struct AssetHelper
 	{
-		static EAssetLoadResult Load(IAsset& out_asset, const AssetMetadata& metadata);
+		static AssetLoadTask LoadAsync(IAsset& out_asset, const AssetMetadata& metadata);
 		static void Swap(IAsset& lhs, IAsset& rhs)
 		{
 			static_cast<A&>(lhs).Swap(static_cast<A&>(rhs));
 		}
+	};
+
+	/**
+	 * Textures have their own specialization, which gets both an immedate and asynchronous load
+	 * function
+	 */
+	template <>
+	struct AssetHelper<apollo::rdr::Texture2D>
+	{
+		static AssetLoadTask LoadAsync(IAsset& out_asset, const AssetMetadata& metadata);
+
+		/// \brief Attempts to load the texture from file immediately. Useful when loading a texture
+		/// directly from a file, instead of through the asset manager.
+		static bool DoLoad(rdr::Texture2D& out_tex, const AssetMetadata& metadata);
+
+		static void Swap(IAsset& lhs, IAsset& rhs);
 	};
 } // namespace apollo::editor

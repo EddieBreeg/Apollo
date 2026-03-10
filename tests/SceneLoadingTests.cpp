@@ -43,22 +43,22 @@ namespace apollo::scene_ut {
 		const AssetTypeInfo m_TypeInfo;
 	};
 
-	EAssetLoadResult LoadScene(IAsset&, const AssetMetadata&)
+	AssetLoadTask LoadScene(IAsset&, const AssetMetadata&)
 	{
-		return EAssetLoadResult::Success;
+		co_return true;
 	}
 
-	EAssetLoadResult LoadSceneWithSubscene(IAsset&, const AssetMetadata& metadata)
+	AssetLoadTask LoadSceneWithSubscene(IAsset&, const AssetMetadata& metadata)
 	{
 		if (metadata.m_Id != g_AssetId1)
-			return EAssetLoadResult::Success;
-
+			co_return true;
+		
 		// We artificially load a subscene within the one we're already loading
 		auto& tempWorld = SceneLoadingSystem::GetTempWorld();
-		auto subScene = IAssetManager::GetInstance()->GetAsset<Scene>(g_AssetId2);
+		auto subScene = co_await IAssetManager::GetInstance()->GetAsset<Scene>(g_AssetId2);
 		APOLLO_ASSERT(subScene, "Scene {} not found", g_AssetId2);
 		tempWorld.emplace<SceneComponent>(tempWorld.create(), std::move(subScene));
-		return EAssetLoadResult::Success;
+		co_return true;
 	}
 
 	struct TestHelper

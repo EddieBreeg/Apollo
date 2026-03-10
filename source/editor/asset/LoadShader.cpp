@@ -18,7 +18,7 @@ namespace {
 #endif
 
 	template <class ShaderType>
-	apollo::EAssetLoadResult LoadShader(
+	bool LoadShader(
 		ShaderType& out_shader,
 		const apollo::AssetMetadata& metadata)
 	{
@@ -35,7 +35,7 @@ namespace {
 				metadata.m_Id,
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
-			return EAssetLoadResult::Failure;
+			return false;
 		}
 		size_t len = inFile.tellg();
 		if (!len)
@@ -45,7 +45,7 @@ namespace {
 				metadata.m_Name,
 				metadata.m_Id,
 				metadata.m_FilePath.string());
-			return EAssetLoadResult::Failure;
+			return false;
 		}
 		inFile.seekg(0, std::ios::beg);
 		std::unique_ptr data = std::make_unique<char[]>(len);
@@ -57,7 +57,7 @@ namespace {
 				metadata.m_Id,
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
-			return EAssetLoadResult::Failure;
+			return false;
 		}
 
 #ifdef APOLLO_VULKAN
@@ -72,24 +72,24 @@ namespace {
 			std::string_view src{ data.get(), len };
 			out_shader = ShaderType::CompileFromSource(metadata.m_Id, src);
 		}
-		return out_shader ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+		return out_shader;
 	}
 } // namespace
 
 namespace apollo::editor {
 	template <>
-	EAssetLoadResult AssetHelper<rdr::VertexShader>::Load(
+	AssetLoadTask AssetHelper<rdr::VertexShader>::LoadAsync(
 		IAsset& out_asset,
 		const AssetMetadata& metadata)
 	{
-		return LoadShader(static_cast<rdr::VertexShader&>(out_asset), metadata);
+		co_return LoadShader(static_cast<rdr::VertexShader&>(out_asset), metadata);
 	}
 
 	template <>
-	EAssetLoadResult AssetHelper<rdr::FragmentShader>::Load(
+	AssetLoadTask AssetHelper<rdr::FragmentShader>::LoadAsync(
 		IAsset& out_asset,
 		const AssetMetadata& metadata)
 	{
-		return LoadShader(static_cast<rdr::FragmentShader&>(out_asset), metadata);
+		co_return LoadShader(static_cast<rdr::FragmentShader&>(out_asset), metadata);
 	}
 } // namespace apollo::editor

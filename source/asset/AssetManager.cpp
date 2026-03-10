@@ -137,7 +137,7 @@ namespace apollo {
 		m_Loader.AddRequest(
 			AssetLoadRequest{
 				AssetRef<IAsset>{ ptr },
-				info.m_Import,
+				info.m_LoadFunc(*ptr, *metadata),
 				metadata,
 				std::move(cbk),
 			});

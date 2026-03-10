@@ -21,9 +21,9 @@ namespace apollo {
 	struct AssetTypeInfo
 	{
 		AssetConstructor* m_Create = nullptr;
-		AssetImportFunc* m_Import = nullptr;
+		AssetImportFunc* m_LoadFunc = nullptr;
 
-		[[nodiscard]] operator bool() const noexcept { return m_Create && m_Import; }
+		[[nodiscard]] operator bool() const noexcept { return m_Create && m_LoadFunc; }
 	};
 
 	struct AssetMetadata

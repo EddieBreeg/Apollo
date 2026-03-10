@@ -10,9 +10,15 @@
 #include <stb_image.h>
 
 namespace apollo::editor {
-	template <>
-	EAssetLoadResult AssetHelper<rdr::Texture2D>::Load(
-		IAsset& out_texture,
+	AssetLoadTask AssetHelper<apollo::rdr::Texture2D>::LoadAsync(
+		IAsset& out_asset,
+		const AssetMetadata& metadata)
+	{
+		co_return DoLoad(static_cast<rdr::Texture2D&>(out_asset), metadata);
+	}
+
+	bool AssetHelper<apollo::rdr::Texture2D>::DoLoad(
+		rdr::Texture2D& out_texture,
 		const AssetMetadata& metadata)
 	{
 		const auto pathStr = metadata.m_FilePath.string();
@@ -22,7 +28,7 @@ namespace apollo::editor {
 		if (!data)
 		{
 			APOLLO_LOG_ERROR("Failed to load texture from {}: {}", pathStr, stbi_failure_reason());
-			return EAssetLoadResult::Failure;
+			return false;
 		}
 
 		rdr::EPixelFormat format = rdr::EPixelFormat::Invalid;
@@ -45,9 +51,8 @@ namespace apollo::editor {
 		default: break;
 		}
 
-		rdr::Texture2D& tex = static_cast<rdr::Texture2D&>(out_texture);
 		rdr::GPUDevice& device = rdr::Context::GetInstance()->GetDevice();
-		tex = rdr::Texture2D(
+		out_texture = rdr::Texture2D(
 			metadata.m_Id,
 			rdr::TextureSettings{
 				.m_Width = static_cast<uint32>(width),
@@ -56,9 +61,9 @@ namespace apollo::editor {
 				.m_Usage = rdr::ETextureUsageFlags::Sampled,
 			});
 
-		DEBUG_CHECK(tex.m_Handle)
+		DEBUG_CHECK(out_texture.m_Handle)
 		{
-			return EAssetLoadResult::Failure;
+			return false;
 		}
 
 		SDL_GPUTransferBufferCreateInfo transferBufferInfo{
@@ -103,7 +108,7 @@ namespace apollo::editor {
 			.rows_per_layer = NumCast<uint32>(height),
 		};
 		const SDL_GPUTextureRegion region{
-			.texture = tex.m_Handle,
+			.texture = out_texture.m_Handle,
 			.x = 0,
 			.y = 0,
 			.w = NumCast<uint32>(width),
@@ -115,6 +120,11 @@ namespace apollo::editor {
 
 		SDL_ReleaseGPUTransferBuffer(device.GetHandle(), transferBuffer);
 
-		return EAssetLoadResult::Success;
+		return true;
+	}
+
+	void AssetHelper<rdr::Texture2D>::Swap(IAsset& lhs, IAsset& rhs)
+	{
+		static_cast<rdr::Texture2D&>(lhs).Swap(static_cast<rdr::Texture2D&>(rhs));
 	}
 } // namespace apollo::editor

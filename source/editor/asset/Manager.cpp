@@ -123,7 +123,7 @@ namespace {
 	{
 		return apollo::AssetTypeInfo{
 			.m_Create = &apollo::ConstructAsset<A>,
-			.m_Import = &apollo::editor::AssetHelper<A>::Load,
+			.m_LoadFunc = &apollo::editor::AssetHelper<A>::LoadAsync,
 		};
 	}
 
@@ -234,7 +234,7 @@ namespace apollo::editor {
 			m_Loader.AddRequest(
 				AssetLoadRequest{
 					.m_Asset = AssetRef{ tempAsset },
-					.m_Import = typeInfo.m_Import,
+					.m_Task = typeInfo.m_LoadFunc(asset, *metadata),
 					.m_Metadata = metadata,
 					.m_Callback =
 						UniqueFunction<void(IAsset&)>{

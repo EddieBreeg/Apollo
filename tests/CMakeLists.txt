@@ -4,6 +4,7 @@ AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	main.cpp
 	AssetLoaderTests.cpp
+	AssetLoadTaskTests.cpp
 	BitmapTests.cpp
 	CoroutineTests.cpp
 	ComponentRegistryTests.cpp
@@ -32,6 +33,7 @@ OPTIONS PRIVATE ${COMPILER_ARGS}
 )
 
 AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
+AddTest("AssetLoadTask Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_load_task]")
 AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
 AddTest("Coroutine Tests" "${PROJECT_NAME}Tests" FILTERS "[coroutine]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")

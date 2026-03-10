@@ -91,7 +91,7 @@ namespace {
 
 namespace apollo::editor {
 	template <>
-	EAssetLoadResult AssetHelper<rdr::txt::FontAtlas>::Load(
+	AssetLoadTask AssetHelper<rdr::txt::FontAtlas>::LoadAsync(
 		IAsset& out_asset,
 		const AssetMetadata& metadata)
 	{
@@ -104,19 +104,19 @@ namespace apollo::editor {
 				"Failed to open {}: {}",
 				metadata.m_FilePath.string(),
 				GetErrnoMessage(errno));
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 		const auto json = nlohmann::json::parse(jsonFile, nullptr, false);
 		if (json.is_discarded())
 		{
 			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 
 		if (!json::Visit(atlas.m_Range, json, "range"))
 		{
 			APOLLO_LOG_ERROR("Failed to parse glyph range from JSON");
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 		if (atlas.m_Range.m_Last < atlas.m_Range.m_First)
 		{
@@ -134,13 +134,13 @@ namespace apollo::editor {
 		if (!json::Visit(fontPath, json, "fontFile"))
 		{
 			APOLLO_LOG_ERROR("Failed to get font file path from JSON");
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 		FT_Error err = FT_New_Face(g_Freetype, fontPath.data(), 0, &atlas.m_FaceHandle);
 		if (err)
 		{
 			APOLLO_LOG_ERROR("Failed to load font file {}: {}", fontPath, FT_Error_String(err));
-			return EAssetLoadResult::Failure;
+			co_return false;
 		}
 
 		std::string_view texPath;
@@ -148,15 +148,14 @@ namespace apollo::editor {
 		{
 			atlas.m_Glyphs.reserve(atlas.m_Range.GetSize());
 			atlas.m_Indices.resize(atlas.m_Range.GetSize(), UINT32_MAX);
-			const EAssetLoadResult loadRes = AssetHelper<rdr::Texture2D>::Load(
+			const bool loadRes = AssetHelper<rdr::Texture2D>::DoLoad(
 				atlas.m_Texture,
 				AssetMetadata{
 					.m_Id = ULID::Generate(),
 					.m_FilePath = texPath,
 				});
-			if (loadRes == EAssetLoadResult::Success &&
-				LoadGlyphs(json, atlas.m_Range, atlas.m_Glyphs, atlas.m_Indices))
-				return EAssetLoadResult::Success;
+			if (loadRes && LoadGlyphs(json, atlas.m_Range, atlas.m_Glyphs, atlas.m_Indices))
+				co_return true;
 		}
 
 		double pxRange = 10.0;
@@ -217,6 +216,6 @@ namespace apollo::editor {
 
 		SDL_ReleaseGPUTransferBuffer(device, transferBuf);
 
-		return EAssetLoadResult::Success;
+		co_return true;
 	}
 } // namespace apollo::editor

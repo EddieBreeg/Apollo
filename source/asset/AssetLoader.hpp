@@ -2,10 +2,12 @@
 
 #include <PCH.hpp>
 
+#include "Asset.hpp"
 #include "AssetFunctions.hpp"
 #include "AssetRef.hpp"
 #include <atomic>
 #include <condition_variable>
+#include <core/Coroutine.hpp>
 #include <core/Queue.hpp>
 #include <core/UniqueFunction.hpp>
 #include <mutex>
@@ -22,12 +24,29 @@ namespace apollo::mt {
 }
 
 namespace apollo {
-	class IAsset;
 
+	class AssetPromise;
+
+	/**
+	 * Coroutine type used to load assets asynchronously
+	 */
+	struct AssetLoadTask : public coro::Coroutine<AssetPromise>
+	{
+		using Base = coro::Coroutine<AssetPromise>;
+		AssetLoadTask() = default;
+		AssetLoadTask(HandleType handle)
+			: Base::Coroutine(handle)
+		{}
+		APOLLO_API EAssetLoadResult operator()();
+	};
+
+	/**
+	 * Request object, submitted to the asset loader
+	 */
 	struct AssetLoadRequest
 	{
 		AssetRef<IAsset> m_Asset;
-		AssetImportFunc* m_Import = nullptr;
+		AssetLoadTask m_Task;
 		const AssetMetadata* m_Metadata = nullptr;
 		UniqueFunction<void(IAsset&)> m_Callback;
 
@@ -77,4 +96,60 @@ namespace apollo {
 		std::vector<UniqueFunction<void()>> m_LoadCallbacks;
 		std::mutex m_Mutex;
 	};
+
+	/**
+	 * Asset coroutine promise type, used internally
+	 */
+	class AssetPromise : public coro::NoopPromise<>
+	{
+	public:
+		using HandleType = std::coroutine_handle<AssetPromise>;
+
+	public:
+		AssetPromise() = default;
+		AssetLoadTask get_return_object() noexcept;
+
+		void return_value(bool success) noexcept
+		{
+			m_Result = success ? EAssetLoadResult::Success : EAssetLoadResult::Failure;
+		}
+		[[nodiscard]] bool CanResume() const noexcept
+		{
+			return !(m_Awaiting && m_Awaiting->IsLoading());
+		}
+		[[nodiscard]] EAssetLoadResult GetResult() const noexcept { return m_Result; }
+
+		bool await_ready() const noexcept { return m_Result != EAssetLoadResult::TryAgain; }
+
+	private:
+		template <Asset A>
+		struct AssetAwaiter
+		{
+			bool await_ready() const noexcept { return !(m_Asset && m_Asset->IsLoading()); }
+			void await_suspend(HandleType handle) noexcept
+			{
+				handle.promise().m_Result = EAssetLoadResult::TryAgain;
+			}
+			AssetRef<A> await_resume() noexcept { return std::move(m_Asset); }
+
+			AssetRef<A> m_Asset;
+		};
+
+	public:
+		template <class A>
+		AssetAwaiter<A> await_transform(AssetRef<A> ref)
+		{
+			m_Awaiting = StaticPointerCast<IAsset>(ref);
+			return { ref };
+		}
+
+	private:
+		EAssetLoadResult m_Result = EAssetLoadResult::TryAgain;
+		AssetRef<IAsset> m_Awaiting; // used if we are waiting on an another asset
+	};
+
+	inline AssetLoadTask AssetPromise::get_return_object() noexcept
+	{
+		return AssetLoadTask{ std::coroutine_handle<AssetPromise>::from_promise(*this) };
+	}
 } // namespace apollo
