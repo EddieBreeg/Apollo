@@ -47,7 +47,7 @@ namespace apollo {
 
 	void RegisterCoreSystems(App& app, ecs::Manager& manager, IAssetManager& assetManager);
 
-	App::App(const EntryPoint& entry)
+	App::App(const EntryPoint& entry, AssetManagerInitFunc* initAssetManager)
 		: m_EntryPoint(entry)
 		, m_Result(EAppResult::Continue)
 	{
@@ -85,13 +85,8 @@ namespace apollo {
 		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
 #endif
 		auto& device = m_RenderContext->GetDevice();
-		APOLLO_ASSERT(
-			entry.m_InitAssetManager,
-			"No intialisation function provided for the asset manager");
-		m_AssetManager = &entry.m_InitAssetManager(
-			entry.m_AssetRoot,
-			device,
-			m_MainThreadPool);
+		APOLLO_ASSERT(initAssetManager, "No intialisation function provided for the asset manager");
+		m_AssetManager = &initAssetManager(entry.m_AssetRoot, device, m_MainThreadPool);
 
 		m_ImGuiContext = InitImGui(m_Window.GetHandle(), device.GetHandle());
 

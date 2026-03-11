@@ -215,7 +215,7 @@ namespace apollo::demo {
 			std::sort(m_VisualElements.begin(), m_VisualElements.end());
 
 			m_RenderContext.AddCustomCommand(
-				[&](rdr::Context& ctx)
+				[this](rdr::Context& ctx)
 				{
 					auto* pass = ctx.GetCurrentRenderPass()->GetHandle();
 					auto* const cmdBuffer = ctx.GetMainCommandBuffer();
@@ -307,8 +307,10 @@ namespace apollo::demo {
 	}
 } // namespace apollo::demo
 
-void apollo::GetEntryPoint(EntryPoint& out_entry)
+apollo::EntryPoint apollo::GetEntryPoint(std::span<const char*>)
 {
-	out_entry.m_AppName = "Apollo Example";
-	out_entry.m_OnInit = apollo::demo::Init;
+	return apollo::EntryPoint{
+		.m_AppName = "Apollo Example",
+		.m_OnInit = apollo::demo::Init,
+	};
 }

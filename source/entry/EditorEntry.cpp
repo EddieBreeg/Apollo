@@ -21,27 +21,29 @@ int main(int argc, const char** argv)
 	auto& componentRegistry = apollo::ecs::ComponentRegistry::Init();
 	apollo::editor::RegisterComponents(componentRegistry);
 
-	EntryPoint entry{
-		.m_Args = std::span{ argv, size_t(argc) },
-		.m_AssetRoot = argc > 1 ? std::filesystem::absolute(argv[1])
-								: std::filesystem::current_path(),
-		.m_InitAssetManager = [](const std::filesystem::path& path,
-								 rdr::GPUDevice& device,
-								 mt::ThreadPool& tp) -> IAssetManager&
+	const std::span appArgs{ argv, static_cast<size_t>(argc) };
+	EntryPoint entry = apollo::GetEntryPoint(appArgs);
+	if (entry.m_AssetRoot.empty())
+	{
+		entry.m_AssetRoot = argc > 1 ? std::filesystem::absolute(argv[1])
+									 : std::filesystem::current_path();
+	}
+
+	auto& app = apollo::App::Init(
+		entry,
+		[](const std::filesystem::path& path,
+		   rdr::GPUDevice& device,
+		   mt::ThreadPool& tp) -> IAssetManager&
 		{
 			return IAssetManager::Init<editor::AssetManager>(path, device, tp);
-		},
-	};
-	apollo::GetEntryPoint(entry);
-
-	auto& app = apollo::App::Init(entry);
+		});
 
 	apollo::EAppResult res = app.GetResultCode();
 
 	if (res != apollo::EAppResult::Continue) [[unlikely]]
 		goto APP_END;
 
-	apollo::editor::Editor::Init(entry, app);
+	apollo::editor::Editor::Init(appArgs, app);
 
 	res = app.Run();
 

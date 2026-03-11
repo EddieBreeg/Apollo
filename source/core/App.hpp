@@ -6,12 +6,11 @@
 #include "Singleton.hpp"
 #include "ThreadPool.hpp"
 #include "Window.hpp"
+#include <entry/Entry.hpp>
 
 struct ImGuiContext;
 
 namespace apollo {
-	class IAssetManager;
-
 	namespace ecs {
 		class Manager;
 	}
@@ -49,7 +48,7 @@ namespace apollo {
 	private:
 		APOLLO_API EAppResult Update();
 
-		APOLLO_API App(const EntryPoint& entry);
+		APOLLO_API App(const EntryPoint& entry, AssetManagerInitFunc* initAssetManager);
 		friend class Singleton<App>;
 
 		static APOLLO_API std::unique_ptr<App> s_Instance;

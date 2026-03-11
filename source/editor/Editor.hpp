@@ -26,7 +26,7 @@ namespace apollo::editor {
 		~Editor() = default;
 		Editor(std::span<const char*> args, rdr::Context& renderContext);
 
-		static EAppResult Init(const EntryPoint&, App&);
+		static EAppResult Init(std::span<const char*> args, App&);
 
 		void Update(entt::registry&, const GameTime&);
 

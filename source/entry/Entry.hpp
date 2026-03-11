@@ -1,8 +1,8 @@
 #pragma once
 
 #include <PCH.hpp>
-#include <span>
 #include <filesystem>
+#include <span>
 
 namespace apollo::mt {
 	class ThreadPool;
@@ -29,16 +29,15 @@ namespace apollo {
 		uint32 m_WindowWidth = 1280;
 		uint32 m_WindowHeight = 720;
 
-		const std::span<const char*> m_Args;
-
 		EAppResult (*m_OnInit)(const EntryPoint&, App&) = nullptr;
 
 		std::filesystem::path m_AssetRoot;
-		IAssetManager& (*m_InitAssetManager)(
-			const std::filesystem::path& settings,
-			rdr::GPUDevice& gpuDevice,
-			mt::ThreadPool& threadPool) = nullptr;
 	};
 
-	extern void GetEntryPoint(EntryPoint& out_entry);
+	using AssetManagerInitFunc = IAssetManager&(
+		const std::filesystem::path& settings,
+		rdr::GPUDevice& gpuDevice,
+		mt::ThreadPool& threadPool);
+
+	extern EntryPoint GetEntryPoint(std::span<const char*> args);
 } // namespace apollo

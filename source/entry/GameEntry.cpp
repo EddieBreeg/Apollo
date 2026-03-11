@@ -7,13 +7,12 @@
 
 int main(int argc, const char** argv)
 {
-	apollo::EntryPoint entry{
-		.m_Args = std::span{ argv, size_t(argc) },
-		.m_AssetRoot = std::filesystem::path(argv[0]).parent_path(),
-	};
-	apollo::GetEntryPoint(entry);
+	const std::span appArgs{ argv, static_cast<size_t>(argc) };
+	apollo::EntryPoint ep = apollo::GetEntryPoint(appArgs);
 
-	auto& app = apollo::App::Init(entry);
+	// note: this crashes, because right now we literally haven't implemented the asset manager for
+	// the game
+	auto& app = apollo::App::Init(ep, nullptr);
 
 	apollo::EAppResult res = app.GetResultCode();
 

@@ -23,10 +23,10 @@ namespace apollo::editor {
 		assetManager->ImportMetadataBank();
 	}
 
-	EAppResult Editor::Init(const EntryPoint& entry, App& app)
+	EAppResult Editor::Init(std::span<const char*> args, App& app)
 	{
 		auto& ecsManager = *ecs::Manager::GetInstance();
-		ecsManager.AddSystem<Editor>(entry.m_Args, *app.GetRenderContext());
+		ecsManager.AddSystem<Editor>(args, *app.GetRenderContext());
 		return EAppResult::Continue;
 	}
 
