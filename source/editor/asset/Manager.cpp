@@ -234,7 +234,7 @@ namespace apollo::editor {
 			m_Loader.AddRequest(
 				AssetLoadRequest{
 					.m_Asset = AssetRef{ tempAsset },
-					.m_Task = typeInfo.m_LoadFunc(asset, *metadata),
+					.m_Task = typeInfo.m_LoadFunc(*tempAsset, *metadata),
 					.m_Metadata = metadata,
 					.m_Callback =
 						UniqueFunction<void(IAsset&)>{
