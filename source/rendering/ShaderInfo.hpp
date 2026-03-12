@@ -182,19 +182,17 @@ namespace apollo::rdr {
 		uint32 m_NumStorageTextures = 0;
 		uint32 m_NumStorageBuffers = 0;
 		uint32 m_NumUniformBuffers = 0;
-		const char* m_EntryPoint = "main";
 		EShaderStage m_Stage = EShaderStage::Invalid;
+		/// \note We may want to add the entry point name here, but for now we don't need it
 
 		ShaderConstantBlock m_Blocks[4];
 
 		void Swap(ShaderInfo& other) noexcept
 		{
 			apollo::Swap(m_NumSamplers, other.m_NumSamplers);
-			;
 			apollo::Swap(m_NumStorageTextures, other.m_NumStorageTextures);
 			apollo::Swap(m_NumStorageBuffers, other.m_NumStorageBuffers);
 			apollo::Swap(m_NumUniformBuffers, other.m_NumUniformBuffers);
-			apollo::Swap(m_EntryPoint, other.m_EntryPoint);
 			apollo::Swap(m_Stage, other.m_Stage);
 			apollo::Swap(m_Blocks, other.m_Blocks);
 		}

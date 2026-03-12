@@ -82,7 +82,6 @@ namespace {
 		void GetInfo(apollo::rdr::ShaderInfo& out_info)
 		{
 			using namespace apollo::rdr;
-			out_info.m_EntryPoint = m_Module.entry_point_name;
 			switch (m_Module.shader_stage)
 			{
 			case SPV_REFLECT_SHADER_STAGE_VERTEX_BIT:
@@ -215,7 +214,7 @@ namespace apollo::rdr {
 		const SDL_GPUShaderCreateInfo createInfo{
 			.code_size = codeLen,
 			.code = static_cast<const uint8*>(code),
-			.entrypoint = m_Info.m_EntryPoint,
+			.entrypoint = ctx.m_Module.entry_point_name,
 #ifdef APOLLO_VULKAN
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
 #endif
