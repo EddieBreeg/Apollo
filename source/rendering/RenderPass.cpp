@@ -109,7 +109,7 @@ namespace apollo::rdr {
 			ctx.GetMainCommandBuffer(),
 			colorTargets,
 			nTargets,
-			&dsTarget);
+			dsTarget.texture ? &dsTarget : nullptr);
 	}
 
 	void RenderPass::End()
