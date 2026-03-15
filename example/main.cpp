@@ -1,6 +1,8 @@
 #include "DemoPCH.hpp"
 #include "Inspector.hpp"
+#include "UiSystem.hpp"
 #include <editor/asset/Manager.hpp>
+#include <ui/Context.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -161,7 +163,7 @@ namespace apollo::demo {
 					  .m_NumColorTargets = 1,
 					  .m_ColorTargets = { rdr::ColorTargetSettings{
 						  .m_Texture = &m_TargetViewport.m_ColorTarget,
-						  .m_ClearColor = { .1f, .1f, .1f, 1.0f },
+						  .m_ClearColor = { .4f, .4f, .4f, 1.0f },
 					  } },
 					  .m_DepthStencilTarget =
 						  rdr::DepthStencilTargetSettings{
@@ -294,13 +296,19 @@ namespace apollo::demo {
 		auto& renderer = *apollo::rdr::Context::GetInstance();
 		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
-		auto& system = manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
-		system.m_Inspector.m_AssetManager = static_cast<editor::AssetManager*>(
+		auto& mainSystem = manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
+
+		mainSystem.m_Inspector.m_AssetManager = static_cast<editor::AssetManager*>(
 			IAssetManager::GetInstance());
 		auto& world = manager.GetEntityWorld();
 		world.emplace<SceneSwitchRequestComponent>(
 			world.create(),
 			"01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+
+		manager.AddSystem<UiSystem>(
+			renderer,
+			ui::Context::s_Instance,
+			mainSystem.m_TargetViewport);
 
 		return EAppResult::Continue;
 	}

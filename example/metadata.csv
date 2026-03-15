@@ -1,3 +1,6 @@
+01KKPKQXGADTHVQR6ACBGAB1WB,vertexShader,rectVert,assets/rectangle.vert.hlsl
+01KKPKRZYYXYWGCYMZYM60JFK9,fragmentShader,rectFrag,assets/rectangle.frag.hlsl
+01KKPKX9AA2VHB6GRRF4T967DP,material,rectMat,assets/rectangle.mat
 01K65F71RK1WNJ6D7XDNTNPVX4,vertexShader,textVert,assets/text.vert.hlsl
 01K6G8959Y1A6BM730HAQSS9PC,fragmentShader,textFrag,assets/text.frag.hlsl
 01K8FV6RFXGPN1H9K95KDNRHZZ,vertexShader,solidMeshVert,assets/solidMesh.vert.hlsl

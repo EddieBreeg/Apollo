@@ -12,6 +12,7 @@ AddShader(TextFragShader
 AddExecutable(${PROJECT_NAME}Example SOURCES
 	main.cpp
 	Inspector.cpp
+	UiSystem.cpp
 LINK PRIVATE ${PROJECT_NAME}::Editor SDL3::SDL3 freetype msdfgen-core assimp::assimp
 OPTIONS PRIVATE ${COMPILER_ARGS}
 PROPERTIES ${COMMON_PROPERTIES}

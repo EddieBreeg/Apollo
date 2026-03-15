@@ -12,7 +12,7 @@ AddLibrary(${PROJECT_NAME}Runtime
 	PRIVATE
 		APOLLO_CORE=1
 	INCLUDES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-	LINK PUBLIC spdlog::spdlog imgui glm::glm EnTT::EnTT nlohmann_json::nlohmann_json
+	LINK PUBLIC spdlog::spdlog imgui glm::glm EnTT::EnTT nlohmann_json::nlohmann_json Clay::Clay
 	PRIVATE SDL3::SDL3 freetype msdfgen::msdfgen-core
 )
 
@@ -23,6 +23,7 @@ add_subdirectory(rendering)
 add_subdirectory(asset)
 add_subdirectory(ecs)
 add_subdirectory(systems)
+add_subdirectory(ui)
 
 add_subdirectory(editor)
 add_subdirectory(entry)

@@ -1,0 +1,19 @@
+{
+	"vertexShader": "01KKPKQXGADTHVQR6ACBGAB1WB",
+	"fragmentShader": "01KKPKRZYYXYWGCYMZYM60JFK9",
+	"primitiveType": "triangleStrip",
+	"colorTargets": [
+		{
+			"format": "rgba8unorm_srgb",
+			"blending": {
+				"srcColorBlendFactor": "srcAlpha",
+				"dstColorBlendFactor": "oneMinusSrcAlpha",
+				"colorBlendOp": "add",
+				"srcAlphaBlendFactor": "srcAlpha",
+				"dstAlphaBlendFactor": "oneMinusSrcAlpha",
+				"alphaBlendOp": "add",
+				"enableBlend": true
+			}
+		}
+	]
+}

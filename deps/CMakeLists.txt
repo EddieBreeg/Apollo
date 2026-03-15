@@ -1,6 +1,7 @@
 set(CMAKE_FOLDER "deps")
 
 add_subdirectory(Catch2)
+add_subdirectory(clay)
 add_subdirectory(glm)
 add_subdirectory(SDL)
 add_subdirectory(spdlog)
