@@ -36,6 +36,8 @@ namespace apollo {
 			return *this;
 		}
 
+		bool SetCursorRelativeMode(bool enable = true) const;
+
 		void Swap(Window& other) noexcept { std::swap(m_Handle, other.m_Handle); }
 
 		[[nodiscard]] SDL_Window* GetHandle() const noexcept { return m_Handle; }

@@ -99,8 +99,7 @@ namespace apollo::demo {
 						if (comp.m_Repeat)
 							break;
 
-						DEBUG_CHECK(
-							SDL_SetWindowRelativeMouseMode(m_Window.GetHandle(), m_CameraLocked))
+						DEBUG_CHECK(m_Window.SetCursorRelativeMode(m_CameraLocked))
 						{
 							APOLLO_LOG_ERROR(
 								"Failed to set relative cursor mode: {}",

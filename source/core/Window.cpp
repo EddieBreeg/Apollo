@@ -3,6 +3,7 @@
 #include "Log.hpp"
 #include "NumConv.hpp"
 
+#include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_video.h>
 
 namespace apollo {
@@ -25,6 +26,11 @@ namespace apollo {
 			APOLLO_LOG_CRITICAL("Failed to create window: {}", SDL_GetError());
 			return;
 		}
+	}
+
+	bool Window::SetCursorRelativeMode(bool enable) const
+	{
+		return SDL_SetWindowRelativeMouseMode(m_Handle, enable);
 	}
 
 	glm::uvec2 Window::GetSize() const
