@@ -1,10 +1,6 @@
 struct Fragment {
 	float4 Pos: SV_POSITION;
 	float2 RelativePos;
-};
-
-cbuffer UiRect: register(b0, space3)
-{
 	float4 Rectangle;
 	float4 BgColor;
 	float4 BorderColor;
@@ -21,19 +17,24 @@ float Sdf(float2 pos, float2 halfSize, float cornerRadius)
 float4 main(Fragment frag): SV_TARGET
 {
 	uint quadrant = uint(frag.RelativePos.x > 0.0) + (uint(frag.RelativePos.y > 0) << 1);
-	float corner = CornerRadius[quadrant];
+	float corner = frag.CornerRadius[quadrant];
 
-	float2 halfSize = 0.5 * Rectangle.zw;
+	float2 halfSize = 0.5 * frag.Rectangle.zw;
 	float d = Sdf(frag.RelativePos, halfSize, corner);
-	float dw = fwidth(d);
+	float dw = 1.5 * fwidth(d);
 	float alpha = smoothstep(d - dw, d, 0.0);
 
-	halfSize -= 0.5 * float2(BorderThickness.x + BorderThickness.z, BorderThickness.y + BorderThickness.w);
-	float2 offset = float2(BorderThickness.x - BorderThickness.z, BorderThickness.y - BorderThickness.w);
+	halfSize -= 0.5 * float2(
+		frag.BorderThickness.x + frag.BorderThickness.z,
+		frag.BorderThickness.y + frag.BorderThickness.w);
+	float2 offset = 0.5 * float2(
+		frag.BorderThickness.x - frag.BorderThickness.z,
+		frag.BorderThickness.y - frag.BorderThickness.w);
 	d = Sdf(frag.RelativePos + offset, halfSize, corner);
-	float inner = smoothstep(d - dw, d, 0.0);
+	dw = 0.75 * fwidth(d);
+	float border = smoothstep(-dw, dw, d);
 
-	float4 color = lerp(BorderColor, BgColor, inner);
+	float4 color = border * frag.BorderColor + (1 - border) * frag.BgColor;
 
 	return float4(color.rgb, color.a * alpha);
 }

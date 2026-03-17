@@ -16,6 +16,35 @@ namespace apollo::demo {
 		GPU_ALIGN(float4) BorderColor = {};
 		GPU_ALIGN(float4) BorderThickness = {};
 		GPU_ALIGN(float4) CornerRadius = {};
+
+		[[nodiscard]] bool operator!=(const UiRect& other) const noexcept
+		{
+			return Rectangle != other.Rectangle || BgColor != other.BgColor ||
+				   BorderColor != other.BorderColor || BorderThickness != other.BorderThickness ||
+				   CornerRadius != other.CornerRadius;
+		}
+	};
+
+	class UiLayer
+	{
+	public:
+		UiLayer() = default;
+		UiLayer(AssetRef<rdr::Material> material);
+
+		UiLayer(UiLayer&& other) = default;
+		UiLayer(const UiLayer&) = delete;
+		UiLayer& operator=(UiLayer&& other) = default;
+		UiLayer& operator=(const UiLayer&) = delete;
+
+		void StartRecording();
+		void EndRecording(SDL_GPUCopyPass* copyPass);
+
+		void AddCommand(const Clay_RenderCommand& cmd);
+		void Draw(rdr::Context& ctx);
+
+	private:
+		rdr::Batch<UiRect> m_Rect;
+		rdr::Batch<UiRect> m_Borders;
 	};
 
 	class UiSystem
@@ -47,7 +76,7 @@ namespace apollo::demo {
 		ui::Context& m_UiContext;
 		rdr::RenderPass m_RenderPass;
 		const Viewport& m_Viewport;
-		std::vector<UiRect> m_Elements;
+		UiLayer m_UiLayer;
 
 		AssetRef<rdr::Material> m_QuadMat;
 		glm::mat4x4 m_ProjMatrix;

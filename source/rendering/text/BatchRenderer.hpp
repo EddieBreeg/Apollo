@@ -38,7 +38,7 @@ namespace apollo::rdr::txt {
 			GPU_ALIGN(float) m_OutlineThickness;
 		};
 
-		Renderer2d()= default;
+		Renderer2d() = default;
 		APOLLO_API void Init(
 			const rdr::GPUDevice& device,
 			AssetRef<Material> material,
@@ -46,10 +46,7 @@ namespace apollo::rdr::txt {
 
 		void SetFont(AssetRef<FontAtlas> font) noexcept { m_Font = std::move(font); }
 
-		[[nodiscard]] bool IsInitialized() const noexcept
-		{
-			return m_Batch && m_Sampler;
-		}
+		[[nodiscard]] bool IsInitialized() const noexcept { return m_Batch && m_Sampler; }
 
 		TextStyle m_Style;
 
@@ -68,7 +65,6 @@ namespace apollo::rdr::txt {
 		APOLLO_API ~Renderer2d();
 
 	private:
-
 		SDL_GPUCopyPass* m_CopyPass = nullptr;
 
 		bool m_Dirty = false;
@@ -78,4 +74,14 @@ namespace apollo::rdr::txt {
 		const GPUDevice* m_Device = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;
 	};
+
+	[[nodiscard]] constexpr bool operator!=(
+		const Renderer2d::GlyphQuad& lhs,
+		const Renderer2d::GlyphQuad& rhs) noexcept
+	{
+		return lhs.m_Rect != rhs.m_Rect || lhs.m_Uv != rhs.m_Uv ||
+			   lhs.m_MainColor != rhs.m_MainColor ||
+			   lhs.m_OutlineThickness != rhs.m_OutlineThickness ||
+			   lhs.m_OutlineColor != rhs.m_OutlineColor;
+	}
 } // namespace apollo::rdr::txt

@@ -7,7 +7,7 @@ namespace apollo::ui {
 	class Context
 	{
 	public:
-		static Context s_Instance;
+		APOLLO_API static Context s_Instance;
 
 		Context(const Context&) = delete;
 		Context& operator=(const Context&) = delete;
@@ -29,6 +29,4 @@ namespace apollo::ui {
 		Clay_Dimensions m_CurrentSize = {};
 		Clay_Arena m_Arena = {};
 	};
-
-	inline Context Context::s_Instance;
 } // namespace apollo::ui

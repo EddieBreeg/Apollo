@@ -104,16 +104,18 @@ namespace apollo::rdr::txt {
 				rect.y + rect.w,
 			};
 			m_Batch.Add(
-				rect,
-				float4{
-					uvScale.x * glyph->m_Uv.x0,
-					uvScale.y * glyph->m_Uv.y0,
-					uvScale.x * width,
-					uvScale.y * height,
-				},
-				m_Style.m_FgColor,
-				m_Style.m_OutlineColor,
-				m_Style.m_OutlineThickness);
+				GlyphQuad{
+					rect,
+					float4{
+						uvScale.x * glyph->m_Uv.x0,
+						uvScale.y * glyph->m_Uv.y0,
+						uvScale.x * width,
+						uvScale.y * height,
+					},
+					m_Style.m_FgColor,
+					m_Style.m_OutlineColor,
+					m_Style.m_OutlineThickness,
+				});
 
 			pos.x += m_Style.m_Size * glyph->m_Advance * m_Style.m_Tracking;
 			prev = glyph;

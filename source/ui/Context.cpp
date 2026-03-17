@@ -5,6 +5,8 @@
 #include <core/Log.hpp>
 
 namespace apollo::ui {
+	Context Context::s_Instance;
+
 	Context& Context::Init(float w, float h)
 	{
 		DEBUG_CHECK(!m_Arena.memory)
