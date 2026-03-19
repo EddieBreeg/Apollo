@@ -32,6 +32,7 @@ if(PROJECT_IS_TOP_LEVEL)
 endif(PROJECT_IS_TOP_LEVEL)
 
 add_subdirectory(deps)
+add_subdirectory(data)
 add_subdirectory(source)
 add_subdirectory(example)
 

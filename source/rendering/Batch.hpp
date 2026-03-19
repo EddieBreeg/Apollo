@@ -3,8 +3,8 @@
 #include <PCH.hpp>
 
 #include "Buffer.hpp"
-#include "Material.hpp"
 #include <asset/AssetRef.hpp>
+#include <memory>
 
 struct SDL_GPUCopyPass;
 struct SDL_GPUGraphicsPipeline;
@@ -15,16 +15,14 @@ namespace apollo::rdr {
 	{
 	public:
 		Batch() = default;
-		Batch(AssetRef<Material> material, uint32 maxSize)
-			: m_Material(std::move(material))
-			, m_Elems(std::make_unique<T[]>(maxSize))
+		Batch(uint32 maxSize)
+			: m_Elems(std::make_unique<T[]>(maxSize))
 			, m_Capacity(maxSize)
 			, m_Buffer(rdr::EBufferFlags::GraphicsStorage, m_Capacity * sizeof(T))
 		{}
 
 		Batch(Batch&& other) noexcept
-			: m_Material(std::move(other.m_Material))
-			, m_Elems(std::move(other.m_Elems))
+			: m_Elems(std::move(other.m_Elems))
 			, m_Capacity(other.m_Capacity)
 			, m_Size(other.m_Size)
 			, m_Dirty(other.m_Dirty)
@@ -42,7 +40,6 @@ namespace apollo::rdr {
 
 		void Swap(Batch& other) noexcept
 		{
-			m_Material.Swap(other.m_Material);
 			m_Buffer.Swap(other.m_Buffer);
 			m_Elems.swap(other.m_Elems);
 			std::swap(m_Capacity, other.m_Capacity);
@@ -86,15 +83,6 @@ namespace apollo::rdr {
 
 		[[nodiscard]] const rdr::Buffer& GetBuffer() const noexcept { return m_Buffer; }
 		[[nodiscard]] uint32 GetCount() const noexcept { return m_Size.m_Current; }
-		[[nodiscard]] SDL_GPUGraphicsPipeline* GetPipeline() const noexcept
-		{
-			if (!m_Material)
-				return nullptr;
-
-			return m_Material->IsLoaded()
-					   ? static_cast<SDL_GPUGraphicsPipeline*>(m_Material->GetHandle())
-					   : nullptr;
-		}
 
 		T* begin() noexcept { return m_Elems.get(); }
 		T* end() noexcept { return m_Elems.get() + m_Size.m_Current; }
@@ -104,7 +92,7 @@ namespace apollo::rdr {
 		T& operator[](uint32 i) { return m_Elems[i]; }
 		const T& operator[](uint32 i) const { return m_Elems[i]; }
 
-		operator bool() const noexcept { return m_Material && m_Buffer; }
+		operator bool() const noexcept { return m_Buffer; }
 
 	private:
 		uint32 GrowCapacity(uint32 cap)
@@ -127,7 +115,6 @@ namespace apollo::rdr {
 			m_Buffer = rdr::Buffer(rdr::EBufferFlags::GraphicsStorage, m_Capacity * sizeof(T));
 		}
 
-		AssetRef<Material> m_Material;
 		std::unique_ptr<T[]> m_Elems;
 		struct Size
 		{

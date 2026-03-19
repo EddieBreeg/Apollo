@@ -22,7 +22,7 @@ float4 main(Fragment frag): SV_TARGET
 	float2 halfSize = 0.5 * frag.Rectangle.zw;
 	float d = Sdf(frag.RelativePos, halfSize, corner);
 	float dw = 1.5 * fwidth(d);
-	float alpha = smoothstep(d - dw, d, 0.0);
+	float alpha = 1.0 - smoothstep(-dw, 0.0, d);
 
 	halfSize -= 0.5 * float2(
 		frag.BorderThickness.x + frag.BorderThickness.z,

@@ -1,19 +1,22 @@
 #ifndef CLAY_IMPLEMENTATION
 #define CLAY_IMPLEMENTATION
-#include "Context.hpp"
 #endif
+
+#include "Context.hpp"
+#include "Renderer.hpp"
 #include <core/Log.hpp>
 
 namespace apollo::ui {
 	Context Context::s_Instance;
 
-	Context& Context::Init(float w, float h)
+	Context& Context::Init(rdr::ui::Renderer& renderer, float w, float h)
 	{
 		DEBUG_CHECK(!m_Arena.memory)
 		{
 			APOLLO_LOG_WARN("Called on ui::Context but context has already been initialized");
 			return *this;
 		}
+		m_Renderer = &renderer;
 
 		m_Arena.capacity = Clay_MinMemorySize();
 		m_Arena.memory = new char[m_Arena.capacity];
@@ -47,7 +50,7 @@ namespace apollo::ui {
 
 	bool Context::SetSize(float w, float h)
 	{
-		if (w != m_CurrentSize.width || h != m_CurrentSize.height)
+		if (m_Renderer->SetSize(float2{ w, h }))
 		{
 			Clay_SetLayoutDimensions(m_CurrentSize = { w, h });
 			return true;
@@ -57,12 +60,18 @@ namespace apollo::ui {
 
 	void Context::BeginLayout() const
 	{
+		m_Renderer->StartFrame();
 		Clay_BeginLayout();
 	}
 
-	Clay_RenderCommandArray Context::EndLayout() const
+	void Context::EndLayout() const
 	{
-		return Clay_EndLayout();
+		const auto commands = Clay_EndLayout();
+		m_Renderer->EndFrame(
+			std::span{
+				commands.internalArray,
+				static_cast<size_t>(commands.length),
+			});
 	}
 
 	void Context::OnError(Clay_ErrorType type, Clay_String message)

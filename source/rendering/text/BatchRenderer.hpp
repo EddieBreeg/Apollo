@@ -70,6 +70,7 @@ namespace apollo::rdr::txt {
 		bool m_Dirty = false;
 
 		AssetRef<FontAtlas> m_Font;
+		AssetRef<Material> m_Mat;
 		Batch<GlyphQuad> m_Batch;
 		const GPUDevice* m_Device = nullptr;
 		SDL_GPUSampler* m_Sampler = nullptr;

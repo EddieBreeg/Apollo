@@ -1,0 +1,5 @@
+function(EmbedText FILE VARIABLE CPPNAME)
+	cmake_parse_arguments(PARSE_ARGV 0 arg "" "LITERAL_PREFIX" "")
+	file(READ ${FILE} CONTENTS)
+	set(${VARIABLE} "constexpr const char ${CPPNAME}[] = R\"${LITERAL_PREFIX}(${CONTENTS})${LITERAL_PREFIX}\";" PARENT_SCOPE)
+endfunction()

@@ -1,4 +1,3 @@
-
 static const float2 g_Offset[] = {
 	float2(0, 0),
 	float2(0, 1),

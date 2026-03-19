@@ -3,6 +3,10 @@
 #include <PCH.hpp>
 #include <clay.h>
 
+namespace apollo::rdr::ui {
+	class Renderer;
+}
+
 namespace apollo::ui {
 	class Context
 	{
@@ -13,13 +17,13 @@ namespace apollo::ui {
 		Context& operator=(const Context&) = delete;
 		~Context() { Reset(); }
 
-		APOLLO_API Context& Init(float width, float height);
+		APOLLO_API Context& Init(rdr::ui::Renderer& renderer, float width, float height);
 		APOLLO_API void Reset();
 
 		APOLLO_API bool SetSize(float width, float height);
 
 		APOLLO_API void BeginLayout() const;
-		[[nodiscard]] APOLLO_API Clay_RenderCommandArray EndLayout() const;
+		APOLLO_API void EndLayout() const;
 
 	private:
 		Context() = default;
@@ -28,5 +32,6 @@ namespace apollo::ui {
 
 		Clay_Dimensions m_CurrentSize = {};
 		Clay_Arena m_Arena = {};
+		rdr::ui::Renderer* m_Renderer = nullptr;
 	};
 } // namespace apollo::ui

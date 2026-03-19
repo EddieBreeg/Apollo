@@ -3,6 +3,7 @@
 #include "UiSystem.hpp"
 #include <editor/asset/Manager.hpp>
 #include <ui/Context.hpp>
+#include <ui/Renderer.hpp>
 
 namespace ImGui {
 	void ShowDemoWindow(bool* p_open);
@@ -308,6 +309,7 @@ namespace apollo::demo {
 		manager.AddSystem<UiSystem>(
 			renderer,
 			ui::Context::s_Instance,
+			rdr::ui::Renderer::s_Instance,
 			mainSystem.m_TargetViewport);
 
 		return EAppResult::Continue;

@@ -22,8 +22,9 @@ namespace apollo::rdr::txt {
 			APOLLO_LOG_ERROR("Invalid material passed to txt::Renderer2d::Init");
 			return;
 		}
+		m_Mat = std::move(material);
 		m_Device = &device;
-		m_Batch = Batch<GlyphQuad>{ std::move(material), batchSize };
+		m_Batch = Batch<GlyphQuad>{ batchSize };
 
 		const SDL_GPUSamplerCreateInfo samplerInfo{
 			.min_filter = SDL_GPU_FILTER_LINEAR,
@@ -150,7 +151,7 @@ namespace apollo::rdr::txt {
 	{
 		APOLLO_ASSERT(IsInitialized(), "Called AddText on uninitialized text renderer");
 		const uint32 count = m_Batch.GetCount();
-		auto* const pipeline = m_Batch.GetPipeline();
+		auto* const pipeline = static_cast<SDL_GPUGraphicsPipeline*>(m_Mat->GetHandle());
 		if (!count || !m_Font || !m_Font->IsLoaded() || !pipeline)
 			return;
 
