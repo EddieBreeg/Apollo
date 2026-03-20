@@ -1,7 +1,7 @@
-set(SHADERS_HEADER ${CMAKE_CURRENT_BINARY_DIR}/UiShaders.hpp)
+set(SHADERS_HEADER ${OUTPUT_PATH}/UiShaders.hpp)
 include(Embed)
 
-message("-- Embedding UI Shaders")
+message("-- Embedding UI Shaders into ${SHADERS_HEADER}")
 
 EmbedText("./ui/rect.vert.hlsl" VERT_SOURCE g_UiRectVert LITERAL_PREFIX hlsl)
 EmbedText("./ui/rect.frag.hlsl" FRAG_SOURCE g_UiRectFrag LITERAL_PREFIX hlsl)
@@ -15,6 +15,3 @@ namespace apollo::data::shaders {
 	${FRAG_SOURCE}
 }
 ")
-
-add_library(BuiltinShaders INTERFACE)
-target_include_directories(BuiltinShaders INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
