@@ -58,6 +58,93 @@ namespace {
 		};
 		return SDL_CreateGPUGraphicsPipeline(device, &info);
 	}
+
+	struct DrawData
+	{
+		using DrawCall = apollo::rdr::DrawCall;
+		using RectangleBatch = apollo::rdr::Batch<apollo::rdr::ui::UiRect>;
+		using BorderBatch = apollo::rdr::Batch<apollo::rdr::ui::Border>;
+
+		DrawData(RectangleBatch& rectangleData, BorderBatch& borderData)
+			: m_RectData(rectangleData)
+			, m_BorderData(borderData)
+			, m_Rectangles{ .m_NumVertices = 4, .m_NumInstances = 0 }
+			, m_Borders{ .m_NumVertices = 4, .m_NumInstances = 0 }
+		{
+			m_RectData.StartRecording();
+			m_BorderData.StartRecording();
+		}
+
+		void EndRecording(SDL_GPUCopyPass* copyPass)
+		{
+			m_RectData.EndRecording(copyPass);
+			m_BorderData.EndRecording(copyPass);
+		}
+
+		void AddRectangle(float4 bounds, float4 bgColor, float4 corners)
+		{
+			m_RectData.Add(
+				apollo::rdr::ui::UiRect{
+					.Bounds = bounds,
+					.BgColor = bgColor,
+					.CornerRadius = corners,
+				});
+			++m_Rectangles.m_NumInstances;
+		}
+		void AddBorder(float4 bounds, float4 color, float4 width, float4 corners)
+		{
+			m_BorderData.Add(
+				apollo::rdr::ui::Border{
+					.Bounds = bounds,
+					.Color = color,
+					.Width = width,
+					.CornerRadius = corners,
+				});
+			++m_Borders.m_NumInstances;
+		}
+		void SetScissor(int32 x, int32 y, int32 w, int32 h) noexcept
+		{
+			m_Scissor = { x, y, w, h };
+			m_ScissorSet = true;
+		}
+
+		void Flush(
+			apollo::rdr::Context& ctx,
+			SDL_GPUGraphicsPipeline* rectPipeline,
+			SDL_GPUGraphicsPipeline* borderPipeline)
+		{
+			if (m_ScissorSet)
+			{
+				ctx.SetScissor(m_Scissor);
+			}
+			if (m_Rectangles.m_NumInstances)
+			{
+				ctx.BindGraphicsPipeline(rectPipeline);
+				ctx.BindVertexStorageBuffer(m_RectData.GetBuffer());
+				ctx.DrawPrimitives(m_Rectangles);
+			}
+			if (m_Borders.m_NumInstances)
+			{
+				ctx.BindGraphicsPipeline(borderPipeline);
+				ctx.BindVertexStorageBuffer(m_BorderData.GetBuffer());
+				ctx.DrawPrimitives(m_Borders);
+			}
+
+			m_ScissorSet = false;
+			m_Rectangles.m_FistInstance = m_Rectangles.m_NumInstances;
+			m_Rectangles.m_NumInstances = 0;
+			m_Borders.m_FistInstance = m_Borders.m_NumInstances;
+			m_Borders.m_NumInstances = 0;
+		}
+
+	private:
+		RectangleBatch& m_RectData;
+		BorderBatch& m_BorderData;
+		DrawCall m_Rectangles;
+		DrawCall m_Borders;
+		apollo::rdr::ScissorCommand m_Scissor;
+		bool m_ScissorSet = false;
+	};
 } // namespace
 
 namespace apollo::rdr::ui {
@@ -82,6 +169,8 @@ namespace apollo::rdr::ui {
 			data::shaders::g_UiBorderVert,
 			data::shaders::g_UiBorderFrag,
 			static_cast<SDL_GPUTextureFormat>(fmt));
+		m_Rectangles = Batch<UiRect>{ 16 };
+		m_Borders = Batch<Border>{ 16 };
 	}
 
 	void Renderer::Reset()
@@ -123,115 +212,95 @@ namespace apollo::rdr::ui {
 		auto* cmdBuffer = m_RenderContext->GetMainCommandBuffer();
 		auto* copyPass = SDL_BeginGPUCopyPass(cmdBuffer);
 
-		m_Rectangles.StartRecording();
-		m_Borders.StartRecording();
+		DrawData data{ m_Rectangles, m_Borders };
+		int32 zIndex = INT32_MIN;
+		m_RenderContext->PushVertexShaderConstants(m_ProjMatrix);
 
 		for (const auto& cmd : commands)
 		{
+			if (cmd.zIndex != zIndex)
+			{
+				data.Flush(*m_RenderContext, m_RectPipeline, m_BorderPipeline);
+				zIndex = cmd.zIndex;
+			}
+
 			switch (cmd.commandType)
 			{
 			case CLAY_RENDER_COMMAND_TYPE_RECTANGLE:
 			{
-				if (!cmd.renderData.rectangle.backgroundColor.a)
-					continue;
-
 				const float maxRadius = Min(cmd.boundingBox.width, cmd.boundingBox.height) / 2.0f;
-				m_Rectangles.Add(
-					UiRect{
-						.Bounds =
-							float4{
-								cmd.boundingBox.x,
-								cmd.boundingBox.y,
-								cmd.boundingBox.width,
-								cmd.boundingBox.height,
-							},
-						.BgColor =
-							float4{
-								cmd.renderData.rectangle.backgroundColor.r,
-								cmd.renderData.rectangle.backgroundColor.g,
-								cmd.renderData.rectangle.backgroundColor.b,
-								cmd.renderData.rectangle.backgroundColor.a,
-							},
-						.CornerRadius =
-							float4{
-								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.topLeft),
-								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.topRight),
-								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.bottomLeft),
-								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.bottomRight),
-							},
+				data.AddRectangle(
+					float4{
+						cmd.boundingBox.x,
+						cmd.boundingBox.y,
+						cmd.boundingBox.width,
+						cmd.boundingBox.height,
+					},
+					float4{
+						cmd.renderData.rectangle.backgroundColor.r,
+						cmd.renderData.rectangle.backgroundColor.g,
+						cmd.renderData.rectangle.backgroundColor.b,
+						cmd.renderData.rectangle.backgroundColor.a,
+					},
+					float4{
+						Min(maxRadius, cmd.renderData.rectangle.cornerRadius.topLeft),
+						Min(maxRadius, cmd.renderData.rectangle.cornerRadius.topRight),
+						Min(maxRadius, cmd.renderData.rectangle.cornerRadius.bottomLeft),
+						Min(maxRadius, cmd.renderData.rectangle.cornerRadius.bottomRight),
 					});
 			}
 			break;
 
 			case CLAY_RENDER_COMMAND_TYPE_BORDER:
 			{
-				const float4 color{
-					cmd.renderData.border.color.r,
-					cmd.renderData.border.color.g,
-					cmd.renderData.border.color.b,
-					cmd.renderData.border.color.a,
-				};
-				if (!color.a)
-					continue;
-
 				const float maxRadius = Min(cmd.boundingBox.width, cmd.boundingBox.height) / 2.0f;
-
-				m_Borders.Add(
-					Border{
-						.Bounds =
-							float4{
-								cmd.boundingBox.x,
-								cmd.boundingBox.y,
-								cmd.boundingBox.width,
-								cmd.boundingBox.height,
-							},
-						.Color = color,
-						.Width =
-							float4{
-								cmd.renderData.border.width.left,
-								cmd.renderData.border.width.right,
-								cmd.renderData.border.width.top,
-								cmd.renderData.border.width.bottom,
-							},
-						.CornerRadius =
-							float4{
-								Min(maxRadius, cmd.renderData.border.cornerRadius.topLeft),
-								Min(maxRadius, cmd.renderData.border.cornerRadius.topRight),
-								Min(maxRadius, cmd.renderData.border.cornerRadius.bottomLeft),
-								Min(maxRadius, cmd.renderData.border.cornerRadius.bottomRight),
-							},
+				data.AddBorder(
+					float4{
+						cmd.boundingBox.x,
+						cmd.boundingBox.y,
+						cmd.boundingBox.width,
+						cmd.boundingBox.height,
+					},
+					float4{
+						cmd.renderData.border.color.r,
+						cmd.renderData.border.color.g,
+						cmd.renderData.border.color.b,
+						cmd.renderData.border.color.a,
+					},
+					float4{
+						cmd.renderData.border.width.left,
+						cmd.renderData.border.width.right,
+						cmd.renderData.border.width.top,
+						cmd.renderData.border.width.bottom,
+					},
+					float4{
+						Min(maxRadius, cmd.renderData.border.cornerRadius.topLeft),
+						Min(maxRadius, cmd.renderData.border.cornerRadius.topRight),
+						Min(maxRadius, cmd.renderData.border.cornerRadius.bottomLeft),
+						Min(maxRadius, cmd.renderData.border.cornerRadius.bottomRight),
 					});
 			}
 			break;
+
+			case CLAY_RENDER_COMMAND_TYPE_SCISSOR_START:
+				data.Flush(*m_RenderContext, m_RectPipeline, m_BorderPipeline);
+				data.SetScissor(
+					cmd.boundingBox.x,
+					cmd.boundingBox.y,
+					cmd.boundingBox.width,
+					cmd.boundingBox.height);
+				break;
+			case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END:
+				data.Flush(*m_RenderContext, m_RectPipeline, m_BorderPipeline);
+				data.SetScissor(0, 0, m_TargetSize.x, m_TargetSize.y);
+				break;
 			default: break;
 			}
 		}
 
-		m_Rectangles.EndRecording(copyPass);
-		m_Borders.EndRecording(copyPass);
+		data.EndRecording(copyPass);
 		SDL_EndGPUCopyPass(copyPass);
 
-		m_RenderContext->AddCustomCommand(
-			[this](rdr::Context& context)
-			{
-				auto* renderPass = context.GetCurrentRenderPass();
-				auto* commandBuffer = context.GetMainCommandBuffer();
-				SDL_PushGPUVertexUniformData(commandBuffer, 0, &m_ProjMatrix, sizeof(m_ProjMatrix));
-
-				if (const uint32 count = m_Rectangles.GetCount())
-				{
-					SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_RectPipeline);
-					SDL_GPUBuffer* const buf = m_Rectangles.GetBuffer().GetHandle();
-					SDL_BindGPUVertexStorageBuffers(renderPass->GetHandle(), 0, &buf, 1);
-					SDL_DrawGPUPrimitives(renderPass->GetHandle(), 4, count, 0, 0);
-				}
-				if (const uint32 count = m_Borders.GetCount())
-				{
-					SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_BorderPipeline);
-					SDL_GPUBuffer* const buf = m_Borders.GetBuffer().GetHandle();
-					SDL_BindGPUVertexStorageBuffers(renderPass->GetHandle(), 0, &buf, 1);
-					SDL_DrawGPUPrimitives(renderPass->GetHandle(), 4, count, 0, 0);
-				}
-			});
+		data.Flush(*m_RenderContext, m_RectPipeline, m_BorderPipeline);
 	}
 } // namespace apollo::rdr::ui

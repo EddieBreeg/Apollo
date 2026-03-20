@@ -108,5 +108,24 @@ namespace apollo::demo {
 			const Clay_ElementId id = ui::CreateId("sidebar_child"_cstr, i);
 			sidebar.AddChild<ui::Element>(id, config);
 		}
+
+		sidebar.AddChild<ui::Element>(
+			"overlay"_eid,
+			Clay_ElementDeclaration{
+				.layout =
+					Clay_LayoutConfig{
+						.sizing =
+							Clay_Sizing{
+								CLAY_SIZING_FIXED(50),
+								CLAY_SIZING_FIXED(50),
+							},
+					},
+				.backgroundColor = g_LightGray,
+				.floating =
+					Clay_FloatingElementConfig{
+						.zIndex = 1,
+						.attachTo = CLAY_ATTACH_TO_PARENT,
+					},
+			});
 	}
 } // namespace apollo::demo
