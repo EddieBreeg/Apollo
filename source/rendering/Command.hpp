@@ -40,6 +40,14 @@ namespace apollo::rdr {
 		bool m_ClearTarget = true;
 	};
 
+	struct ScissorCommand
+	{
+		int32 x = 0;
+		int32 y = 0;
+		int32 w = 0;
+		int32 h = 0;
+	};
+
 	class GPUCommand
 	{
 	public:
@@ -53,6 +61,7 @@ namespace apollo::rdr {
 			// Pass commands
 			BeginRenderPass,
 			SetViewport,
+			SetScissor,
 
 			// Bind commands
 			BindGraphicsPipeline,
@@ -92,6 +101,11 @@ namespace apollo::rdr {
 		explicit GPUCommand(const RectF& viewport) noexcept
 			: m_Storage{ .m_Viewport{ viewport } }
 			, m_Type(ECommandType::SetViewport)
+		{}
+
+		explicit GPUCommand(const ScissorCommand& scissor) noexcept
+			: m_Storage{ .m_Scissor{ scissor } }
+			, m_Type(ECommandType::SetScissor)
 		{}
 
 		APOLLO_API explicit GPUCommand(SDL_GPUGraphicsPipeline* pipeline) noexcept
@@ -164,6 +178,7 @@ namespace apollo::rdr {
 			std::span<const Buffer> m_Buffers;
 			const Buffer* m_IBuffer;
 			RectF m_Viewport;
+			ScissorCommand m_Scissor;
 			DrawCall m_DrawCall;
 			IndexedDrawCall m_IndexedDrawCall;
 			ImGuiDrawCommand m_ImGuiDrawCall;

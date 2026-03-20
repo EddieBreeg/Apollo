@@ -33,6 +33,7 @@ namespace apollo::rdr {
 
 		void BeginRenderPass(RenderPass& renderPass) { m_CommandQueue.AddEmplace(renderPass); }
 		void SetViewport(const RectF& viewport) { m_CommandQueue.AddEmplace(viewport); }
+		void SetScissor(const ScissorCommand& scissor) { m_CommandQueue.AddEmplace(scissor); }
 
 		template <class... Args>
 		void PushVertexShaderConstants(Args&&... args)
@@ -109,6 +110,7 @@ namespace apollo::rdr {
 		[[nodiscard]] SDL_GPUSampler* GetDefaultSampler() noexcept { return m_DefaultSampler; }
 
 		[[nodiscard]] RenderPass* GetCurrentRenderPass() noexcept { return m_RenderPass; }
+
 	private:
 		/**
 		 * Switches render pass. If a render pass was currently in progress, End is called on

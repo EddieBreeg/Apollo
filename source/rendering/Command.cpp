@@ -51,6 +51,19 @@ namespace apollo::rdr {
 		};
 		SDL_SetGPUViewport(renderPass->GetHandle(), &vp);
 	}
+	COMMAND_TYPE_IMPL(SetScissor)
+	{
+		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
+		APOLLO_ASSERT(renderPass, "SetScissor command called, but no render pass in progress");
+		const SDL_Rect rect{
+			m_Storage.m_Scissor.x,
+			m_Storage.m_Scissor.y,
+			m_Storage.m_Scissor.w,
+			m_Storage.m_Scissor.h,
+		};
+		SDL_SetGPUScissor(renderPass->GetHandle(), &rect);
+	}
+
 	COMMAND_TYPE_IMPL(BindGraphicsPipeline)
 	{
 		RenderPass* const renderPass = ctx.GetCurrentRenderPass();
