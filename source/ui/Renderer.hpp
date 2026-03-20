@@ -48,7 +48,7 @@ namespace apollo::rdr::ui {
 		APOLLO_API void StartFrame();
 		APOLLO_API void EndFrame(std::span<const Clay_RenderCommand> commands);
 
-		APOLLO_API bool SetSize(float2 size) noexcept;
+		APOLLO_API bool SetTargetSize(float2 size) noexcept;
 
 		APOLLO_API void Init(rdr::Context& ctx, rdr::EPixelFormat targetFormat);
 		APOLLO_API void Reset();

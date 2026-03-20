@@ -50,7 +50,7 @@ namespace apollo::ui {
 
 	bool Context::SetSize(float w, float h)
 	{
-		if (m_Renderer->SetSize(float2{ w, h }))
+		if (w != m_CurrentSize.width || h != m_CurrentSize.height)
 		{
 			Clay_SetLayoutDimensions(m_CurrentSize = { w, h });
 			return true;

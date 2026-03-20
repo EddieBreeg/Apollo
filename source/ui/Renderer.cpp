@@ -99,7 +99,7 @@ namespace apollo::rdr::ui {
 		m_Borders.Clear();
 	}
 
-	bool Renderer::SetSize(float2 size) noexcept
+	bool Renderer::SetTargetSize(float2 size) noexcept
 	{
 		if (size == m_TargetSize)
 			return false;
@@ -124,9 +124,11 @@ namespace apollo::rdr::ui {
 			switch (cmd.commandType)
 			{
 			case CLAY_RENDER_COMMAND_TYPE_RECTANGLE:
+			{
 				if (!cmd.renderData.rectangle.backgroundColor.a)
 					continue;
 
+				const float maxRadius = Min(cmd.boundingBox.width, cmd.boundingBox.height) / 2.0f;
 				m_Rectangles.Add(
 					UiRect{
 						.Rectangle =
@@ -145,13 +147,14 @@ namespace apollo::rdr::ui {
 							},
 						.CornerRadius =
 							float4{
-								cmd.renderData.rectangle.cornerRadius.topLeft,
-								cmd.renderData.rectangle.cornerRadius.topRight,
-								cmd.renderData.rectangle.cornerRadius.bottomLeft,
-								cmd.renderData.rectangle.cornerRadius.bottomRight,
+								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.topLeft),
+								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.topRight),
+								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.bottomLeft),
+								Min(maxRadius, cmd.renderData.rectangle.cornerRadius.bottomRight),
 							},
 					});
-				break;
+			}
+			break;
 
 			case CLAY_RENDER_COMMAND_TYPE_BORDER:
 			{
@@ -163,6 +166,8 @@ namespace apollo::rdr::ui {
 				};
 				if (!color.a)
 					continue;
+
+				const float maxRadius = Min(cmd.boundingBox.width, cmd.boundingBox.height) / 2.0f;
 
 				m_Rectangles.Add(
 					UiRect{
@@ -177,10 +182,10 @@ namespace apollo::rdr::ui {
 							},
 						.CornerRadius =
 							float4{
-								cmd.renderData.border.cornerRadius.topLeft,
-								cmd.renderData.border.cornerRadius.topRight,
-								cmd.renderData.border.cornerRadius.bottomLeft,
-								cmd.renderData.border.cornerRadius.bottomRight,
+								Min(maxRadius, cmd.renderData.border.cornerRadius.topLeft),
+								Min(maxRadius, cmd.renderData.border.cornerRadius.topRight),
+								Min(maxRadius, cmd.renderData.border.cornerRadius.bottomLeft),
+								Min(maxRadius, cmd.renderData.border.cornerRadius.bottomRight),
 							},
 					});
 			}

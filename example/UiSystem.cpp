@@ -5,8 +5,8 @@
 #include <ui/Renderer.hpp>
 
 namespace {
-	constexpr Clay_Color g_Red = (Clay_Color){ 0.66f, 0.26, 0.11f, 1.0 };
-	constexpr Clay_Color g_LightGray = (Clay_Color){ 0.66f, 0.66f, 0.66f, 1.f };
+	[[maybe_unused]] constexpr Clay_Color g_Red = (Clay_Color){ 0.66f, 0.26, 0.11f, 1.0 };
+	[[maybe_unused]] constexpr Clay_Color g_LightGray = (Clay_Color){ 0.66f, 0.66f, 0.66f, 1.f };
 
 	constexpr Clay_ElementDeclaration g_SidebarConfig{
 		.layout =
@@ -16,7 +16,7 @@ namespace {
 				.childGap = 10,
 				.layoutDirection = CLAY_TOP_TO_BOTTOM,
 			},
-		.backgroundColor = g_Red,
+		// .backgroundColor = g_Red,
 	};
 
 	constexpr Clay_ElementDeclaration g_SidebarChildConfig{
@@ -59,6 +59,7 @@ namespace apollo::demo {
 			m_Viewport.m_Rectangle.x1 - m_Viewport.m_Rectangle.x0,
 			m_Viewport.m_Rectangle.y1 - m_Viewport.m_Rectangle.y0,
 		};
+		m_UiRenderer.SetTargetSize(m_Viewport.m_TargetSize);
 		m_UiContext.SetSize(winSize.x, winSize.y);
 		m_UiContext.BeginLayout();
 
