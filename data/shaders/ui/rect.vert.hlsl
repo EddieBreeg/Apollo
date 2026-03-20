@@ -12,10 +12,8 @@ cbuffer Camera: register(b0, space1)
 
 struct Element
 {
-	float4 Rectangle;
+	float4 Bounds;
 	float4 BgColor;
-	float4 BorderColor;
-	float4 BorderThickness;
 	float4 CornerRadius;
 };
 
@@ -30,11 +28,11 @@ struct Fragment
 
 Fragment main(uint id: SV_VERTEXID, uint instance: SV_INSTANCEID)
 {
-	float2 offset = g_Elems[instance].Rectangle.zw * g_Offset[id];
-	float2 halfSize = 0.5 * g_Elems[instance].Rectangle.zw;
+	float2 offset = g_Elems[instance].Bounds.zw * g_Offset[id];
+	float2 halfSize = 0.5 * g_Elems[instance].Bounds.zw;
 	
 	Fragment f;
-	f.Pos = mul(VPMatrix, float4(g_Elems[instance].Rectangle.xy + offset, 0, 1));
+	f.Pos = mul(VPMatrix, float4(g_Elems[instance].Bounds.xy + offset, 0, 1));
 	f.RelativePos = offset - halfSize;
 	f.Elem = g_Elems[instance];
 	

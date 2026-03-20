@@ -3,8 +3,6 @@ struct Fragment {
 	float2 RelativePos;
 	float4 Rectangle;
 	float4 BgColor;
-	float4 BorderColor;
-	float4 BorderThickness;
 	float4 CornerRadius;
 };
 
@@ -24,17 +22,5 @@ float4 main(Fragment frag): SV_TARGET
 	float dw = 1.5 * fwidth(d);
 	float alpha = 1.0 - smoothstep(-dw, 0.0, d);
 
-	halfSize -= 0.5 * float2(
-		frag.BorderThickness.x + frag.BorderThickness.z,
-		frag.BorderThickness.y + frag.BorderThickness.w);
-	float2 offset = 0.5 * float2(
-		frag.BorderThickness.x - frag.BorderThickness.z,
-		frag.BorderThickness.y - frag.BorderThickness.w);
-	d = Sdf(frag.RelativePos + offset, halfSize, corner);
-	dw = 0.75 * fwidth(d);
-	float border = smoothstep(-dw, dw, d);
-
-	float4 color = border * frag.BorderColor + (1 - border) * frag.BgColor;
-
-	return float4(color.rgb, color.a * alpha);
+	return float4(frag.BgColor.rgb, frag.BgColor.a * alpha);
 }

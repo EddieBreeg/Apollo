@@ -19,16 +19,26 @@ namespace apollo::rdr {
 namespace apollo::rdr::ui {
 	struct UiRect
 	{
-		GPU_ALIGN(float4) Rectangle = {};
+		GPU_ALIGN(float4) Bounds = {};
 		GPU_ALIGN(float4) BgColor = {};
-		GPU_ALIGN(float4) BorderColor = {};
-		GPU_ALIGN(float4) BorderThickness = {};
 		GPU_ALIGN(float4) CornerRadius = {};
 
 		[[nodiscard]] bool operator!=(const UiRect& other) const noexcept
 		{
-			return Rectangle != other.Rectangle || BgColor != other.BgColor ||
-				   BorderColor != other.BorderColor || BorderThickness != other.BorderThickness ||
+			return Bounds != other.Bounds || BgColor != other.BgColor ||
+				   CornerRadius != other.CornerRadius;
+		}
+	};
+	struct Border
+	{
+		GPU_ALIGN(float4) Bounds;
+		GPU_ALIGN(float4) Color;
+		GPU_ALIGN(float4) Width;
+		GPU_ALIGN(float4) CornerRadius;
+
+		[[nodiscard]] bool operator!=(const Border& other) const noexcept
+		{
+			return Bounds != other.Bounds || Color != other.Color || Width != other.Width ||
 				   CornerRadius != other.CornerRadius;
 		}
 	};
@@ -58,6 +68,8 @@ namespace apollo::rdr::ui {
 		glm::mat4x4 m_ProjMatrix;
 		Context* m_RenderContext = nullptr;
 		SDL_GPUGraphicsPipeline* m_RectPipeline = nullptr;
-		Batch<UiRect> m_Rectangles, m_Borders;
+		SDL_GPUGraphicsPipeline* m_BorderPipeline = nullptr;
+		Batch<UiRect> m_Rectangles;
+		Batch<Border> m_Borders;
 	};
 } // namespace apollo::rdr::ui

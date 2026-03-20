@@ -1,5 +1,6 @@
 #include "UiSystem.hpp"
 #include <SDL3/SDL_gpu.h>
+#include <imgui.h>
 #include <ui/Context.hpp>
 #include <ui/Element.hpp>
 #include <ui/Renderer.hpp>
@@ -11,7 +12,7 @@ namespace {
 	constexpr Clay_ElementDeclaration g_SidebarConfig{
 		.layout =
 			Clay_LayoutConfig{
-				.sizing = { .width = CLAY_SIZING_PERCENT(0.2f), .height = CLAY_SIZING_GROW() },
+				.sizing = { .width = CLAY_SIZING_PERCENT(0.5f), .height = CLAY_SIZING_GROW() },
 				.padding = { 10, 10, 10, 10 },
 				.childGap = 10,
 				.layoutDirection = CLAY_TOP_TO_BOTTOM,
@@ -25,18 +26,39 @@ namespace {
 				.sizing =
 					Clay_Sizing{
 						CLAY_SIZING_GROW(0),
-						CLAY_SIZING_FIXED(50),
+						CLAY_SIZING_FIXED(100),
 					},
 			},
-		.backgroundColor = g_LightGray,
+		// .backgroundColor = g_LightGray,
 		.cornerRadius =
 			Clay_CornerRadius{
-				.topLeft = 25,
-				.topRight = 25,
-				.bottomLeft = 25,
-				.bottomRight = 25,
+				.topLeft = 50,
+				.bottomRight = 50,
+			},
+		.border =
+			Clay_BorderElementConfig{
+				.color = g_Red,
+				.width =
+					Clay_BorderWidth{
+						.left = 15,
+						.top = 15,
+					},
 			},
 	};
+
+	bool BorderWidget(Clay_BorderElementConfig& inout_config)
+	{
+		bool changed = ImGui::DragScalarN("Border Width", ImGuiDataType_U16, &inout_config.width, 4);
+		changed |= ImGui::ColorEdit4("Border Color", &inout_config.color.r);
+		return changed;
+	}
+	bool UiConfigWidget(Clay_ElementDeclaration& inout_config)
+	{
+		bool changed = ImGui::ColorEdit4("Background Color", &inout_config.backgroundColor.r);
+		changed |= ImGui::DragFloat4("Corner Radius", &inout_config.cornerRadius.topLeft);
+		changed |= BorderWidget(inout_config.border);
+		return changed;
+	}
 } // namespace
 
 namespace apollo::demo {
@@ -73,11 +95,18 @@ namespace apollo::demo {
 	{
 		using namespace ui::ui_literals;
 
+		static auto config = g_SidebarChildConfig;
+		if (ImGui::Begin("UI Inspector"))
+		{
+			UiConfigWidget(config);
+		}
+		ImGui::End();
+
 		ui::Element sidebar("sidebar"_eid, g_SidebarConfig);
 		for (int i = 0; i < 3; ++i)
 		{
-			const Clay_ElementId id = ui::CreateId("child"_cstr, i);
-			sidebar.AddChild<ui::Element>(id, g_SidebarChildConfig);
+			const Clay_ElementId id = ui::CreateId("sidebar_child"_cstr, i);
+			sidebar.AddChild<ui::Element>(id, config);
 		}
 	}
 } // namespace apollo::demo

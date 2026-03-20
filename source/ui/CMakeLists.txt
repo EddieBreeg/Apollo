@@ -8,6 +8,8 @@ set(EmbedCommand ${CMAKE_COMMAND}
 set(HLSL_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/../../data/shaders/ui/rect.vert.hlsl
 	${CMAKE_CURRENT_SOURCE_DIR}/../../data/shaders/ui/rect.frag.hlsl
+	${CMAKE_CURRENT_SOURCE_DIR}/../../data/shaders/ui/border.vert.hlsl
+	${CMAKE_CURRENT_SOURCE_DIR}/../../data/shaders/ui/border.frag.hlsl
 )
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/UiShaders.hpp

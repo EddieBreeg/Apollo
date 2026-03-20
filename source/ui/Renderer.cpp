@@ -77,6 +77,11 @@ namespace apollo::rdr::ui {
 			data::shaders::g_UiRectVert,
 			data::shaders::g_UiRectFrag,
 			static_cast<SDL_GPUTextureFormat>(fmt));
+		m_BorderPipeline = CreatePipeline(
+			ctx.GetDevice().GetHandle(),
+			data::shaders::g_UiBorderVert,
+			data::shaders::g_UiBorderFrag,
+			static_cast<SDL_GPUTextureFormat>(fmt));
 	}
 
 	void Renderer::Reset()
@@ -89,8 +94,10 @@ namespace apollo::rdr::ui {
 			return;
 
 		SDL_ReleaseGPUGraphicsPipeline(m_RenderContext->GetDevice().GetHandle(), m_RectPipeline);
+		SDL_ReleaseGPUGraphicsPipeline(m_RenderContext->GetDevice().GetHandle(), m_BorderPipeline);
 		m_RenderContext = nullptr;
 		m_RectPipeline = nullptr;
+		m_BorderPipeline = nullptr;
 	}
 
 	void Renderer::StartFrame()
@@ -131,7 +138,7 @@ namespace apollo::rdr::ui {
 				const float maxRadius = Min(cmd.boundingBox.width, cmd.boundingBox.height) / 2.0f;
 				m_Rectangles.Add(
 					UiRect{
-						.Rectangle =
+						.Bounds =
 							float4{
 								cmd.boundingBox.x,
 								cmd.boundingBox.y,
@@ -169,11 +176,17 @@ namespace apollo::rdr::ui {
 
 				const float maxRadius = Min(cmd.boundingBox.width, cmd.boundingBox.height) / 2.0f;
 
-				m_Rectangles.Add(
-					UiRect{
-						.BgColor = color,
-						.BorderColor = color,
-						.BorderThickness =
+				m_Borders.Add(
+					Border{
+						.Bounds =
+							float4{
+								cmd.boundingBox.x,
+								cmd.boundingBox.y,
+								cmd.boundingBox.width,
+								cmd.boundingBox.height,
+							},
+						.Color = color,
+						.Width =
 							float4{
 								cmd.renderData.border.width.left,
 								cmd.renderData.border.width.right,
@@ -204,16 +217,17 @@ namespace apollo::rdr::ui {
 				auto* renderPass = context.GetCurrentRenderPass();
 				auto* commandBuffer = context.GetMainCommandBuffer();
 				SDL_PushGPUVertexUniformData(commandBuffer, 0, &m_ProjMatrix, sizeof(m_ProjMatrix));
-				SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_RectPipeline);
 
 				if (const uint32 count = m_Rectangles.GetCount())
 				{
+					SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_RectPipeline);
 					SDL_GPUBuffer* const buf = m_Rectangles.GetBuffer().GetHandle();
 					SDL_BindGPUVertexStorageBuffers(renderPass->GetHandle(), 0, &buf, 1);
 					SDL_DrawGPUPrimitives(renderPass->GetHandle(), 4, count, 0, 0);
 				}
 				if (const uint32 count = m_Borders.GetCount())
 				{
+					SDL_BindGPUGraphicsPipeline(renderPass->GetHandle(), m_BorderPipeline);
 					SDL_GPUBuffer* const buf = m_Borders.GetBuffer().GetHandle();
 					SDL_BindGPUVertexStorageBuffers(renderPass->GetHandle(), 0, &buf, 1);
 					SDL_DrawGPUPrimitives(renderPass->GetHandle(), 4, count, 0, 0);

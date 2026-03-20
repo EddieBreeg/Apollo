@@ -53,6 +53,12 @@ namespace apollo::rdr {
 		{
 			if (!m_Dirty)
 				return;
+
+			if (m_Buffer.GetSize() < (m_Capacity * sizeof(T)))
+			{
+				m_Buffer = rdr::Buffer(rdr::EBufferFlags::GraphicsStorage, m_Capacity * sizeof(T));
+			}
+
 			m_Buffer.UploadData(copyPass, m_Elems.get(), m_Size.m_Current * sizeof(T));
 			m_Dirty = false;
 		}
@@ -112,7 +118,6 @@ namespace apollo::rdr {
 				ptr[i] = m_Elems[i];
 			}
 			m_Elems = std::move(ptr);
-			m_Buffer = rdr::Buffer(rdr::EBufferFlags::GraphicsStorage, m_Capacity * sizeof(T));
 		}
 
 		std::unique_ptr<T[]> m_Elems;
