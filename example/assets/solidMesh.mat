@@ -13,7 +13,7 @@
 	},
 	"colorTargets": [
 		{
-			"format": "rgba8unorm_srgb"
+			"format": "rgba8unorm"
 		}
 	]
 }

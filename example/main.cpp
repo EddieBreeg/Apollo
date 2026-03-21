@@ -172,6 +172,7 @@ namespace apollo::demo {
 						  },
 				  })
 		{
+			m_TargetViewport.m_ColorTargetFormat = rdr::EPixelFormat::RGBA8_UNorm;
 			m_ModelMatrix = glm::translate(glm::identity<glm::mat4x4>(), { 0, 0, -1 });
 		}
 
