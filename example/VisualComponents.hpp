@@ -17,4 +17,15 @@ namespace apollo::demo {
 				{ "mesh", "material" },
 			};
 	};
+	struct GridComponent
+	{
+		AssetRef<rdr::MaterialInstance> m_Mat;
+		uint32 m_GridWidth = 3;
+
+		static constexpr ecs::ComponentReflection<&GridComponent::m_Mat, &GridComponent::m_GridWidth>
+			Reflection{
+				"grid",
+				{ "material", "width" },
+			};
+	};
 } // namespace apollo::demo

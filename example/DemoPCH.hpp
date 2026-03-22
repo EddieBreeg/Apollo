@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "MeshComponent.hpp"
 #include "Viewport.hpp"
+#include "VisualComponents.hpp"
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_keyboard.h>
 #include <SDL3/SDL_mouse.h>

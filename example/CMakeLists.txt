@@ -14,6 +14,7 @@ AddExecutable(${PROJECT_NAME}Example SOURCES
 	CameraSystem.cpp
 	Inspector.cpp
 	UiSystem.cpp
+	VisualSystem.cpp
 LINK PRIVATE ${PROJECT_NAME}::Editor SDL3::SDL3 freetype msdfgen-core assimp::assimp
 OPTIONS PRIVATE ${COMPILER_ARGS}
 PROPERTIES ${COMMON_PROPERTIES}
