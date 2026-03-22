@@ -100,6 +100,9 @@ namespace {
 
 			for (uint32 i = 0; i < m_Module.descriptor_binding_count; ++i)
 			{
+				if (!m_Module.descriptor_bindings[i].accessed)
+					continue;
+
 				switch (m_Module.descriptor_bindings[i].descriptor_type)
 				{
 				case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
