@@ -134,9 +134,10 @@ namespace apollo::rdr {
 			return *m_ConstantBlocks.GetConstantPtr<T>(blockIndex, offset);
 		}
 
+		APOLLO_API void PushFragmentConstants(SDL_GPUCommandBuffer* commandBuffer) const;
 		APOLLO_API void PushFragmentConstants(
 			SDL_GPUCommandBuffer* commandBuffer,
-			uint32 blockIndex = 0) const;
+			uint32 blockIndex) const;
 
 		APOLLO_API void Bind(SDL_GPURenderPass* renderPass) const;
 

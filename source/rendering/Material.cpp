@@ -57,6 +57,9 @@ namespace apollo::rdr {
 
 	void MaterialInstance::ConstantStorage::Init(std::span<const ShaderConstantBlock> blocks)
 	{
+		if (blocks.empty())
+			return;
+
 		APOLLO_ASSERT(blocks.size() <= 4, "Too many shader constant blocks");
 		uint32 totalSize = 0;
 
@@ -121,6 +124,18 @@ namespace apollo::rdr {
 	{
 		const uint8* ptr = m_ConstantBlocks.GetBlockStart(index);
 		SDL_PushGPUFragmentUniformData(cmdBuffer, index, ptr, m_ConstantBlocks.m_Sizes[index]);
+	}
+
+	void MaterialInstance::PushFragmentConstants(SDL_GPUCommandBuffer* cmdBuffer) const
+	{
+		for (int32 i = 0; i < 4; ++i)
+		{
+			if (const auto size = m_ConstantBlocks.m_Sizes[i])
+			{
+				const uint8* ptr = m_ConstantBlocks.GetBlockStart(i);
+				SDL_PushGPUFragmentUniformData(cmdBuffer, i, ptr, size);
+			}
+		}
 	}
 
 	void MaterialInstance::Bind(SDL_GPURenderPass* renderPass) const
