@@ -345,7 +345,7 @@ namespace apollo::editor {
 				metadata.m_Name);
 			co_return false;
 		}
-		if (!desc.is_array())
+		if (!desc.is_array() && !desc.is_null())
 		{
 			APOLLO_LOG_ERROR(
 				"Can't parse shader constant blocks from JSON for material instance: not "
