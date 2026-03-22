@@ -1,0 +1,16 @@
+{
+	"vertexShader": "01KMAXZX1842Z1N05408VQC2DR",
+	"fragmentShader": "01KMAXZXKPZP0YVTWWWZM55RAD",
+	"primitiveType": "triangleStrip",
+	"depthStencil": {
+		"format": "d32float",
+		"enableDepthTest": true,
+		"enableDepthWrite": true,
+		"compareOp": "less"
+	},
+	"colorTargets": [
+		{
+			"format": "rgba8unorm"
+		}
+	]
+}

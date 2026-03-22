@@ -21,13 +21,14 @@
 						"minLength": 1
 					},
 					"components": {
-						"type": "array",
-						"items": {
-							"type": "object"
-						}
+						"type": "object"
 					}
 				},
-				"required": ["id", "components", "name"]
+				"required": [
+					"id",
+					"components",
+					"name"
+				]
 			}
 		}
 	}

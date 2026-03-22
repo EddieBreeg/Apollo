@@ -1,4 +1,5 @@
 #include "DemoPCH.hpp"
+#include "GridSystem.hpp"
 #include "Inspector.hpp"
 #include "UiSystem.hpp"
 #include <editor/asset/Manager.hpp>
@@ -294,6 +295,7 @@ namespace apollo::demo {
 
 		auto* compRegistry = ecs::ComponentRegistry::GetInstance();
 		compRegistry->RegisterComponent<MeshComponent>();
+		compRegistry->RegisterComponent<GridComponent>();
 
 		auto& renderer = *apollo::rdr::Context::GetInstance();
 		auto& manager = *apollo::ecs::Manager::GetInstance();
@@ -304,8 +306,12 @@ namespace apollo::demo {
 		auto& world = manager.GetEntityWorld();
 		world.emplace<SceneSwitchRequestComponent>(
 			world.create(),
-			"01K7VZZSR16FXR2NF8DNYSJQQ4"_ulid);
+			"01KMAX1C7SPE9BNEW848XEZT4D"_ulid);
 
+		manager.AddSystem<GridDrawSystem>(
+			renderer,
+			mainSystem.m_TargetViewport,
+			mainSystem.m_Camera);
 		manager.AddSystem<UiSystem>(
 			renderer,
 			ui::Context::s_Instance,

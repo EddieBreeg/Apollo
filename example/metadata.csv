@@ -12,4 +12,9 @@
 01K9T0Z16XZSB6MSYMN31YC3SG,materialInstance,cube3Mat,"assets/cube3.matinstance"
 01K77QW60RWKYCZFHVP704FV6B,fontAtlas,arial,"assets/arial.atlas"
 01K9Q8NY9E7XW9SA56KJV05A5X,mesh,cube,assets/Cube.obj
+01KMAXZX1842Z1N05408VQC2DR,vertexShader,gridVert,assets/grid.vert.hlsl
+01KMAXZXKPZP0YVTWWWZM55RAD,fragmentShader,gridFrag,assets/grid.frag.hlsl
+01KMAY1CWDS7Z3WRQERHTS8VKX,material,grid,assets/grid.mat
+01KMAYHZE4DKPVWECY4P7W1A5Y,materialInstance,grid1,assets/grid.matinstance
 01K7VZZSR16FXR2NF8DNYSJQQ4,scene,main,main.scn
+01KMAX1C7SPE9BNEW848XEZT4D,scene,descriptorIndexing,descIndex.scn

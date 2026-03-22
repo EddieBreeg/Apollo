@@ -1,0 +1,32 @@
+{
+	"gameObjects": [
+		{
+			"name": "grid",
+			"id": "01KMAWMW1EXX5C0CBVPEVYGM7A",
+			"components": {
+				"transform": {
+					"position": {
+						"x": 0,
+						"y": 0,
+						"z": -1
+					},
+					"scale": {
+						"x": 1,
+						"y": 1,
+						"z": 1
+					},
+					"rotation": {
+						"x": 0,
+						"y": 0,
+						"z": 0,
+						"w": 1
+					}
+				},
+				"grid": {
+					"material": "01KMAYHZE4DKPVWECY4P7W1A5Y",
+					"width": 10
+				}
+			}
+		}
+	]
+}
