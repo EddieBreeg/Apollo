@@ -25,6 +25,7 @@ namespace apollo::editor {
 
 	EAppResult Editor::Init(std::span<const char*> args, App& app)
 	{
+		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& ecsManager = *ecs::Manager::GetInstance();
 		ecsManager.AddSystem<Editor>(args, *app.GetRenderContext());
 		return EAppResult::Continue;

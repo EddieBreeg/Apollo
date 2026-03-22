@@ -296,7 +296,6 @@ namespace apollo::demo {
 		compRegistry->RegisterComponent<MeshComponent>();
 
 		auto& renderer = *apollo::rdr::Context::GetInstance();
-		ImGui::SetCurrentContext(app.GetImGuiContext());
 		auto& manager = *apollo::ecs::Manager::GetInstance();
 		auto& mainSystem = manager.AddSystem<TestSystem>(app.GetMainWindow(), renderer);
 
