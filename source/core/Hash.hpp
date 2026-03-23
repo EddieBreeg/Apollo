@@ -3,29 +3,56 @@
 #include <PCH.hpp>
 #include <bit>
 
+/**
+ * \file Hash.hpp
+
+ * \requirement Hasher
+ * A type H is a Hasher type if given:
+ - k an object of type `const Key&`
+ - h an object of type `H` or `const H`
+
+ `h(k)` produces a value which is convertible to a uint64. The result should be the same after every
+ invocation.
+
+ \requirement Hashable
+ A type T is hashable if \ref apollo::Hash<T> "Hash<T>" meets the requirements of Hasher for key
+ type T.
+ */
+
 namespace apollo {
 	/**
-	 * Generic object hasher. This should have a specialisation for any type T which needs to be
-	 * hashed
+	 * \brief Generic object hasher.
+
+	 This base template gets specialized for all types which need to be hashed.
 	 */
 	template <class T>
 	struct Hash;
 
-	// Evaluates to true if H can be used to hash a value of type K
+	/**
+	* \verifies Hasher
+	 \tparam H: The hasher type to test
+	 \tparam K: The key type
+	 */
 	template <class H, class K>
 	concept Hasher = requires(H hasher, const K& key)
 	{
 		{ hasher(key) }->std::convertible_to<uint64>;
 	};
 
+	/**
+	* \brief Tests whether a given type is hashable.
+
+	\tparam T: The key type to test
+
+	Evaluates to true if \ref apollo::Hash<T> "Hash<T>" meets the requirements of Hasher for type T.
+	\verifies Hashable
+	 */
 	template <class T>
-	concept Hashable = requires(const T& val, Hash<T> h)
-	{
-		{ h(val) }->std::convertible_to<uint64>;
-	};
+	concept Hashable = Hasher<Hash<T>, T>;
 
 	/**
-	 * Integer hash implementation
+	 * \brief Integer hash implementation
+	 * \satisfies Hasher
 	 */
 	template <std::integral Int>
 	struct Hash<Int>
@@ -36,6 +63,10 @@ namespace apollo {
 		}
 	};
 
+	/**
+	 * \brief float hash implementation
+	 * \satisfies Hasher
+	 */
 	template <>
 	struct Hash<float>
 	{
@@ -44,6 +75,10 @@ namespace apollo {
 			return std::bit_cast<uint32>(val);
 		}
 	};
+	/**
+	 * \brief double hash implementation
+	 * \satisfies Hasher
+	 */
 	template <>
 	struct Hash<double>
 	{
@@ -54,25 +89,32 @@ namespace apollo {
 	};
 
 	/**
-	 *  Pointer implementation.
+	 * \brief Pointer hash implementation
+	 \details This specialization simply casts the pointer to an integer value, and does not attempt
+	 to dereference it
+	 * \satisfies Hasher
 	 */
 	template <class T>
 	struct Hash<T*>
 	{
-		/**
-		 * This casts the pointer to an integer value, and does not attempt to dereference it
-		 */
 		[[nodiscard]] uintptr_t operator()(T* const ptr) const noexcept { return uintptr_t(ptr); }
 	};
 
 	/**
-	 * Hash combination primitive. Useful to hash multiple objects together
-	 * \param  seed: The initial hash value. This is typically returned from a specialisation of Hash
+	 * \name Hash combination primitives
+	 * \brief The HashCombine primitive computes a single hash from multiple keys.
+	 * @{
+	 */
+
+	/**
+	 * \param seed: The initial hash value. This is typically returned from a specialization of Hash
 	 * \param val: The values to combine with the seed. Each one will be hashed using the default
-	 * corresponding specialisation of Hash
+	 * corresponding specialization of Hash
+	 * \verifies Hashable
 	 */
 	template <class... K>
-	[[nodiscard]] constexpr uint64 HashCombine(uint64 seed, K&&... val)
+	[[nodiscard]] constexpr uint64 HashCombine(uint64 seed, K&&... val) noexcept(
+		(noexcept(Hash<std::decay_t<K>>{}(std::forward<K>(val))) && ...))
 		requires(Hashable<std::decay_t<K>>&&...)
 	{
 		((seed ^= Hash<std::decay_t<K>>{}(std::forward<K>(val)) + 0x90e14f3da127aed8 + (seed << 6) +
@@ -82,8 +124,13 @@ namespace apollo {
 	}
 
 	/**
-	 * This overload does the same thing as the the one above, except the user can specify a hasher
-	 * object, which will be used to hash every value in the parameter pack.
+	 * \param seed: The initial hash value. This is typically returned from a specialization of Hash
+	 * \param hasher: The hasher object to use for the computations
+	 * \param val: The values to combine with the seed. Each one will be hashed using the default
+	 * corresponding specialization of Hash
+	 * \verifies Hashable
+	 * \details This overload does the same thing as the first one, but with a user provided hasher
+	 * object.
 	 */
 	template <class H, class... K>
 	[[nodiscard]] constexpr uint64 HashCombine(uint64 seed, H&& hasher, K&&... val) noexcept(
@@ -93,4 +140,6 @@ namespace apollo {
 		 ...);
 		return seed;
 	}
+
+	/*! @} */
 } // namespace apollo

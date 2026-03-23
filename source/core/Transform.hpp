@@ -3,8 +3,14 @@
 #include <PCH.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-namespace apollo {
+/** \file Transform.hpp
+ * \brief 3D transform computation
+ */
 
+namespace apollo {
+	/**
+	 * \brief Returns a 4x4 transformation matrix from a position, scale and rotation
+	 */
 	[[nodiscard]] inline glm::mat4x4 ComputeTransformMatrix(
 		const float3& pos,
 		const float3& scale,

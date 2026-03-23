@@ -3,6 +3,12 @@
 #include <PCH.hpp>
 #include <clay.h>
 
+/**
+ * \namespace apollo::ui
+ * \brief User-Interface library
+ * All the tools to build graphical user interfaces for the game
+ * \sa apollo::rdr::ui
+ */
 namespace apollo::ui {
 	[[nodiscard]] constexpr Clay_ElementId CreateId(Clay_String label, uint32 hash = 0)
 	{

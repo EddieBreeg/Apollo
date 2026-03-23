@@ -8,8 +8,14 @@
 #include "Window.hpp"
 #include <entry/Entry.hpp>
 
+/** \file App.hpp */
+
 struct ImGuiContext;
 
+/**
+ * \namespace apollo
+ * \brief The main namespace. Everything that belongs to the engine lives here
+ */
 namespace apollo {
 	namespace ecs {
 		class Manager;
@@ -24,26 +30,45 @@ namespace apollo {
 	struct EntryPoint;
 
 	/**
-	 * Main App class. This gets initialised in the entry point, and destroyed at the end of the
-	 * program
+	 * \defgroup global-structure General application structure
+	 * @{
+	 */
+
+	/**
+	 * \brief Main App class.
+	 * The App class handles the main program loop, as well as initialization/clean-up code. It gets
+	 * initialized in the `main` function and is destroyed at the very end of the program.
 	 */
 	class App : public Singleton<App>
 	{
 	public:
+		/**
+		 * \brief Shuts down the core managers before exiting
+		 */
 		APOLLO_API ~App();
+		/**
+		 * \returns The current application result code. This will always be EAppResult::Continue
+		 * until either a termination even was received, or a critical error has occurred.
+		 */
 		[[nodiscard]] EAppResult GetResultCode() const noexcept { return m_Result; }
 		[[nodiscard]] Window& GetMainWindow() noexcept { return m_Window; }
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 		[[nodiscard]] rdr::Context* GetRenderContext() noexcept { return m_RenderContext; }
+		[[nodiscard]] mt::ThreadPool& GetThreadPool() noexcept { return m_MainThreadPool; }
 
-		// Main loop. Blocks until the program comes to an end, e.g. after calling RequestAppQuit()
+		/**
+		 * \brief Main loop.
+		 * Blocks until the program comes to an end, e.g. after calling RequestAppQuit()
+		 */
 		APOLLO_API EAppResult Run();
 
-		// Internally requests program termination. The loop will stop once the current iteration is
-		// done
+		/**
+		 * \brief Internally requests program termination.
+		 * \param success: Should be `true` if the app terminated normally, `false` otherwise
+		 * \details This tells the engine to end the main program loop. The current iteration of the
+		 * loop will still complete.
+		 */
 		APOLLO_API void RequestAppQuit(bool success = true) noexcept;
-
-		[[nodiscard]] mt::ThreadPool& GetThreadPool() noexcept { return m_MainThreadPool; }
 
 	private:
 		APOLLO_API EAppResult Update();
@@ -64,4 +89,6 @@ namespace apollo {
 		GameTime m_GameTime;
 		mt::ThreadPool m_MainThreadPool;
 	};
+
+	/** @} */
 } // namespace apollo

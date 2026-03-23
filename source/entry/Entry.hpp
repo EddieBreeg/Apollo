@@ -35,6 +35,11 @@ namespace apollo {
 	class App;
 	class IAssetManager;
 
+	/**
+	* \addtogroup global-structure
+	@{
+	 */
+
 	/// Application result code
 	enum class EAppResult : int8
 	{
@@ -87,4 +92,6 @@ namespace apollo {
 	 * details.
 	 */
 	extern EntryPoint GetEntryPoint(std::span<const char*> args);
+
+	/** @} */
 } // namespace apollo

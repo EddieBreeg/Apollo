@@ -3,14 +3,24 @@
 #include <PCH.hpp>
 #include <memory>
 
+/** \file Singleton.hpp */
+
 namespace apollo {
 	/**
-	 * Singleton class helper. T must declare a static s_Instance of type std::unique_ptr<T>
+	 * \brief Singleton class helper.
+	 * This helper is used as a base for most singletons in the engine.
+	 * \tparam T: The derived singleton type. \b T is expected to declare a static instance of type
+	 * std::unique_ptr<T> called s_Instance.
+	 * See the App class for an example of how to use this class.
 	 */
 	template <class T>
 	class Singleton
 	{
 	public:
+		/**
+		 * \brief Creates the instance, or returns the pre-existing one.
+		 * \param args: The arguments to forward to the constructor.
+		 */
 		template <class... Args>
 		static T& Init(Args&&... args)
 		{
@@ -21,7 +31,8 @@ namespace apollo {
 			return *T::s_Instance;
 		}
 
-		static T* GetInstance() { return T::s_Instance.get(); }
+		[[nodiscard]] static T* GetInstance() { return T::s_Instance.get(); }
+		/// Destroys the instance
 		static void Shutdown() { T::s_Instance.reset(); }
 
 	protected:

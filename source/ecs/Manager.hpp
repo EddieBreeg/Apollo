@@ -15,6 +15,10 @@ namespace apollo {
 	class GameTime;
 }
 
+/**
+ * \namespace apollo::ecs
+ * \brief ECS (Entitity-Component-System) library
+ */
 namespace apollo::ecs {
 	class Manager : public Singleton<Manager>
 	{

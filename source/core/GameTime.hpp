@@ -3,9 +3,12 @@
 #include <PCH.hpp>
 #include <chrono>
 
+/** \file GameTime.hpp */
+
 namespace apollo {
 	/**
-	 * Time management class. Provides information about both frame-times and execution time
+	 * \brief Time management class. Provides information about both frame-times and total execution
+	 * time.
 	 */
 	class GameTime
 	{
@@ -18,18 +21,21 @@ namespace apollo {
 		using TimePoint = ClockType::time_point;
 
 		/**
-		 * Called at the end of a frame to compute the delta
+		 * \brief Called at the end of a frame to compute the delta
 		 */
 		APOLLO_API void Update();
 		/**
-		 * Restarts the timer. After this call, GetElapsed() returns 0
+		 * \brief Restarts the timer. After this call, GetElapsed() returns 0
 		 */
 		APOLLO_API void Reset();
 
 		/**
-		 * Returns the delta between the two last updates. This corresponds to the duration of the
-		 * **previous** frame, or 0 during the first frame
+		 * \name GetDelta
+		 * \returns The delta between the two last updates. This corresponds to the duration
+		 * of the **previous** frame, or 0 during the first frame
+		 * @{
 		 */
+
 		[[nodiscard]] Duration GetDelta() const noexcept { return m_Delta; }
 		template <class D>
 		[[nodiscard]] D GetDeltaAs() const noexcept
@@ -37,11 +43,17 @@ namespace apollo {
 			return std::chrono::duration_cast<D>(m_Delta);
 		}
 
+		/** @} */
+
+		/** \brief The time at which the timer was started/reset. */
 		[[nodiscard]] TimePoint GetStartTime() const noexcept { return m_StartTime; }
 
 		/**
-		 * The total amount of time elapsed between the object's construction (or the last call to
-		 * Reset) and the last update
+		 * \returns The total amount of time elapsed between the object's construction (or the last
+		 call to
+		 * Reset) and the last update.
+		 * \name GetElapsed()
+		 @{
 		 */
 		[[nodiscard]] Duration GetElapsed() const noexcept { return m_LastUpdate - m_StartTime; }
 		template <class D>
@@ -49,10 +61,11 @@ namespace apollo {
 		{
 			return std::chrono::duration_cast<D>(m_LastUpdate - m_StartTime);
 		}
+		/** @} */
 
 		/**
-		 * Returns how many times Update has been called since the object's construction or the last
-		 * call to Reset
+		 * \brief Returns how many times Update has been called since the object's construction or
+		 * the last call to Reset
 		 */
 		[[nodiscard]] uint64 GetUpdateCount() const noexcept { return m_UpdateCount; }
 

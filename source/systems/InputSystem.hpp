@@ -8,6 +8,10 @@ namespace apollo {
 	class App;
 } // namespace apollo
 
+/**
+ * \namespace apollo::inputs
+ * \brief Inputs management (keyboard/mouse/window events etc)
+ */
 namespace apollo::inputs {
 	class APOLLO_API System
 	{
@@ -21,5 +25,5 @@ namespace apollo::inputs {
 		App& m_App;
 	};
 
-	APOLLO_API const bool *GetKeyStates() noexcept;
+	APOLLO_API const bool* GetKeyStates() noexcept;
 } // namespace apollo::inputs

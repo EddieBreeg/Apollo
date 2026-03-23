@@ -3,8 +3,11 @@
 #include "ULID.hpp"
 #include <spdlog/fmt/bundled/core.h>
 
+/** \file ULIDFormatter.hpp */
+
+/// fmt::format specialization for ULID class
 template <>
-struct fmt::formatter<apollo::ULID> : public fmt::formatter<fmt::basic_string_view<char>>
+struct ::fmt::formatter<apollo::ULID> : public fmt::formatter<fmt::basic_string_view<char>>
 {
 	fmt::appender format(const apollo::ULID id, format_context& ctx) const
 	{

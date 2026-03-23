@@ -3,6 +3,9 @@
 #include <PCH.hpp>
 #include <string_view>
 
+/** \file Utf8.hpp */
+
+/// \namespace apollo::utf8
 namespace apollo::utf8 {
 	static constexpr char32_t g_InvalidCodePoint = 0xffffffff;
 

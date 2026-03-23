@@ -6,16 +6,20 @@
 #include "JsonFwd.hpp"
 #include <string_view>
 
+/** \file ULID.hpp */
+
 namespace apollo {
 	/**
-	 * Unique lexographically sortable identifier. The spec for this format can
-	 * be found here: https://github.com/ulid/spec
+	 * \brief Unique lexographically sortable identifier.
+	 * The spec for this format can be found at https://github.com/ulid/spec
+	 * \satisfies Hashable
+	 * \satisfies JsonConvertible
 	 */
 	class APOLLO_API ULID
 	{
 	public:
 		/**
-		 * Creates a null identifier (all 0s)
+		 * \brief Creates a null identifier (all 0s)
 		 */
 		constexpr ULID() noexcept = default;
 		constexpr ULID(const ULID&) noexcept = default;
@@ -23,20 +27,20 @@ namespace apollo {
 		constexpr ULID& operator=(const ULID&) noexcept = default;
 
 		/**
-		 * Constructs a ULID from a timestamp and random values
+		 * \brief Constructs a ULID from a timestamp and random values
 		 * \note Only the 48 rightmost bit of timestamp will be used, the 16 upper bits will be
 		 * discarded
 		 */
 		constexpr ULID(const uint64 timestamp, const uint16 rand1, const uint64 rand2) noexcept;
 
 		/**
-		 * Generates a new identifier, with a 48-bit unix timestamp (in milliseconds) and
+		 * \brief Generates a new identifier, with a 48-bit unix timestamp (in milliseconds) and
 		 * 80 bits of pseudo-random data
 		 */
 		[[nodiscard]] static ULID Generate();
 
 		/**
-		 * Converts the ULID object into a base 32 string
+		 * \brief Converts the ULID object into a base 32 string
 		 * \tparam N: Size of the output buffer
 		 * \tparam Offset: Start position of the ULID in the output buffer
 		 * \param out_buf: array of characters where to write the ULID
@@ -46,27 +50,44 @@ namespace apollo {
 		constexpr char* ToChars(char (&out_buf)[N]) const noexcept;
 
 		/**
-		 * Attempts to create a ULID object from a base 32 string. If the string doesn't
-		 * represent a valid ULID object, a null id is returned instead
+		 * \brief Attempts to create a ULID object from a base 32 string.
+		 * If the string doesn't represent a valid ULID object, a null id is returned instead
 		 */
 		[[nodiscard]] static constexpr ULID FromString(const std::string_view str) noexcept;
 
 		/**
-		 * Tests whether this id is non-null
+		 * \brief Tests whether this id is non-null
 		 */
 		[[nodiscard]] constexpr operator bool() const noexcept { return m_Left || m_Right; }
 
 		[[nodiscard]] constexpr bool operator==(const ULID other) const noexcept;
 		[[nodiscard]] constexpr bool operator!=(const ULID other) const noexcept;
 
+		/** \name JSON conversion functions
+		 * \sa json::Converter
+		 * @{ */
 		bool FromJson(const nlohmann::json& json) noexcept;
 		void ToJson(nlohmann::json& out_json) const;
+		/** @} */
 
 	private:
 		friend struct Hash<ULID>;
 		uint64 m_Left = 0, m_Right = 0;
 	};
 
+	/**
+	 * \namespace apollo::ulid_literal
+	 * \brief Defines the _ulid literal
+	 */
+	namespace ulid_literal {
+		consteval ULID operator""_ulid(const char* str, size_t len)
+		{
+			return ULID::FromString({ str, len });
+		}
+	} // namespace ulid_literal
+	using namespace ulid_literal;
+
+	/** \brief ULID Hash specialization */
 	template <>
 	struct Hash<ULID>
 	{
@@ -168,12 +189,4 @@ namespace apollo {
 	{
 		return m_Left != other.m_Left || m_Right != other.m_Right;
 	}
-
-	namespace ulid_literal {
-		consteval ULID operator""_ulid(const char* str, size_t len)
-		{
-			return ULID::FromString({ str, len });
-		}
-	} // namespace ulid_literal
-	using namespace ulid_literal;
 } // namespace apollo

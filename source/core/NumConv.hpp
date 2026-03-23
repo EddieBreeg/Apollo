@@ -5,6 +5,10 @@
 #include "Assert.hpp"
 #include <concepts>
 
+/** \file NumConv.hpp
+ * \brief Numeric conversions
+ */
+
 namespace apollo {
 	namespace _internal {
 		template <class T>
@@ -47,6 +51,20 @@ namespace apollo {
 		requires(sizeof(From) > sizeof(To)) struct LossyFloatConversion<From, To> : std::true_type
 		{};
 	} // namespace _internal
+
+	/**
+	 * \name NumCast
+	 * \tparam From: The source type
+	 * \tparam To: The destination type
+	 * \param x: The value to convert
+	 * \brief Converts a value from one numeric type to another, and performs runtime checks if
+	 * required.
+
+	 * If \p x can safely be converted to type \p To without any risk of data loss/corruption,
+	 * then a simple static_cast expression is used. In all other cases, the function asserts if
+	 * a difference was detected between the result and the original value.
+	 * @{
+	 */
 
 	template <_internal::IntOrEnum To, _internal::IntOrEnum From>
 	[[nodiscard]] constexpr To NumCast(From x) noexcept
@@ -106,4 +124,6 @@ namespace apollo {
 			_internal::ToUnderlying(res));
 		return res;
 	}
+
+	/** @} */
 } // namespace apollo

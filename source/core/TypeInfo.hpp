@@ -4,7 +4,9 @@
 
 /**
  * \file TypeInfo.hpp
- * Custom RTTI implementation. Currently, this kinda breaks down when crossing DLL boundaries...
+ * \brief Custom RTTI implementation.
+ * \details These APIs get used internally, its unlikely you'll have to interact with them
+ * \warning Currently, this kinda breaks down when crossing DLL boundaries...
  */
 
 namespace apollo {
@@ -15,6 +17,9 @@ namespace apollo {
 		};
 	} // namespace _internal
 
+	/**
+	 * \brief Generates a sequential index for a given type/index generator
+	 */
 	template <class T, class G = _internal::DefaultTypeIndexGenerator>
 	struct TypeIndex
 	{
@@ -27,6 +32,9 @@ namespace apollo {
 		[[nodiscard]] operator uint32() const noexcept { return GetValue(); }
 	};
 
+	/**
+	 * \brief Default type info implementation
+	 */
 	struct TypeInfo
 	{
 	private:

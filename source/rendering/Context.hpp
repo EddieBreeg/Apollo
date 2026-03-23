@@ -17,9 +17,16 @@ namespace apollo {
 	class Window;
 }
 
+/**
+ * \namespace apollo::rdr
+ * \brief Rendering APIs
+ */
 namespace apollo::rdr {
 	class RenderPass;
 
+	/**
+	 * \brief Global rendering context
+	 */
 	class Context : public Singleton<Context>
 	{
 	public:

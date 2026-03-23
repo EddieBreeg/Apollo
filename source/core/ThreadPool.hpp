@@ -12,12 +12,26 @@
 #include <thread>
 #include <vector>
 
+/** \file ThreadPool.hpp */
+
+/**
+ * \namespace apollo::mt
+ * \brief Multithreading utilities
+ */
 namespace apollo::mt {
+	/** \brief Simple thread pool implementation
+
+	This gets used internally in places where concurrency is desired, for example the AssetLoader.
+	Jobs are stored using a Queue container.
+	 */
 	class ThreadPool
 	{
 	public:
 		static inline const uint32 DefaultThreadCount = Max(1u, std::thread::hardware_concurrency());
 
+		/**
+		 * \brief Creates and immediately kicks off the threads.
+		 */
 		inline explicit ThreadPool(uint32 threadCount = DefaultThreadCount);
 		inline ~ThreadPool();
 
@@ -26,31 +40,35 @@ namespace apollo::mt {
 
 		[[nodiscard]] bool IsRunning() const noexcept { return m_Running; }
 
-		/*
-		 * Adds a simple job to the queue. This is the preferred overload, as it does not require
+		/** \name Enqueue
+		 * \brief Adds a job add the end of the queue
+		 * \note A job is not guaranteed to get executed: \ref ThreadPool::Stop "Stop()"
+		 * might get called before it gets the chance.
+		 * @{ */
+
+		/**
+		 * \brief This is the preferred overload, as it does not require
 		 * wrapping the functor in a lambda.
-		 * \remark The job is not guaranteed to get executed:
-		 * Stop might get called before a thread gets to it
 		 */
 		template <class F>
-		void Enqueue(F&& func) requires(std::is_invocable_r_v<void, F>);
+		inline void Enqueue(F&& func) requires(std::is_invocable_r_v<void, F>);
 
-		/*
-		 * Adds a simple job with arguments to the queue. This overload wraps the functor and its
+		/**
+		 * \brief This overload wraps the functor and its
 		 * arguments in a lambda. Consider using the overload above instead.
-		 * \remark This job is not guaranteed to get executed:
-		 * Stop might get called before a thread gets to it
 		 */
 		template <class F, class... Args>
-		void Enqueue(F&& func, Args&&... args) requires(std::is_invocable_r_v<void, F, Args...>);
+		inline void Enqueue(F&& func, Args&&... args) requires(std::is_invocable_r_v<void, F, Args...>);
 
-		/*
-		 * Adds a simple job with arguments to the queue.
-		 * \remark This job is not guaranteed to get executed:
-		 * Stop might get called before a thread gets to it
+		/** @} */
+		
+		/**
+		 * \brief Adds a job to the queue and returns an associated future
+		 * \retval std::future A future object through which the result will be made a available if the
+		 * job completes.
 		 */
 		template <class F, class... Args>
-		[[nodiscard]] auto EnqueueAndGetFuture(F&& func, Args&&... args)
+		[[nodiscard]] inline auto EnqueueAndGetFuture(F&& func, Args&&... args)
 			-> std::future<decltype(func(std::move(args)...))> requires(
 				std::is_invocable_v<F, Args...>);
 
@@ -59,6 +77,10 @@ namespace apollo::mt {
 			return NumCast<uint32>(m_Threads.size());
 		}
 
+		/** \brief Marks the pool as stopped and notifies all threads
+		 * \note This function does not block, but jobs might still be running by the time it
+		 * returns.
+		 */
 		inline void Stop();
 
 	private:

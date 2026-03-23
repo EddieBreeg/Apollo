@@ -2,8 +2,14 @@
 
 #include <PCH.hpp>
 
-namespace apollo::inputs{
-	// Virtual key mappings, extracted from SDL
+/** \file KeyCodes.hpp */
+
+/**
+ \namespace apollo::inputs
+ \brief Input events management
+*/
+namespace apollo::inputs {
+	/** \brief Virtual key mappings, extracted from SDL */
 	enum class EKey : uint32
 	{
 		Unknown = 0x00000000u,
@@ -263,4 +269,4 @@ namespace apollo::inputs{
 		Lhyper = 0x20000006u,
 		Rhyper = 0x20000007u,
 	};
-}
+} // namespace apollo::inputs

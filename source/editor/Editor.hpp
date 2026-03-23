@@ -19,6 +19,11 @@ namespace apollo {
 	struct EntryPoint;
 } // namespace apollo
 
+/**
+ * \namespace apollo::editor
+ * \brief The editor library of the engine.
+ * \details All tools provided by Apollo to create and edit a game.
+ */
 namespace apollo::editor {
 	class Editor
 	{

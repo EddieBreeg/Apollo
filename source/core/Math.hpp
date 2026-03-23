@@ -1,20 +1,20 @@
 #pragma once
 
+/** \file Math.hpp */
+
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#define INT_DECL(type) using type = type##_t
-INT_DECL(int8);
-INT_DECL(int16);
-INT_DECL(int32);
-INT_DECL(int64);
-INT_DECL(uint8);
-INT_DECL(uint16);
-INT_DECL(uint32);
-INT_DECL(uint64);
-#undef INT_DECL
+using int8 = int8_t;
+using int16 = int16_t;
+using int32 = int32_t;
+using int64 = int64_t;
+using uint8 = uint8_t;
+using uint16 = uint16_t;
+using uint32 = uint32_t;
+using uint64 = uint64_t;
 
 using float2 = glm::vec<2, float>;
 using float3 = glm::vec<3, float>;
@@ -28,7 +28,7 @@ namespace apollo {
 		return b;
 	}
 
-	[[nodiscard]] constexpr auto Max(auto&& a, auto&& b) noexcept(noexcept(a < b))
+	[[nodiscard]] constexpr auto Max(auto&& a, auto&& b) noexcept(noexcept(a > b))
 	{
 		if (a > b)
 			return a;
@@ -51,17 +51,39 @@ namespace apollo {
 		return (val & (~val + 1)) == val;
 	}
 
+	/**
+	 * \brief Computes the padding required to align an offset on some boundary
+	 * \param offset: The value to align
+	 * \param alignment: The alignment to use. Must be a power of 2
+	 * \returns The padding value
+	 * \warning The result is undefined if `alignment` is not a power of two
+	 */
 	[[nodiscard]] constexpr uint32_t Padding(uint32_t offset, uint32_t alignment) noexcept
 	{
 		const uint32_t mask = alignment - 1;
 		return (alignment - (offset & mask)) & mask;
 	}
 
+	/**
+	 * \brief Aligns an offset on the provided boundary
+	 * \param offset: The value to align
+	 * \param alignment: The alignment to use. Must be a power of 2
+	 * \returns offset + \ref apollo::Padding "Padding"(offset, alignment)
+	 * \warning The result is undefined if `alignment` is not a power of two
+	 */
 	[[nodiscard]] constexpr uint32_t Align(uint32_t offset, uint32_t alignment) noexcept
 	{
 		return offset + Padding(offset, alignment);
 	}
 
+	/**
+	* \brief Maps a value linearly from a source range to a destination range
+	* \param x: The value to map
+	* \param fromMin: Start of the source range
+	* \param fromMax: End of the source range
+	* \param toMin: Start of the destination range
+	* \param toMax: End of the destination range
+	 */
 	[[nodiscard]] constexpr float MapRange(
 		float x,
 		float fromMin,

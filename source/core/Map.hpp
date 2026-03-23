@@ -3,7 +3,8 @@
 #include <unordered_map>
 
 /**
- * Just some hashmap shortcuts
+ * \file Map.hpp
+ * \brief Hashmap typedefs
  */
 
 namespace apollo {
@@ -13,6 +14,11 @@ namespace apollo {
 	struct Hash;
 	struct StringHash;
 
+	/**
+	 * \brief std::unordered_map specialization using apollo::Hash
+
+	 This is typically the specialization used all across the engine.
+	 */
 	template <class K, class T>
 	using HashMap = std::unordered_map<K, T, Hash<K>>;
 

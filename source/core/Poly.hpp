@@ -2,13 +2,15 @@
 
 #include <PCH.hpp>
 
+/** \file Poly.hpp */
+
 /**
  * \namespace apollo::poly
- * Type-erasure support
+ * \brief Type-erasure support
  */
 namespace apollo::poly {
 	/**
-	 * Type-erased destructor
+	 * \brief Type-erased destructor
 	 */
 	template <class T>
 	void Destroy(void* ptr)
@@ -21,7 +23,7 @@ namespace apollo::poly {
 	}
 
 	/**
-	 * Type-erased delete function
+	 * \brief Type-erased delete function
 	 */
 
 	template <class T>
@@ -32,7 +34,7 @@ namespace apollo::poly {
 	}
 
 	/**
-	 * Type-erased functor invocation function
+	 * \brief Type-erased functor invocation function
 	 */
 	template <class F, class... Args>
 	decltype(auto) Invoke(void* ptr, Args&&... args) requires(std::is_invocable_v<F, Args...>)

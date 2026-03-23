@@ -7,8 +7,11 @@
 #include <PCH.hpp>
 
 namespace apollo {
-	/*
-	 * Converts an enum value to its underlying integer type
+	/**
+	 * \brief Converts an enum value to its underlying integer type
+	 * \tparam E: The enum type
+	 * \param val: The value to convert
+	 * \returns static_cast<std::underlying_type_t<E>>(val)
 	 */
 	template <class E>
 	[[nodiscard]] constexpr auto ToUnderlying(E val) noexcept requires std::is_enum_v<E>
@@ -17,9 +20,9 @@ namespace apollo {
 	}
 
 	/**
-	 * \namespace enum_operators
-	 * Definition for common operations one might want to use on enums: comparisons, bitwise and so
-	 * on
+	 * \namespace apollo::enum_operators
+	 * \brief Definition for common operations one might want to use on enums: comparisons, bitwise
+	 * and so on
 	 */
 	namespace enum_operators {
 		template <class E>
@@ -98,13 +101,13 @@ namespace apollo {
 	using namespace enum_operators;
 
 	/**
-	 * Utility struct to handle enum based bit flags
+	 * \brief Utility struct to handle enum based bit flags
 	 * \tparam E: The underlying enum value type
 	 */
 	template <class E>
 	requires(std::is_enum_v<E>) struct EnumFlags
 	{
-		E m_Value = static_cast<E>(0);
+		E m_Value = static_cast<E>(0); //!< The underlying value
 
 		constexpr EnumFlags() = default;
 		constexpr EnumFlags(const EnumFlags&) noexcept = default;
@@ -123,32 +126,44 @@ namespace apollo {
 		constexpr operator E() const noexcept { return m_Value; }
 
 		/**
-		 * Returns true if any of the 1 bits in mask are set in the stored value, false otherwise
+		 * \brief Returns true if any of the 1 bits in mask are set in the stored value, false
+		 * otherwise
+		 * \param mask: The bits to test
 		 */
 		[[nodiscard]] constexpr bool HasAny(E mask) const noexcept { return bool(m_Value & mask); }
 
 		/**
-		 * Returns true if all of the 1 bits in mask are set in the stored value, false otherwise
+		 * \brief Returns true if all of the 1 bits in mask are set in the stored value, false
+		 * otherwise
+		 * \param mask: The bits to test
 		 */
-		[[nodiscard]] constexpr bool HasAll(E mask) const noexcept { return (m_Value & mask) == mask; }
+		[[nodiscard]] constexpr bool HasAll(E mask) const noexcept
+		{
+			return (m_Value & mask) == mask;
+		}
 
 		/**
-		 * Sets the bits in mask to 1 in the stored value
+		 * \brief Sets the bits in mask to 1 in the stored value
 		 * \param mask: The bits to "activate"
 		 */
 		constexpr void Set(E mask) noexcept { m_Value |= mask; }
 
-		// If bit is true, equivalent to Set(mask), otherwise Clear(mask)
-		constexpr void Set(E mask, bool bit) noexcept
+		/**
+		 * \brief If `value` is true, equivalent to Set(mask), otherwise Clear(mask)
+		 * \param mask: The bits to modify
+		 * \param value: The value to use for the bits specified in the mask
+		 */
+		constexpr void Set(E mask, bool value) noexcept
 		{
-			m_Value = (m_Value & ~mask) | (bit * mask);
+			m_Value = (m_Value & ~mask);
+			m_Value |= value ? mask : 0;
 		}
 		/**
-		 * Sets all the 1-bits in mask to 0 in the stored value
+		 * \brief Clears the 1-bits in `mask` to 0 
 		 */
 		constexpr void Clear(E mask) noexcept { m_Value &= ~mask; }
 		/**
-		 * Flips all the 1-bits in mask in the stored value
+		 * \brief Flips all the 1-bits in mask in the stored value
 		 */
 		constexpr void Flip(E mask) noexcept { m_Value ^= mask; }
 	};

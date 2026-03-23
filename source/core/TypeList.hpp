@@ -2,6 +2,8 @@
 
 #include <PCH.hpp>
 
+/** \file TypeList.hpp */
+
 namespace apollo {
 	template<class... T>
 	struct TypeList

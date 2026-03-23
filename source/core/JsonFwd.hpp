@@ -5,13 +5,30 @@
 #include "FieldList.hpp"
 #include <nlohmann/json_fwd.hpp>
 
+/** \file JsonFwd.hpp */
+
 /**
- * \namespace json
- * Contains all json-related code for converting objects to/from json
+ * \namespace apollo::json
+ * \brief Contains all json-related code for converting objects to/from json
+
+ * \requirement JsonConvertible
+ A type \e T is JsonConvertible if given:
+ - a an object of type T
+ - b an object of type const T&
+ - j1 an object of type const nlohmann::json&
+ - j2 an object of type nlohmann::json&
+
+ The following statements are true:
+ - `apollo::json::Converter<T>::FromJson(a, j1)` is well-formed, and the result is convertible to
+ `bool`
+ - `apollo::json::Converter<T>::ToJson(b, j2)` is well-formed
+
+ \sa apollo::json::JsonConvertible
  */
 namespace apollo::json {
 	/**
-	 * Represents a JSON structure field
+	 * \brief Represents a JSON structure field
+	 * \sa apollo::json::JsonConvertible
 	 */
 	struct Field
 	{
@@ -25,6 +42,7 @@ namespace apollo::json {
 		bool m_IsOptional = false;
 	};
 
+	/** \brief A list of JSON fields, used for reflection. */
 	template <auto... M>
 	using FieldList = meta::FieldList<Field, M...>;
 
@@ -43,13 +61,17 @@ namespace apollo::json {
 	} // namespace _internal
 
 	/**
-	 * Evaluates to true if T declared an accessible static FieldList object named JsonFields
+	 * \brief Tests whether a type *T* declares a JSON field list.
+
+	 * Evaluates to true if \e T::JsonFields is a an accessible object of type \e L where
+	 * \e L is a speicialization of \ref apollo::json::FieldList
 	 */
 	template <class T>
 	concept HasJsonFieldList = _internal::IsFieldList<decltype(T::JsonFields)>::value;
 
 	/**
-	 * This concept is used to detect when a struct/class type implements JSON conversion methods
+	 * \brief This concept is used to detect when a struct/class type implements JSON conversion
+	 * methods
 	 */
 	template <class T>
 	concept JsonEnabledType = requires(T a, const T b, const nlohmann::json& j1, nlohmann::json& j2)
@@ -59,14 +81,22 @@ namespace apollo::json {
 	};
 
 	/**
-	 * JSON Converter. This is used to convert complex objects from/to JSON. A default
-	 * implementation is available in Json.hpp
+	 * \brief JSON Converter.
+
+	 * This is used to convert complex objects from/to JSON. A default
+	 * implementation is available in Json.hpp. To be valid, a Converter specialization must define the following functions:
+	 \code{.cpp} 
+	 	static bool FromJson(T& out_obj, const nlohmann::json& j);
+		static void ToJson(const T& obj, nlohmann::json& out_json);
+	\endcode
+	\sa JsonConvertible
 	 */
 	template <class T>
 	struct Converter;
 
 	/**
-	 * Used to detect whether a type has a valid specialisation of Converter available
+	 * \brief Used to detect whether a type has a valid specialisation of Converter available
+	 * \verifies JsonConvertible
 	 */
 	template <class T>
 	concept JsonConvertible = requires(T a, const T& b, const nlohmann::json& j1, nlohmann::json& j2)

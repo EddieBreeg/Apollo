@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Queue.hpp */
+
 #include <PCH.hpp>
 
 #include "TypeTraits.hpp"
@@ -8,6 +10,11 @@
 #include <stdexcept>
 
 namespace apollo {
+	/**
+	 * \brief Queue container implementation
+	 * \tparam T: The type of values stored in the queue
+	 * \tparam Alloc: The allocator type used to acquire memory
+	 */
 	template <class T, class Alloc = std::allocator<T>>
 	struct Queue
 	{
@@ -19,6 +26,11 @@ namespace apollo {
 		template <class A = Alloc>
 		explicit Queue(A&& alloc) requires(std::is_constructible_v<Alloc, A>);
 
+		/**
+		 \brief Constructs a queue with an initial capacity using the provided allocator
+		 \param capacity: The initial capacity for the allocated buffer
+		 \param alloc: The allocator which will be used for the initial and subsequent allocations
+		 */
 		template <class A = Alloc>
 		explicit Queue(uint32 capacity, A&& alloc = {}) requires(std::is_constructible_v<Alloc, A>);
 
@@ -42,23 +54,60 @@ namespace apollo {
 		template <class... A>
 		void AddEmplace(A&&... args) requires std::is_constructible_v<T, A...>;
 
+		/**
+		 \brief Destroys the first element in the queue.
+
+		 If size is 0, does nothing.
+		 */
 		void PopFront() noexcept(std::is_nothrow_destructible_v<T>);
+		/**
+		 * \brief Combines PopFront() and GetFront()
+		 * \throws std::runtime_error if size was 0
+		 */
 		[[nodiscard]] T PopAndGetFront() requires(meta::NoThrowMovable<T>);
 
-		T& GetFront();
-		const T& GetFront() const;
+		/** \name GetFront()
+		* \brief Gets the first element in the queue
+		* \throws std::runtime_error if size was 0.
+		@{
+		 */
+		[[nodiscard]] T& GetFront();
+		[[nodiscard]] const T& GetFront() const;
+		/** @} */
 
 		Alloc& GetAllocator() noexcept { return m_Allocator; }
 		const Alloc& GetAllocator() const noexcept { return m_Allocator; }
 
+		/**
+		* \brief Empties the queue without releasing the allocated memory.
+
+		* After calling this function, GetSize() returns 0. If T is not trivially destructible,
+		* T::~T() is called on every single element in the queue.
+		 */
 		void Clear();
+
+		/**
+		* \brief Ensures enough memory is allocated to store at least *\p capacity* elements.
+
+		* If the current capacity is greater or equal to the provided value, does nothing.
+		 */
 		void Reserve(uint32 capacity);
+
+		/**
+		* \name Element access functions
+		* \param i
+		* \returns The \p ith element in the queue
+		* \throws std::out_of_range if \e i >= \e GetSize() 
+		* @{
+		 */
 
 		[[nodiscard]] T& Get(uint32 i);
 		[[nodiscard]] const T& Get(uint32 i) const;
 
 		[[nodiscard]] T& operator[](uint32 i) { return Get(i); }
 		[[nodiscard]] const T& operator[](uint32 i) const { return Get(i); }
+
+		/** @} */
 
 		void Swap(Queue& other) noexcept(
 			!AllocatorTraits::propagate_on_container_swap::value ||
@@ -81,10 +130,6 @@ namespace apollo {
 		Alloc m_Allocator;
 	};
 
-	/**
-	 * Queue Implementation
-	 * ====================
-	 */
 
 	template <class T, class Alloc>
 	template <class A>

@@ -2,12 +2,20 @@
 
 #include "Math.hpp"
 
+/** \file Rectangle.hpp */
+
 namespace apollo {
+	/**
+	\satisfies JsonConvertible
+	*/
 	template <class T>
 	struct Rectangle
 	{
 		T x0, y0, x1, y1;
 
+		/**
+		* \brief Joins this rectangle with another.
+		 */
 		constexpr Rectangle& operator+=(const Rectangle& other) noexcept
 		{
 			x0 = Min(x0, other.x0);

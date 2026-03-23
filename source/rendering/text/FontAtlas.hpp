@@ -23,6 +23,10 @@ namespace apollo::mt {
 	class ThreadPool;
 }
 
+/**
+ * \namespace apollo::rdr::txt
+ * \brief Text rendering support
+ */
 namespace apollo::rdr::txt {
 	struct TextStyle;
 

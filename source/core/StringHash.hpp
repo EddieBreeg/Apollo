@@ -4,14 +4,22 @@
 
 #include <string_view>
 
+/** \file StringHash.hpp */
+
 namespace apollo {
 	template <class T>
 	struct Hash;
 
 	/**
+	 * \brief Pre-hashed string utility
+
 	 * This utility class just stores a 32-bit hash value, computed from a string.
 	 * Useful when we might want to access a hashmap using either the string itself,
 	 * or its pre-computed hash value.
+
+	 * \todo This currently doesn't store the original string. This is bad, as we can't guarantee
+	 * that two different strings won't even produce the same hash.
+
 	 */
 	struct StringHash
 	{

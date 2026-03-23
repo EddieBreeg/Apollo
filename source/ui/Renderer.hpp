@@ -16,6 +16,10 @@ namespace apollo::rdr {
 	struct RenderPassSettings;
 } // namespace apollo::rdr
 
+/**
+ * \namespace apollo::rdr::ui
+ * \brief UI rendering engine
+ */
 namespace apollo::rdr::ui {
 	struct UiRect
 	{

@@ -5,7 +5,19 @@
 
 #include "Assert.hpp"
 
+/** \file Coroutine.hpp */
+
+/**
+ * \namespace apollo::coro
+ * \brief Coroutine support
+ * \sa The [standard's documentation](https://en.cppreference.com/w/cpp/language/coroutines.html)
+ * for coroutines
+ */
 namespace apollo::coro {
+	/**
+	 * \brief Casts from one coroutine handle type to another, assuming the conversion is well
+	 * defined
+	 */
 	template <class To, class From>
 	[[nodiscard]] std::coroutine_handle<To> StaticHandleCast(std::coroutine_handle<From> h) noexcept
 		requires(requires(From* x) { static_cast<To*>(x); })
@@ -13,6 +25,10 @@ namespace apollo::coro {
 		return std::coroutine_handle<To>::from_address(h.address());
 	}
 
+	/**
+	 * \brief Basic Coroutine class
+	 * \tparam P: The coroutine's promise type.
+	 */
 	template <class P = void>
 	class Coroutine
 	{
@@ -43,12 +59,19 @@ namespace apollo::coro {
 			other.m_Handle = nullptr;
 		}
 
+		/** \name Member access operator
+		 * \brief Allows easy access to the underlying promise
+		 * \returns \code &m_Handle.promise() \endcode
+		 * @{ */
 		[[nodiscard]] P* operator->() noexcept { return &m_Handle.promise(); }
 		[[nodiscard]] const P* operator->() const noexcept { return &m_Handle.promise(); }
+		/** @} */
 
-		/*
-		 * If the internal handle points to a currently suspended coroutine, resumes it. Otherwise
-		 * returns true immediately.
+		/**
+		 * \brief Invokes/resumes the coroutine
+		 * \details If the internal handle points to a currently suspended coroutine, resumes it.
+		 * Otherwise returns true immediately. Asserts if *this does not refer to a valid coroutine
+		 * object.
 		 * \returns true if the underlying coroutine is null or has reached its final suspension
 		 * point, false otherwise.
 		 */
@@ -63,6 +86,10 @@ namespace apollo::coro {
 			return m_Handle.done();
 		}
 
+		/**
+		 * \brief Indicates whether the current object points to valid coroutine which has reached
+		 * its final suspension point.
+		 */
 		[[nodiscard]] constexpr bool IsDone() const noexcept { return m_Handle && m_Handle.done(); }
 		[[nodiscard]] constexpr operator bool() const noexcept { return (bool)m_Handle; }
 
@@ -82,6 +109,9 @@ namespace apollo::coro {
 			m_Handle = handle;
 		}
 
+		/**
+		 * \brief Replaces the internal handle and returns the old one.
+		 */
 		[[nodiscard("Discarding the returned handle would cause a leak")]] constexpr HandleType Release(
 			HandleType other = nullptr) noexcept
 		{
@@ -104,6 +134,11 @@ namespace apollo::coro {
 		HandleType m_Handle;
 	};
 
+	/**
+	 * \brief Utility promise type which does nothing.
+	 * \tparam EagerStart: Whether the coroutine should be started immediately or suspended upon
+	 * creation.
+	 */
 	template <bool EagerStart = false>
 	struct NoopPromise
 	{

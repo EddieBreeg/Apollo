@@ -2,6 +2,8 @@
 
 #include <PCH.hpp>
 
+/** \file UniqueFunction.hpp */
+
 #include "Poly.hpp"
 #include "StaticStorage.hpp"
 
@@ -10,13 +12,14 @@ namespace apollo {
 	class UniqueFunction;
 
 	/**
-	 * Move-only alternative to std::function. Unlike the STL counterpart, this can store
-	 * objects which may not be copied, like promises, which in turn makes it usable for things
-	 * like asynchronous operations
+	 * \brief Move-only alternative to std::function.
+	 * \details Unlike the STL counterpart, this can store objects which may not be copied, like
+	 * promises, which in turn makes it usable for things like asynchronous operations
 	 */
 	template <class R, class... Args>
 	class UniqueFunction<R(Args...)>
 	{
+	public:
 		static constexpr uint32 StorageSize = 2 * sizeof(void*);
 
 		template <class F>
@@ -26,11 +29,10 @@ namespace apollo {
 		static constexpr bool FitsStorage = sizeof(F) <= StorageSize &&
 											alignof(F) <= alignof(std::max_align_t);
 
-	public:
 		UniqueFunction() = default;
 
 		/**
-		 * Small-object constructor: this does not perform any heap allocation
+		 * \brief Small-object constructor: this does not perform any heap allocation
 		 */
 		template <class F>
 		explicit UniqueFunction(F&& func) noexcept(
@@ -38,8 +40,8 @@ namespace apollo {
 			requires(IsInvocable<std::decay_t<F>>&& FitsStorage<std::decay_t<F>>);
 
 		/**
-		 * Bit-object constructor: this calls new. Only used if func can't fit into the static
-		 * storage buffer (see FitsStorage above)
+		 * \brief Big-object constructor: this calls new. Only used if func can't fit into the
+		 * static storage buffer (see FitsStorage above)
 		 */
 		template <class F>
 		explicit UniqueFunction(F&& func)
@@ -48,13 +50,20 @@ namespace apollo {
 		UniqueFunction(UniqueFunction&& other) noexcept;
 		UniqueFunction& operator=(UniqueFunction&& other) noexcept;
 
+		/**
+		 * \brief Assignment from function object. Destroys *this and constructs a new function on
+		 * top.
+		 */
 		template <class F>
 		UniqueFunction& operator=(F&& other) noexcept(
 			std::is_nothrow_constructible_v<UniqueFunction, F>)
 			requires(IsInvocable<std::decay_t<F>>);
 
-		constexpr operator bool() const noexcept { return m_VTable; }
+		[[nodiscard]] constexpr operator bool() const noexcept { return m_VTable; }
 
+		/**
+		 * \brief Invokes the underlying function.
+		 */
 		R operator()(auto&&... args)
 		{
 			return m_VTable.m_Invoke(GetPtr(), std::forward<decltype(args)>(args)...);
@@ -154,8 +163,7 @@ namespace apollo {
 	template <class R, class... Args>
 	template <class F>
 	UniqueFunction<R(Args...)>& UniqueFunction<R(Args...)>::operator=(F&& other) noexcept(
-		std::is_nothrow_constructible_v<UniqueFunction, F>)
-		requires(IsInvocable<std::decay_t<F>>)
+		std::is_nothrow_constructible_v<UniqueFunction, F>) requires(IsInvocable<std::decay_t<F>>)
 	{
 		this->~UniqueFunction();
 		return *new (this) UniqueFunction<R(Args...)>{ std::forward<F>(other) };

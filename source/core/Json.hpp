@@ -8,7 +8,14 @@
 #include <glm/gtc/quaternion.hpp>
 #include <nlohmann/json.hpp>
 
+/** \file Json.hpp
+ * \brief Implementation for JSON conversion functions.
+ */
+
 namespace apollo::json {
+	/**
+	 * \brief Tests whether a type is natively convertible to/from nlohmann::json
+	 */
 	template <class T>
 	concept NativeJsonType = requires(T a, const T& b, nlohmann::json j)
 	{
@@ -68,15 +75,18 @@ namespace apollo::json {
 	} // namespace _internal
 
 	/**
-	 * Looks for a specific key in a json object, and attempts to convert the associated value to a
-	 * C++ object if it was found. This overload is only valid for type which are natively
-	 * recognized by nlohmann::json
+	 * \name Visit functions
+	 * \brief Looks for a specific key in a json object, and attempts to convert the associated
+	 * value to a C++ object if it was found.
 	 * \param out_obj: The destination object
 	 * \param j: The JSON object to look into
 	 * \param key: The key to look for
 	 * \param optional: The value which gets returned if key was not found
 	 * \returns true if the object was successfully converted, false otherwise
+	 * @{
 	 */
+
+	/// Overload for native JSON types (i.e. integers, STL containers etc)
 	template <class T, class K>
 	bool Visit(T& out_obj, const nlohmann::json& j, K&& key, bool optional = false)
 		requires(NativeJsonType<T>)
@@ -115,16 +125,7 @@ namespace apollo::json {
 		return true;
 	}
 
-	/**
-	 * Looks for a specific key in a json object, and attempts to convert the associated value to a
-	 * C++ object if it was found. This overload is only valid for types which meet the requirements
-	 * for the JsonEnabledType concept
-	 * \param out_obj: The destination object
-	 * \param j: The JSON object to look into
-	 * \param key: The key to look for
-	 * \param optional: The value which gets returned if key was not found
-	 * \returns true if the object was successfully converted, false otherwise
-	 */
+	/// Overload for any \ref JsonEnabledType "JSON enabled" type
 	template <JsonEnabledType T, class K>
 	bool Visit(T& out_obj, const nlohmann::json& j, K&& key, bool optional = false) noexcept(
 		noexcept(out_obj.FromJson(j)))
@@ -137,12 +138,20 @@ namespace apollo::json {
 		return true;
 	}
 
+	/// Overload from objects which have a valid Converter specialization.
+	template <class T, class K>
+	bool Visit(T& out_obj, const nlohmann::json& j, K&& key, bool isOptional = false)
+		requires(std::convertible_to<decltype(Converter<T>::FromJson(out_obj, j[key])), bool>);
+	/** @} */
+
 	template <class T, class K>
 	static constexpr bool NoThrowVisitable = noexcept(
 		Visit(std::declval<T&>(), std::declval<const nlohmann::json&>(), std::declval<K>()));
 
 	/**
-	 * Default JSON Converter implementation. This specialisation is valid for any type which meets
+	 * \brief Default JSON Converter implementation.
+
+	 * This specialisation is valid for any type which meets
 	 * the requirements of the HasJsonFieldList concept, provided the fields in the list are
 	 * themselves JSON compatible.
 	 */
@@ -287,7 +296,7 @@ namespace apollo::json {
 	};
 
 	template <class T, class K>
-	bool Visit(T& out_obj, const nlohmann::json& json, K&& key, bool isOptional = false)
+	inline bool Visit(T& out_obj, const nlohmann::json& json, K&& key, bool isOptional)
 		requires(std::convertible_to<decltype(Converter<T>::FromJson(out_obj, json[key])), bool>)
 	{
 		const auto it = json.find(std::forward<K>(key));

@@ -1,8 +1,19 @@
 #pragma once
 
+/** \file Log.hpp
+ * Logging utilities, only for dev mode
+ \warning These macros do nothing outside of dev mode
+ \addtogroup macros
+ @{
+ */
+
 #include <spdlog/spdlog.h>
 
 #ifdef APOLLO_DEV
+/*! \def APOLLO_LOG(leve, ...)
+ \brief Logs a message to the console
+ \param level: The logging level to use. Should one of the values in spdlog::level
+*/
 #define APOLLO_LOG(level, ...)                                                                     \
 	spdlog::log(spdlog::source_loc{ __FILE__, __LINE__, __func__ }, level, __VA_ARGS__)
 #define APOLLO_LOG_TRACE(...)	 APOLLO_LOG(spdlog::level::trace, __VA_ARGS__)
@@ -20,3 +31,5 @@
 #endif
 
 #include "ULIDFormatter.hpp"
+
+/** @} */
