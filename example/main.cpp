@@ -10,10 +10,12 @@ namespace apollo::demo {
 	{
 		spdlog::set_level(spdlog::level::trace);
 
+		// Component registration
 		auto* compRegistry = ecs::ComponentRegistry::GetInstance();
 		compRegistry->RegisterComponent<MeshComponent>();
 		compRegistry->RegisterComponent<GridComponent>();
 
+		// System initialization
 		auto& renderer = *apollo::rdr::Context::GetInstance();
 		auto& manager = *apollo::ecs::Manager::GetInstance();
 		auto& camSystem = manager.AddSystem<apollo::demo::CameraSystem>(renderer.GetWindow());

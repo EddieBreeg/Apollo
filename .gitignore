@@ -19,3 +19,7 @@ deps/freetype2/**/*.sh
 deps/freetype2/**/Makefile
 deps/freetype2/**/configure
 *.afdesign
+# Ignore generated doc files
+docs/*
+!docs/Doxyfile
+!docs/*.dox

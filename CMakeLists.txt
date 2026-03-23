@@ -7,6 +7,7 @@ include(TestMacros)
 
 option(${PROJECT_NAME}_BUILD_TESTS "Whether to build tests for the project" ON)
 option(${PROJECT_NAME}_INSTALL "Whether to enable install for ${PROJECT_NAME} targets" ${IS_ROOT_PROJECT})
+option(${PROJECT_NAME}_BUILD_DOCS "Whether to generate the doxygen documentation" OFF)
 
 set(${PROJECT_NAME}_BACKEND Vulkan CACHE STRING "The rendering backend used by the engine runtime")
 set_property(CACHE ${PROJECT_NAME}_BACKEND PROPERTY STRINGS "Vulkan;D3D12")
@@ -41,5 +42,12 @@ if(${${PROJECT_NAME}_BUILD_TESTS})
 	enable_testing()
 	add_subdirectory(tests)
 endif(${${PROJECT_NAME}_BUILD_TESTS})
+
+if(${PROJECT_NAME}_BUILD_DOCS)
+	add_custom_target(${PROJECT_NAME}Docs 
+		COMMAND	doxygen ./docs/Doxyfile
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	)
+endif()
 
 set(CMAKE_FOLDER ${PROJECT_NAME})

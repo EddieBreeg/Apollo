@@ -38,3 +38,21 @@ You may also want to specify `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` if your intell
 Finally, build the project with `cmake --build`. When using MSVC/Ninja, build presets are available for the different configurations. Otherwise you'll have to provide the `--config` flag yourself.
 
 Alternatively, the presets file also provides helpful workflows for automatically executing both the configure and build steps in a single command, for example: `cmake --workflow ninja_debug`.
+
+### CMake Targets
+
+If you're using CMake, here are some noteworthy targets exported by the project: 
+
+- **Apollo::Runtime**: The core runtime of the engine. This is where most of the cool stuff happens, and is used as a dependency by all other modules.
+- **Apollo::Entry**: The main game entry point library. This is where the `main` function for the *game* application lives.
+- **Apollo::EditorRuntime**: The engine's editor library, built on top of **Apollo::Runtime**. 
+- **Apollo::EditorEntry**: Same as the **Apollo::Entry** target, except this one is for the *editor* application.
+- **ApolloDocs**: The documentation target. Built only if the `Apollo_BUILD_DOCS` cache variable is set. This is disabled by default.
+
+Additionally, the following shortcuts are also provided:
+- **Apollo::Apollo**: The main game engine dependency, which links both the runtime and the entry point. This is the target you need for your main game application.  
+- **Apollo::Editor**: The editor, which links the core runtime as well as the editor runtime and entry point. This is the target you need for your game editor application.
+
+## Documentation
+
+The documentation is built into the source code using Doxygen comments. It can be exported in HTML format either by building the **ApolloDocs** cmake target mentioned earlier, or by running Doxygen manually from the root directory: `doxygen ./docs/Doxyfile`
