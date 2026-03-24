@@ -4,11 +4,16 @@
 #include <core/TypeInfo.hpp>
 #include <entt/entity/fwd.hpp>
 
+/** \file System.hpp */
+
 namespace apollo {
 	class GameTime;
 }
 
 namespace apollo::ecs {
+	/**
+	 * \brief Tests whether a given type can be used as a System class.
+	 */
 	template <class S>
 	concept System = requires(S & instance, entt::registry& world, const GameTime& time)
 	{
@@ -23,11 +28,18 @@ namespace apollo::ecs {
 		};
 	} // namespace _internal
 
+	/**
+	 * \brief Type-erased System object wrapper
+
+	 This class is used internally by the \ref ecs::Manager "ECS Manager"
+	 */
 	class APOLLO_API SystemInstance
 	{
-		using UpdateFunc = void(void*, entt::registry&, const GameTime&);
-
 	public:
+		using UpdateFunc = void(void*, entt::registry&, const GameTime&);
+		/**
+		 * \brief Creates a system instance from the provided arguments
+		 */
 		template <System S, class... Args>
 		static SystemInstance Create(Args&&... args) requires(std::is_constructible_v<S, Args...>)
 		{
@@ -72,8 +84,14 @@ namespace apollo::ecs {
 
 		void Swap(SystemInstance& other) noexcept;
 
+		/**
+		 * \brief Called every frame
+		 */
 		void Update(entt::registry& world, const GameTime& time);
 
+		/**
+		 * \brief Called once at the end of the engine initialization phase
+		 */
 		void PostInit();
 		void Shutdown();
 

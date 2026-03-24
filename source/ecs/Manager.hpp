@@ -11,6 +11,8 @@
 #include <entt/entity/registry.hpp>
 #include <vector>
 
+/** \file Manager.hpp */
+
 namespace apollo {
 	class GameTime;
 }
@@ -20,6 +22,9 @@ namespace apollo {
  * \brief ECS (Entitity-Component-System) library
  */
 namespace apollo::ecs {
+	/**
+	 * \brief Holds all ECS system instances and the entity world.
+	 */
 	class Manager : public Singleton<Manager>
 	{
 		struct IndexGen
@@ -32,6 +37,10 @@ namespace apollo::ecs {
 	public:
 		APOLLO_API ~Manager() = default;
 
+		/**
+		 * \brief Adds a system to the manager. This system will automatically get updated every
+		 * frame.
+		 */
 		template <System S, class... T>
 		S& AddSystem(T&&... args)
 		{
@@ -42,8 +51,21 @@ namespace apollo::ecs {
 						.template GetAs<S>();
 		}
 
+		/**
+		 * \brief Calls the PostInit() method on all systems that define it.
+		 * \note This is called by the App class at the end of the initialization phase.
+		 * Calling this function is \b not your responsibility as a user.
+		 */
 		APOLLO_API void PostInit();
-		APOLLO_API void Update(const GameTime&);
+		/**
+		 * \brief Updates all ECS systems, in the order they were added.
+		 * \param t: The global game timer.
+		 */
+		APOLLO_API void Update(const GameTime& t);
+		/**
+		 * \brief Grants access to the entity world object. You don't usually need to call this
+		 * function.
+		 */
 		[[nodiscard]] entt::registry& GetEntityWorld() noexcept { return m_World; }
 
 	private:

@@ -1,9 +1,6 @@
 #pragma once
 
-// This is not part of the core API! This is used to have ECS component
-// reflection, which depends on whether we're in a game or editor context
-
-// #if defined(APOLLO_GAME_ENTRY) || defined(APOLLO_EDITOR)
+/** \file ComponentRegistry.hpp */
 
 #include <PCH.hpp>
 #include <core/Json.hpp>
@@ -35,12 +32,21 @@ private:
 	}
 };
 
-// #endif
-
 namespace apollo::ecs {
+	/**
+	 * \brief Holds runtime information about Component types
+	 * \details Components must be registered in here when runtime reflection is required.
+	 * This is typically so we can load them from scene files or display them in UI widgets.
+	 * If your component type doesn't need these features, then registering isn't required.
+	 * \sa Component requirements
+	 */
 	class ComponentRegistry : public Singleton<ComponentRegistry>
 	{
 	public:
+		/**
+		 * \brief Generates runtime information about the provided component type and adds it to the
+		 * internal map
+		 */
 		template <Component C>
 		const ComponentInfo& RegisterComponent()
 		{
