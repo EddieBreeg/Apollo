@@ -3,7 +3,12 @@
 #include <PCH.hpp>
 #include <asset/AssetManager.hpp>
 
+/** \file Manager.hpp */
+
 namespace apollo::editor {
+	/**
+	 * \brief Editor specific asset manager
+	 */
 	class AssetManager final : public IAssetManager
 	{
 	public:

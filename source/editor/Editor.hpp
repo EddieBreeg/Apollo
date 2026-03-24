@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <span>
 
+/** \file Editor.hpp */
+
 namespace apollo::rdr {
 	class Context;
 }
@@ -25,6 +27,9 @@ namespace apollo {
  * \details All tools provided by Apollo to create and edit a game.
  */
 namespace apollo::editor {
+	/**
+	 * \brief Editor system, mostly in charge of handling dev UIs
+	 */
 	class Editor
 	{
 	public:

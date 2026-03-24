@@ -2,6 +2,9 @@
 
 #include <asset/AssetFunctions.hpp>
 
+/** \file AssetHelper.hpp
+ * \brief Internal helpers used by the editor for asset management */
+
 namespace apollo {
 	class Scene;
 } // namespace apollo
