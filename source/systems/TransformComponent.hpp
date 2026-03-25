@@ -4,7 +4,10 @@
 #include <core/Transform.hpp>
 #include <ecs/Reflection.hpp>
 
+/** \file TransformComponent.hpp */
+
 namespace apollo {
+	/// Represents the position of an object in 3D space
 	struct TransformComponent
 	{
 		float3 m_Position = {};
@@ -15,6 +18,13 @@ namespace apollo {
 			&TransformComponent::m_Position,
 			&TransformComponent::m_Scale,
 			&TransformComponent::m_Rotation>
-			Reflection{ "transform", { "position", "scale", "rotation" } };
+			Reflection{
+				"transform",
+				{
+					"position",
+					"scale",
+					"rotation",
+				},
+			};
 	};
 } // namespace apollo

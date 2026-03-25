@@ -3,6 +3,8 @@
 #include <PCH.hpp>
 #include <core/KeyCodes.hpp>
 
+/** \file InputEventComponents.hpp */
+
 namespace apollo::inputs {
 	struct WindowResizeEventComponent
 	{
@@ -26,8 +28,10 @@ namespace apollo::inputs {
 		EKey m_Key = EKey::Unknown;
 	};
 
-	// Doesn't contain any data, but gets attached to all entities which have any of the components
-	// defined above
+	/** \brief Generic input event
+	 * \details This component doesn't hold any data on its own, but it gets attached to all input
+	 * event entities
+	 */
 	struct InputEventComponent
 	{};
 } // namespace apollo::inputs

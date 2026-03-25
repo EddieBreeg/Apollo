@@ -2,10 +2,13 @@
 
 #include "SceneComponents.hpp"
 
+/** \file SceneLoadingSystem.hpp */
+
 namespace apollo {
 	class IAssetManager;
 	class GameTime;
 
+	/// This is the system in charge of processing scene switches
 	class SceneLoadingSystem
 	{
 	public:
@@ -23,7 +26,8 @@ namespace apollo {
 		[[nodiscard]] APOLLO_API static entt::registry& GetTempWorld() noexcept;
 
 	private:
-		enum class EState: uint8 {
+		enum class EState : uint8
+		{
 			Default = 0,
 			Loading,
 			Finished,

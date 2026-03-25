@@ -6,8 +6,10 @@
 
 #include <ecs/Reflection.hpp>
 
+/** \file SceneComponents.hpp */
+
 namespace apollo {
-	// Represents a scene that is currently loaded
+	/// Represents a scene that is currently loaded
 	struct SceneComponent
 	{
 		AssetRef<Scene> m_Scene;
@@ -19,19 +21,19 @@ namespace apollo {
 		};
 	};
 
-	// Represents a scene that is being loaded
+	/// Represents a scene that is being loaded
 	struct SceneLoadComponent
 	{
 		AssetRef<Scene> m_Scene;
 	};
 
-	// Used to request a scene swap. This is the primary way scenes should be loaded
+	/// Used to request a scene swap. This is the primary way scenes should be loaded
 	struct SceneSwitchRequestComponent
 	{
 		ULID m_Id;
 	};
 
-	// Gets added to the root scene for one frame after loading completes
+	/// Gets added to the root scene for one frame after loading completes
 	struct SceneLoadFinishedEventComponent
 	{};
 } // namespace apollo

@@ -3,6 +3,8 @@
 #include <PCH.hpp>
 #include <entt/entity/fwd.hpp>
 
+/** \file InputSystem.hpp */
+
 namespace apollo {
 	class GameTime;
 	class App;
@@ -13,6 +15,10 @@ namespace apollo {
  * \brief Inputs management (keyboard/mouse/window events etc)
  */
 namespace apollo::inputs {
+	/**
+	 * \brief System in charge of emitting input events
+	 * \sa The components defined in InputEventComponents.hpp
+	 */
 	class APOLLO_API System
 	{
 	public:
