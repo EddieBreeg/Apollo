@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file AssetLoader.hpp */
+
 #include <PCH.hpp>
 
 #include "Asset.hpp"
@@ -28,7 +30,7 @@ namespace apollo {
 	class AssetPromise;
 
 	/**
-	 * Coroutine type used to load assets asynchronously
+	 * \brief Coroutine type used to load assets asynchronously
 	 */
 	struct AssetLoadTask : public coro::Coroutine<AssetPromise>
 	{
@@ -41,40 +43,66 @@ namespace apollo {
 	};
 
 	/**
-	 * Request object, submitted to the asset loader
+	 * \brief Request object, submitted to the \ref apollo::AssetLoader "asset loader"
 	 */
 	struct AssetLoadRequest
 	{
-		AssetRef<IAsset> m_Asset;
-		AssetLoadTask m_Task;
+		AssetRef<IAsset> m_Asset; /*!< The asset to load */
+		AssetLoadTask m_Task;	  /*!< The coroutine to invoke */
 		const AssetMetadata* m_Metadata = nullptr;
-		UniqueFunction<void(IAsset&)> m_Callback;
+		UniqueFunction<void(IAsset&)> m_Callback; /*!< If not null, this callback gets invoked once
+													 the asset completes loading*/
 
+		/// Invokes the load task
 		EAssetLoadResult operator()();
 	};
 
+	/**
+	 * \brief This class is in charge of processing all asset load requests from the \ref
+	 * IAssetManager "asset manager"
+	 * \details Assets are loaded on a separate thread using mt::ThreadPool.
+	 */
 	class AssetLoader
 	{
 	public:
+		/**
+		 * \brief Initiazes the loader. This is called by the main App class.
+		 */
 		AssetLoader(rdr::GPUDevice& device, mt::ThreadPool& threadPool)
 			: m_Device(device)
 			, m_ThreadPool(threadPool)
 		{}
 
+		/**
+		 * \brief Adds a new request to the queue. This is typically called from the \ref
+		 * IAssetManager "asset manager".
+		 */
 		APOLLO_API void AddRequest(AssetLoadRequest request);
 
+		/**
+		 * \brief Called every frame to process the queue
+		 */
 		APOLLO_API void ProcessRequests();
+		/**
+		 * \brief Waits for the current asset batch to finish.
+		 * \details This function blocks until the worker thread is done processing all pending
+		 * requests, e.g. after loading a scene.
+		 */
 		APOLLO_API void WaitForCompletion();
+		/**
+		 * \brief Clears the queue
+		 */
 		APOLLO_API void Clear();
 
 		static APOLLO_API SDL_GPUCommandBuffer* GetCurrentCommandBuffer() noexcept;
 		static APOLLO_API SDL_GPUCopyPass* GetCurrentCopyPass() noexcept;
 
-		/* \brief Registers a callback which will be called after all assets in a batch have been
+		/**
+		 * \brief Registers a callback which will be called after all assets in a batch have been
 		 * processed
 		 * \note This function is not thread-safe, and must be called from the main thread before
 		 * any asset load operations can begin. Ideally, you'd call this during the post-init phase
-		 * at the start of the app
+		 * of a system right before the game actually starts
 		 */
 		template <class F>
 		void RegisterCallback(F&& cbk)
@@ -82,6 +110,9 @@ namespace apollo {
 			m_LoadCallbacks.emplace_back(std::forward<F>(cbk));
 		}
 
+		/**
+		 * \brief Calls AssetLoader::WaitForCompletion()
+		 */
 		~AssetLoader() { WaitForCompletion(); }
 
 	private:
@@ -98,7 +129,7 @@ namespace apollo {
 	};
 
 	/**
-	 * Asset coroutine promise type, used internally
+	 * \brief Asset coroutine promise type, used internally by AssetTask
 	 */
 	class AssetPromise : public coro::NoopPromise<>
 	{
@@ -107,7 +138,10 @@ namespace apollo {
 
 	public:
 		AssetPromise() = default;
-		AssetLoadTask get_return_object() noexcept;
+		AssetLoadTask get_return_object() noexcept
+		{
+			return AssetLoadTask{ std::coroutine_handle<AssetPromise>::from_promise(*this) };
+		}
 
 		void return_value(bool success) noexcept
 		{
@@ -147,9 +181,4 @@ namespace apollo {
 		EAssetLoadResult m_Result = EAssetLoadResult::TryAgain;
 		AssetRef<IAsset> m_Awaiting; // used if we are waiting on an another asset
 	};
-
-	inline AssetLoadTask AssetPromise::get_return_object() noexcept
-	{
-		return AssetLoadTask{ std::coroutine_handle<AssetPromise>::from_promise(*this) };
-	}
 } // namespace apollo

@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file AssetManager.hpp */
+
 #include <PCH.hpp>
 
 #include "Asset.hpp"
@@ -18,6 +20,7 @@ namespace apollo::rdr {
 }
 
 namespace apollo {
+	/// Runtime information about a specific asset type
 	struct AssetTypeInfo
 	{
 		AssetConstructor* m_Create = nullptr;
@@ -26,6 +29,10 @@ namespace apollo {
 		[[nodiscard]] operator bool() const noexcept { return m_Create && m_LoadFunc; }
 	};
 
+	/**
+	 * \brief All relevant information about a specific Asset: ID, name etc
+	 * \sa IAssetManager::ImportMetadataBank
+	 */
 	struct AssetMetadata
 	{
 		ULID m_Id;
@@ -35,10 +42,20 @@ namespace apollo {
 		EAssetType m_Type = EAssetType::Invalid;
 	};
 
+	/**
+	 * \brief Handles all assets in the game
+	 */
 	class IAssetManager
 	{
 	public:
+		/**
+		 * \brief Destroys every asset in the cache before exiting
+		 */
 		virtual APOLLO_API ~IAssetManager();
+		/**
+		 * \brief Loads all asset metadata for a given project. The implementation is different in
+		 * the editor vs the game app
+		 */
 		virtual bool ImportMetadataBank() = 0;
 
 		template <class ManagerType, class... Args>
@@ -55,6 +72,25 @@ namespace apollo {
 
 		static void Shutdown() { s_Instance.reset(); }
 
+		/** \name GetAsset
+		 * \brief Retrieves an asset from its ULID
+		 * \tparam A: The destination type
+		 * \param id: The asset's ID
+		 * \param type: The asset's type
+		 * \param callback: An optional callback to invoke when asset completes loading. If the
+		 * asset is already loaded, the callback is invoked immediately
+		 * \details This function first looks up the ULID in the internal cache. If the asset is
+		 * found and has the correct type, it is returned immediately. Otherwise, the asset is
+		 * created and added to the cache; then a load request is submitted to the \ref AssetLoad
+		 * "asset loader"
+		 * \retval AssetRef A reference to the specific asset if it exists, null otherwise
+		 * \note If an asset exists with the given ULID, type checking will be performed to ensure
+		 * we're actually retrieving the right type of asset. An assert will be raised if this check
+		 * fails.
+		 * @{ */
+
+		/** \brief Returns a generic AssetRef
+		 */
 		AssetRef<IAsset> GetAsset(const ULID& id, EAssetType type)
 		{
 			return AssetRef<IAsset>{ GetAssetImpl(id, type) };
@@ -76,11 +112,6 @@ namespace apollo {
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
 
-		/*
-		 * Retrieves an asset, with an optional callback to be invoked once the asset is loaded.
-		 * If the asset is already loaded, the callback will be invoked immediately, otherwise
-		 * there is no strong guarantee as to when this will happen.
-		 */
 		template <Asset A, class F>
 		AssetRef<A> GetAsset(const ULID& id, F&& callback) requires(std::is_invocable_v<F, IAsset&>)
 		{
@@ -90,7 +121,12 @@ namespace apollo {
 				UniqueFunction<void(IAsset&)>{ std::forward<F>(callback) });
 			return AssetRef<A>{ static_cast<A*>(ptr) };
 		}
+		/** @} */
 
+		/**
+		 * \brief Manually creates a new asset and adds it to the internal cache.
+		 * \note This function does not submit a load request.
+		 */
 		template <Asset A, class... Args>
 		AssetRef<A> AddTempAsset(Args&&... args) requires(std::constructible_from<A, Args...>)
 		{
@@ -99,10 +135,19 @@ namespace apollo {
 			return AssetRef{ ptr };
 		}
 
+		/** \brief Retrieves the metadata for a given asset ID. Returns nullptr if the asset wasn't
+		 * found in the bank */
 		[[nodiscard]] APOLLO_API const AssetMetadata* GetAssetMetadata(
 			const ULID& id) const noexcept;
 
+		/**
+		 * \brief Updates the asset loader and processes unload requests. Called every frame.
+		 */
 		APOLLO_API void Update();
+		/**
+		 * \brief Returns the project's root asset path. This is where all the asset data/metadata
+		 * lives.
+		 */
 		const std::filesystem::path& GetAssetPath() const noexcept { return m_AssetsPath; }
 
 		[[nodiscard]] AssetLoader& GetAssetLoader() noexcept { return m_Loader; }
@@ -125,6 +170,7 @@ namespace apollo {
 			const ULID& id,
 			EAssetType type,
 			UniqueFunction<void(IAsset&)> cbk = {});
+
 		APOLLO_API void RequestUnload(IAsset* res);
 
 		static void SetAssetState(IAsset& asset, EAssetState state) noexcept
@@ -148,6 +194,9 @@ namespace apollo {
 } // namespace apollo
 
 namespace apollo::json {
+	/** \name JSON visitors
+	 * \brief These helpers allow to easily retrieve an asset reference from a ULID in JSON format
+	 * @{ */
 	APOLLO_API bool Visit(
 		AssetRef<IAsset>& out_ref,
 		EAssetType type,
@@ -172,4 +221,5 @@ namespace apollo::json {
 		out_ref = StaticPointerCast<A>(std::move(ref));
 		return true;
 	}
+	/** @} */
 } // namespace apollo::json

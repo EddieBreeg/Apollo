@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Asset.hpp */
+
 #include <PCH.hpp>
 
 #include <atomic>
@@ -11,6 +13,7 @@ namespace apollo {
 
 	struct AssetMetadata;
 
+	/// Identifies a specific type of asset
 	enum class EAssetType : int8
 	{
 		Invalid = -1,
@@ -25,24 +28,38 @@ namespace apollo {
 		NTypes
 	};
 
+	/// These flags are used to specify the state an asset is currently in
 	enum class EAssetState : uint8
 	{
-		Invalid = 0,
-		Loading = BIT(0),
-		LoadingDeferred = BIT(1), /* Used when the loading operation couldn't be completed in one
+		Invalid = 0,			  /*!< Default state after creation */
+		Loading = BIT(0),		  /*!< The asset is currently being loaded */
+		LoadingDeferred = BIT(1), /*!< Used when the loading operation couldn't be completed in one
 								   * go, and needs to be resumed */
-		Loaded = BIT(2),
-		Unloading = BIT(3),
-		Unloaded = BIT(4),
-		LoadingFailed = BIT(5),
+		Loaded = BIT(2),		  /*!< The asset has been loaded successfully */
+		Unloading = BIT(3),		  /*!< The asset is currently being unloaded */
+		Unloaded = BIT(4),		  /*!< The asset has been unloaded */
+		LoadingFailed = BIT(5),	  /*!< A loading attempt was performed and failed */
 	};
 
+	/**
+	 * Converts a EAssetType into a readable string. Asserts if \p type is not a valid asset type
+	 * \sa EAssetType
+	 */
 	[[nodiscard]] APOLLO_API std::string_view GetAssetTypeName(const EAssetType type) noexcept;
 
+	/**
+	 * \brief Abstract Asset interface. All asset classes implement this.
+	 * \details This class uses an internal ref counter to manage the asset's lifetime.
+	 * \sa \ref apollo::AssetRef "AssetRef"
+	 * \sa IAssetManager
+	 * \sa GET_ASSET_TYPE_IMPL
+	 */
 	class IAsset
 	{
 	public:
+		/** \brief Constructs an asset with a randomly-generated ULID */
 		APOLLO_API IAsset();
+		/** \brief Constructs an asset from the provided ULID */
 		IAsset(const ULID& id)
 			: m_Id{ id }
 		{}
@@ -80,6 +97,11 @@ namespace apollo {
 		friend struct AssetRetainTraits;
 	};
 
+/** \def GET_ASSET_TYPE_IMPL(type)
+ * \brief Helper macro to implement the IAsset interface for a given \ref apollo::EAssetType
+ * "EAssetType"
+ * \details This is used in specific classes which derive from \ref apollo::IAsset "IAsset"
+ */
 #define GET_ASSET_TYPE_IMPL(type)                                                                  \
 	static constexpr EAssetType AssetType = (type);                                                \
 	[[nodiscard]] EAssetType GetType() const noexcept override                                     \
@@ -87,16 +109,27 @@ namespace apollo {
 		return AssetType;                                                                          \
 	}
 
+	/**
+	 * \brief Asset type requirements
+	 * \tparam A: The asset class to check
+	 * \details All asset classes must implement the IAsset interface:
+	 * - \b A::AssetType must be an accessible static constexpr value of type EAssetType
+	 * - \b a.GetType() must return \b A::AssetType for any object \e a of type <b>const A</b>
+	 *
+	 * The easiest way to implement this interface is through the GET_ASSET_TYPE_IMPL macro.
+	 */
 	template <class A>
-	concept Asset = requires(A & lhs, A& rhs)
+	concept Asset = requires(A & lhs, A& rhs, const A& a)
 	{
 		{ std::is_base_of_v<IAsset, A> };
 		{ sizeof(lhs) }->std::same_as<size_t>; // completeness test
 		{ std::is_same_v<decltype(A::AssetType), EAssetType> };
 		{ EAssetType::Invalid < A::AssetType && A::AssetType < EAssetType::NTypes };
 		{ lhs.Swap(rhs) };
+		{ a.GetType() }->std::same_as<EAssetType>;
 	};
 
+	/// Helper function to instanciate an asset of a given type
 	template <Asset A>
 	IAsset* ConstructAsset(const ULID& id) requires(std::is_base_of_v<IAsset, A>)
 	{
