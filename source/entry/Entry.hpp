@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Entry.hpp */
+
 /**
  * \page entry Entry point
 
