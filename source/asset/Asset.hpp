@@ -113,13 +113,15 @@ namespace apollo {
 	 * \brief Asset type requirements
 	 * \tparam A: The asset class to check
 	 * \details All asset classes must implement the IAsset interface:
-	 * - \b A::AssetType must be an accessible static constexpr value of type EAssetType
-	 * - \b a.GetType() must return \b A::AssetType for any object \e a of type <b>const A</b>
+	 * - <tt>A</tt> must be constructible from a ULID
+	 * - \b A::AssetType must be an accessible static constexpr value of type \ref
+	 * apollo::EAssetType "EAssetType"
+	 * - \b a.GetType() must return \p A::AssetType for any object \p a of type <tt>const A</tt>
 	 *
 	 * The easiest way to implement this interface is through the GET_ASSET_TYPE_IMPL macro.
 	 */
 	template <class A>
-	concept Asset = requires(A & lhs, A& rhs, const A& a)
+	concept Asset = requires(A & lhs, A& rhs, const A& a, const ULID& id)
 	{
 		{ std::is_base_of_v<IAsset, A> };
 		{ sizeof(lhs) }->std::same_as<size_t>; // completeness test
@@ -127,6 +129,7 @@ namespace apollo {
 		{ EAssetType::Invalid < A::AssetType && A::AssetType < EAssetType::NTypes };
 		{ lhs.Swap(rhs) };
 		{ a.GetType() }->std::same_as<EAssetType>;
+		{ A(id) }->std::same_as<A>;
 	};
 
 	/// Helper function to instanciate an asset of a given type

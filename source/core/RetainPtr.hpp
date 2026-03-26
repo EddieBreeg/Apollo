@@ -115,7 +115,7 @@ namespace apollo {
 
 		/** \brief Copies the stored pointer and increments the ref count if not null */
 		RetainPtr(const RetainPtr& other);
-		/** \brief Moves a RetainPtr object into *this. After this call, \e other.Get() returns \b
+		/** \brief Moves a RetainPtr object into *this. After this call, \p other.Get() returns \b
 		 * nullptr */
 		RetainPtr(RetainPtr&& other) noexcept;
 
@@ -129,14 +129,14 @@ namespace apollo {
 
 		/** \brief Replaces the stored pointer.
 		 * \param ptr: The new value to store
-		 * \details \e ptr is left unchanged (its reference count is not increment). If the old
+		 * \details \p ptr is left unchanged (its reference count is not increment). If the old
 		 * stored value was not <b>nullptr</b>, its reference count is decremented before the new
 		 * value is assigned.
 		 */
 		void Reset(T* ptr, Adopt_t);
 		/** \brief Replaces the stored pointer.
 		 * \param ptr: The new value to store
-		 * \details If \e ptr is not nullptr, its reference count is incremented. If the old
+		 * \details If \p ptr is not nullptr, its reference count is incremented. If the old
 		 * stored value was not <b>nullptr</b>, its reference count is decremented before the new
 		 * value is assigned.
 		 */

@@ -5,6 +5,9 @@ namespace apollo::asset_ut {
 	struct TestAsset : public IAsset
 	{
 		GET_ASSET_TYPE_IMPL(EAssetType::Invalid);
+		TestAsset(const ULID& id)
+			: IAsset(id)
+		{}
 		TestAsset(EAssetState state = EAssetState::Loading) { m_State = state; }
 
 		void SetState(EAssetState state) noexcept { m_State.store(state); }

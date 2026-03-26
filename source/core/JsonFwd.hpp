@@ -12,11 +12,11 @@
  * \brief Contains all json-related code for converting objects to/from json
 
  * \requirement JsonConvertible
- A type \e T is JsonConvertible if given:
- - a an object of type T
- - b an object of type const T&
- - j1 an object of type const nlohmann::json&
- - j2 an object of type nlohmann::json&
+ A type <tt>T</tt> is JsonConvertible if given:
+ - \p a an object of type <tt>T</tt>
+ - \p b an object of type <tt>const T&</tt>
+ - \p j1 an object of type <tt>const nlohmann::json&</tt>
+ - \p j2 an object of type <tt>nlohmann::json&</tt>
 
  The following statements are true:
  - `apollo::json::Converter<T>::FromJson(a, j1)` is well-formed, and the result is convertible to
@@ -61,10 +61,10 @@ namespace apollo::json {
 	} // namespace _internal
 
 	/**
-	 * \brief Tests whether a type *T* declares a JSON field list.
+	 * \brief Tests whether a type \tt{T} declares a JSON field list.
 
-	 * Evaluates to true if \e T::JsonFields is a an accessible object of type \e L where
-	 * \e L is a speicialization of \ref apollo::json::FieldList
+	 * Evaluates to true if \p T::JsonFields is a an accessible object of type \tt{L} where
+	 * \tt{L} is a specialization of \ref apollo::json::FieldList
 	 */
 	template <class T>
 	concept HasJsonFieldList = _internal::IsFieldList<decltype(T::JsonFields)>::value;
@@ -84,9 +84,10 @@ namespace apollo::json {
 	 * \brief JSON Converter.
 
 	 * This is used to convert complex objects from/to JSON. A default
-	 * implementation is available in Json.hpp. To be valid, a Converter specialization must define the following functions:
-	 \code{.cpp} 
-	 	static bool FromJson(T& out_obj, const nlohmann::json& j);
+	 * implementation is available in Json.hpp. To be valid, a Converter specialization must define
+	the following functions:
+	 \code{.cpp}
+		static bool FromJson(T& out_obj, const nlohmann::json& j);
 		static void ToJson(const T& obj, nlohmann::json& out_json);
 	\endcode
 	\sa JsonConvertible

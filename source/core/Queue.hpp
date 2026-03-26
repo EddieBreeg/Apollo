@@ -97,7 +97,7 @@ namespace apollo {
 		* \name Element access functions
 		* \param i
 		* \returns The \p ith element in the queue
-		* \throws std::out_of_range if \e i >= \e GetSize() 
+		* \throws std::out_of_range if \p i >= \p GetSize() 
 		* @{
 		 */
 
