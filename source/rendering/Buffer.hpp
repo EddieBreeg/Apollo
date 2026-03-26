@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Buffer.hpp */
+
 #include <PCH.hpp>
 
 #include "HandleWrapper.hpp"
@@ -9,6 +11,9 @@ struct SDL_GPUBuffer;
 struct SDL_GPUCopyPass;
 
 namespace apollo::rdr {
+	/**
+	 * \brief Bit flags used to specify how a buffer is to be used
+	 */
 	enum class EBufferFlags : int8
 	{
 		None = 0,
@@ -20,6 +25,9 @@ namespace apollo::rdr {
 		NFlags = 4
 	};
 
+	/**
+	 * \brief GPU buffer abstraction
+	 */
 	class Buffer : public _internal::HandleWrapper<SDL_GPUBuffer*>
 	{
 	public:

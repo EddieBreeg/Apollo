@@ -1,8 +1,13 @@
 #pragma once
 
+/** \file VertexLayout.hpp
+ \brief Internal APIs for the input assembly stage on a graphics pipeline
+*/
+
 #include <PCH.hpp>
 
 namespace apollo::rdr {
+	/// Single vertex attribute
 	struct VertexAttribute
 	{
 		enum EType : int8
@@ -29,6 +34,9 @@ namespace apollo::rdr {
 	template <class T>
 	consteval VertexAttribute::EType GetAttributeType() noexcept;
 
+	/**
+	 * \brief Specifies a list of vertex member attributes, used to derive its memory layout
+	 */
 	template <auto... Members>
 	requires(std::is_member_pointer_v<decltype(Members)>&&...) struct VertexAttributeList
 	{
@@ -56,6 +64,12 @@ namespace apollo::rdr {
 		}
 	};
 
+/**
+ * \def DECL_VERTEX_ATTRIBUTES(...)
+ * \brief Declares a vertex attribute list
+ * \sa \ref apollo::rdr::Vertex2d "Vertex2d"/\ref apollo::rdr::Vertex3d "Vertex3d" for examples of
+ * how to use this
+ */
 #define DECL_VERTEX_ATTRIBUTES(...) static constexpr VertexAttributeList<__VA_ARGS__> Attributes
 
 	namespace _internal {

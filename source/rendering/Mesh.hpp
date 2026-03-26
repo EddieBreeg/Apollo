@@ -5,6 +5,8 @@
 #include "Buffer.hpp"
 #include <asset/Asset.hpp>
 
+/** \file Mesh.hpp */
+
 namespace apollo {
 	enum class EAssetLoadResult : int8;
 }
@@ -15,6 +17,9 @@ namespace apollo::editor {
 }
 
 namespace apollo::rdr {
+	/**
+	 * \brief Mesh object
+	 */
 	class Mesh : public IAsset
 	{
 	public:

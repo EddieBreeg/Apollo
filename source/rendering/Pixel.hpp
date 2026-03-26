@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Pixel.hpp */
+
 #include <PCH.hpp>
 
 namespace apollo::rdr {
@@ -30,21 +32,31 @@ namespace apollo::rdr {
 		T r = 0, g = 0, b = 0, a = 0;
 	};
 
+	/// Single R channel pixel
 	template <class T>
 	using RPixel = Pixel<T, 1>;
 
+	/// Dual RG channel pixel
 	template <class T>
 	using RGPixel = Pixel<T, 2>;
 
+	/**
+	 * \brief 3-channel RGB pixel.
+	 * \note This format is typically not supported by modern graphics APIs for GPU textures
+	 */
 	template <class T>
 	using RGBPixel = Pixel<T, 3>;
 
+	/// 4-channel RGBA pixel
 	template <class T>
 	using RGBAPixel = Pixel<T, 4>;
 
 	template <class P>
 	struct PixelTraits;
 
+	/**
+	 * \brief Provides information about a specific Pixel type
+	 */
 	template <class T, uint32 N>
 	struct PixelTraits<Pixel<T, N>>
 	{
@@ -86,6 +98,7 @@ namespace apollo::rdr {
 		return !(a == b);
 	}
 
+	/// Pixel format values, directly mapped on SDL3's
 	enum class EPixelFormat : int8
 	{
 		Invalid = -1,

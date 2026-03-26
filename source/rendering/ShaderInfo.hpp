@@ -1,5 +1,9 @@
 #pragma once
 
+/** \file ShaderInfo.hpp
+ \brief Shader reflection support
+ */
+
 #include <PCH.hpp>
 #include <core/Log.hpp>
 #include <memory>
@@ -15,6 +19,10 @@ namespace apollo::rdr {
 		NStages
 	};
 
+	/**
+	 * \brief Represents a single constant within a uniform constant block
+	 * \sa ConstantBlock
+	 */
 	struct ShaderConstant
 	{
 		enum EType : int8
@@ -71,8 +79,10 @@ namespace apollo::rdr {
 
 		[[nodiscard]] static constexpr const char* GetTypeName(EType type) noexcept
 		{
+#ifndef _DOXYGEN_
 #define TYPE_CASE(Name)                                                                            \
 	case rdr::ShaderConstant::Name: return #Name
+#endif
 			switch (type)
 			{
 				TYPE_CASE(Float);
@@ -116,6 +126,9 @@ namespace apollo::rdr {
 		std::string m_Name;
 	};
 
+	/**
+	 * \brief Represents a whole block of shader constants
+	 */
 	struct ShaderConstantBlock
 	{
 		std::string m_Name;
@@ -132,6 +145,9 @@ namespace apollo::rdr {
 		}
 	};
 
+	/**
+	 * \brief Fixed-sized shader constant storage, used internally by GPUCommand
+	 */
 	struct ShaderConstantStorage
 	{
 		ShaderConstantStorage() = default;
@@ -176,14 +192,18 @@ namespace apollo::rdr {
 		alignas(std::max_align_t) uint8 m_Buffer[128] = { 0 };
 	};
 
+	/**
+	 * \brief Information about a shader, like what resource descriptors it uses.
+	 * \details This is typically retrieved using reflection on compiled shader code.
+	 */
 	struct ShaderInfo
 	{
-		uint32 m_NumSamplers = 0;
+		uint32 m_NumSamplers = 0; /*!< This is assumed to be both the number of sampled textures and
+									 samplers in used in the shader */
 		uint32 m_NumStorageTextures = 0;
 		uint32 m_NumStorageBuffers = 0;
 		uint32 m_NumUniformBuffers = 0;
 		EShaderStage m_Stage = EShaderStage::Invalid;
-		/// \note We may want to add the entry point name here, but for now we don't need it
 
 		ShaderConstantBlock m_Blocks[4];
 

@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Shader.hpp */
+
 #include <PCH.hpp>
 
 #include "HandleWrapper.hpp"
@@ -12,6 +14,9 @@ struct SDL_GPUShader;
 namespace apollo::rdr {
 	enum class EShaderStage : int8;
 
+	/**
+	 * \brief GPU Graphics shader abstraction, used as a base for VertexShader and FragmentShader
+	 */
 	class GraphicsShader : public _internal::HandleWrapper<SDL_GPUShader*>, public IAsset
 	{
 	public:

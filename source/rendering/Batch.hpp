@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Batch.hpp */
+
 #include <PCH.hpp>
 
 #include "Buffer.hpp"
@@ -10,11 +12,15 @@ struct SDL_GPUCopyPass;
 struct SDL_GPUGraphicsPipeline;
 
 namespace apollo::rdr {
+	/**
+	 * \brief Utility class used to group multiple objects per draw-call
+	 */
 	template <class T>
-	class Batch
+	requires(std::is_trivially_destructible_v<T>) class Batch
 	{
 	public:
 		Batch() = default;
+		/// Initializes the internal storage and GPU buffer
 		Batch(uint32 maxSize)
 			: m_Elems(std::make_unique<T[]>(maxSize))
 			, m_Capacity(maxSize)
@@ -47,8 +53,12 @@ namespace apollo::rdr {
 			std::swap(m_Dirty, other.m_Dirty);
 		}
 
+		/// Marks the batch as ready to record new data
 		void StartRecording() { m_Dirty = false; }
 
+		/**
+		 * \brief Performs the data upload to the GPU if required
+		 */
 		void EndRecording(SDL_GPUCopyPass* copyPass)
 		{
 			if (!m_Dirty)
@@ -63,6 +73,9 @@ namespace apollo::rdr {
 			m_Dirty = false;
 		}
 
+		/**
+		 \brief Sets the size to 0. No object is destroyed.
+		 */
 		void Clear()
 		{
 			m_Size = {
@@ -71,6 +84,11 @@ namespace apollo::rdr {
 			};
 		}
 
+		/**
+		 * \brief Adds an element to the batch.
+		 * \details The data was already present from a previous frame, the new element is compared
+		 * to the old one. The batch is only marked as dirty if they differ.
+		 */
 		void Add(T&& elem)
 			requires(requires(const T& a, const T& b) { { a != b }->std::same_as<bool>; })
 		{
@@ -88,16 +106,29 @@ namespace apollo::rdr {
 		}
 
 		[[nodiscard]] const rdr::Buffer& GetBuffer() const noexcept { return m_Buffer; }
+		/// The number of elements currently added
 		[[nodiscard]] uint32 GetCount() const noexcept { return m_Size.m_Current; }
 
+		/** \name Iterator functions
+		 * \brief
+		 * @{ */
 		T* begin() noexcept { return m_Elems.get(); }
 		T* end() noexcept { return m_Elems.get() + m_Size.m_Current; }
 		const T* begin() const noexcept { return m_Elems.get(); }
 		const T* end() const noexcept { return m_Elems.get() + m_Size.m_Current; }
+		/** @} */
 
+		/** \name Element access
+		 * \brief Returns the \p ith element. No bound checking is performed.
+		 * @{ */
 		T& operator[](uint32 i) { return m_Elems[i]; }
 		const T& operator[](uint32 i) const { return m_Elems[i]; }
+		/** @} */
 
+		/**
+		 * \brief Implicit conversion to \b bool
+		 * \returns \code (bool)m_Buffer \endcode
+		 */
 		operator bool() const noexcept { return m_Buffer; }
 
 	private:

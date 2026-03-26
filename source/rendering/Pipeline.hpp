@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Pipeline.hpp */
+
 #include <PCH.hpp>
 
 #include "VertexTypes.hpp"
@@ -7,6 +9,8 @@
 
 struct SDL_GPUGraphicsPipelineCreateInfo;
 
+/** JSON converter for SDL_GPUGraphicsPipelineCreateInfo, used internally to load materials from
+ * disk */
 template <>
 struct apollo::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>
 {
@@ -19,6 +23,6 @@ struct apollo::json::Converter<SDL_GPUGraphicsPipelineCreateInfo>
 };
 
 namespace apollo::rdr {
-	// Maximum number of color targets for a graphics pipeline output
+	/** \brief Maximum number of color targets for a graphics pipeline output */
 	static constexpr uint32 MaxColorTargets = 8;
 } // namespace apollo::rdr

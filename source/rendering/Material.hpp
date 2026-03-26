@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Material.hpp */
+
 #include <PCH.hpp>
 
 #include "HandleWrapper.hpp"
@@ -26,6 +28,7 @@ namespace apollo::editor {
 } // namespace apollo::editor
 
 namespace apollo::rdr {
+	/** \brief Numeric key used to sort drawable elements */
 	struct MaterialInstanceKey
 	{
 		MaterialInstanceKey() = default;
@@ -53,13 +56,17 @@ namespace apollo::rdr {
 		}
 		[[nodiscard]] uint16 GetInstanceIndex() const noexcept { return m_Value & s_IndexMask; }
 
-	private:
+		/** \brief This bit is set to indicate the material writes to the depth buffer */
 		static constexpr uint32 s_DepthWriteBit = BIT(30);
 		static constexpr uint16 s_IndexMask = 0x7FFF;
 
+	private:
 		uint32 m_Value = UINT32_MAX;
 	};
 
+	/**
+	 * \brief GPU graphics pipeline abstraction
+	 */
 	class Material : public IAsset, public _internal::HandleWrapper<void*>
 	{
 	public:
@@ -94,6 +101,11 @@ namespace apollo::rdr {
 			return m_FragShader.Get();
 		}
 
+		/**
+		 * \brief Generates a new \ref MaterialInstanceKey "instance key" from an internal index.
+		 * \par Thread Safety
+		 This function is thread-safe
+		 */
 		[[nodiscard]] MaterialInstanceKey GenerateInstanceKey() noexcept
 		{
 			return static_cast<MaterialInstanceKey>(
@@ -109,6 +121,13 @@ namespace apollo::rdr {
 		std::atomic_uint16_t m_InstanceKey = 0;
 	};
 
+	/**
+	 * \brief Encapsulates a material along with data descriptors (textures, fragment shader
+	 * constants)
+	 * \details A Material only defines how an object should be drawn to the screen, regardless of
+	 * what resources are bound to the pipeline. %Material instances on the other hand store a
+	 * reference to a given material along with the resources which should be bound before drawing.
+	 */
 	class MaterialInstance : public IAsset
 	{
 	public:
@@ -122,6 +141,15 @@ namespace apollo::rdr {
 		[[nodiscard]] Material* GetMaterial() noexcept { return m_Material.Get(); }
 		[[nodiscard]] const Material* GetMaterial() const noexcept { return m_Material.Get(); }
 
+		/** \name GetFragmentConstant
+		 * \brief Accesses a specific constant from the internal storage
+		 * \param blockIndex: The index of the constant block to access. Must be between 0 and 3
+		 * inclusive.
+		 * \param offset: The byte offset of the constant within the block.
+		 * \tparam T: The value type
+		 * \note No type checking is performed
+		 * @{ */
+
 		template <class T>
 		T& GetFragmentConstant(uint32 blockIndex, uint32 offset)
 		{
@@ -134,6 +162,8 @@ namespace apollo::rdr {
 			return *m_ConstantBlocks.GetConstantPtr<T>(blockIndex, offset);
 		}
 
+		/** @} */
+
 		APOLLO_API void PushFragmentConstants(SDL_GPUCommandBuffer* commandBuffer) const;
 		APOLLO_API void PushFragmentConstants(
 			SDL_GPUCommandBuffer* commandBuffer,
@@ -141,6 +171,9 @@ namespace apollo::rdr {
 
 		APOLLO_API void Bind(SDL_GPURenderPass* renderPass) const;
 
+		/**
+		 * \brief Gets the instance key, used to sort objects before drawing them
+		 */
 		[[nodiscard]] MaterialInstanceKey GetKey() const noexcept { return m_Key; }
 
 		void Swap(MaterialInstance& other) noexcept
@@ -151,6 +184,10 @@ namespace apollo::rdr {
 			m_FragmentTextures.Swap(other.m_FragmentTextures);
 		}
 
+		/**
+		 * \brief Checks whether the asset is currently loaded, including the referenced material as
+		 * well as the textures.
+		 */
 		[[nodiscard]] APOLLO_API bool IsLoaded() const noexcept;
 
 	private:

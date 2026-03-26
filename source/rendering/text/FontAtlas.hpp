@@ -30,6 +30,9 @@ namespace apollo::mt {
 namespace apollo::rdr::txt {
 	struct TextStyle;
 
+	/**
+	 * \brief This API is used to rasterize a font into an atlas using msdfgen
+	 */
 	class AtlasGenerator
 	{
 	public:
@@ -70,6 +73,9 @@ namespace apollo::rdr::txt {
 		double m_Scale = 1.0;
 	};
 
+	/**
+	 * \brief Stores a font as a texture atlas and a sparse array of Glyph objects
+	 */
 	class FontAtlas : public IAsset
 	{
 	public:
@@ -113,12 +119,23 @@ namespace apollo::rdr::txt {
 		APOLLO_API ~FontAtlas();
 
 		[[nodiscard]] const rdr::Texture2D& GetTexture() const noexcept { return m_Texture; }
+
+		/**
+		 * \brief Retrieves a single glyph from the atlas. If the glyph wasn't loaded from the
+		 * original font file, the \p fallback character will be used instead. Failing that, \b
+		 * nullptr is returned.
+		 */
 		[[nodiscard]] const Glyph* GetGlyph(char32_t ch, char32_t fallback = U' ') const noexcept
 		{
 			if (const auto* g = FindGlyph(ch))
 				return g;
 			return FindGlyph(fallback);
 		}
+		/**
+		 * \brief The pixel size used to rasterize the glyphs when generating the atlas.
+		 * \note This has no bearing on the size at which you actually render them on the screen;
+		 * multi-channel SDFs allow us to render at pretty much any size.
+		 */
 		[[nodiscard]] uint32 GetPixelSize() const noexcept { return m_PixelSize; }
 
 		[[nodiscard]] APOLLO_API float2

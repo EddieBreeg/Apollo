@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Texture.hpp */
+
 #include <PCH.hpp>
 #include <asset/Asset.hpp>
 
@@ -18,7 +20,7 @@ namespace apollo::editor {
 }
 
 namespace apollo::rdr {
-
+	/// Specifies how a texture is to be used
 	enum class ETextureUsageFlags
 	{
 		None = 0,
@@ -40,6 +42,9 @@ namespace apollo::rdr {
 		ETextureUsageFlags m_Usage = ETextureUsageFlags::Sampled;
 	};
 
+	/**
+	 * \brief 2D GPU texture abstraction
+	 */
 	class Texture2D : public IAsset, public _internal::HandleWrapper<SDL_GPUTexture*>
 	{
 	public:

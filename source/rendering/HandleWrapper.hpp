@@ -1,8 +1,13 @@
 #pragma once
 
+/** \file HandleWrapper.hpp */
+
 #include <core/Unassigned.hpp>
 
 namespace apollo::rdr::_internal {
+	/**
+	 * \brief Common utility used as a base for all types which wrap around a resource handle
+	 */
 	template <class HandleType>
 	struct HandleWrapper
 	{

@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Context.hpp */
+
 #include <PCH.hpp>
 #include <core/Singleton.hpp>
 
@@ -25,7 +27,8 @@ namespace apollo::rdr {
 	class RenderPass;
 
 	/**
-	 * \brief Global rendering context
+	 * \brief Global rendering context. This is the central rendering API you'll be interacting with
+	 * most of the time.
 	 */
 	class Context : public Singleton<Context>
 	{
@@ -35,8 +38,16 @@ namespace apollo::rdr {
 		GPUDevice& GetDevice() noexcept { return m_Device; }
 		Window& GetWindow() noexcept { return m_Window; }
 
-		// Creates the main command buffer, and acquires the swapchain texture
+		/** \brief Creates the main command buffer, and acquires the swapchain texture. Called by
+		 * the main App class
+		 */
 		APOLLO_API void BeginFrame();
+
+		/** \name Deferred commands
+		 * \brief These functions add a command to the internal queue.
+		 * \details For practical reasons, GPU commands are not recorded into the command buffer
+		 * directly. They are first added to a queue and processed at the end of the frame.
+		 * @{ */
 
 		void BeginRenderPass(RenderPass& renderPass) { m_CommandQueue.AddEmplace(renderPass); }
 		void SetViewport(const RectF& viewport) { m_CommandQueue.AddEmplace(viewport); }
@@ -93,12 +104,13 @@ namespace apollo::rdr {
 		void DrawImGuiLayer(const ImGuiDrawCommand& call) { m_CommandQueue.AddEmplace(call); }
 
 		template <class F>
-		void AddCustomCommand(F&& cmd)
+		void AddCustomCommand(F&& cmd) requires(requires { cmd(*this); })
 		{
 			m_CommandQueue.AddEmplace(std::forward<F>(cmd));
 		}
+		/** @} */
 
-		// Returns null if called outside of BeginFrame/EndFrame
+		/// Returns null if called outside of BeginFrame/EndFrame
 		[[nodiscard]] SDL_GPUCommandBuffer* GetMainCommandBuffer() noexcept
 		{
 			return m_MainCommandBuffer;
@@ -106,7 +118,7 @@ namespace apollo::rdr {
 		// Returns null if called outside of BeginFrame/EndFrame
 		[[nodiscard]] SDL_GPUTexture* GetSwapchainTexture() noexcept { return m_SwapchainTexture; }
 
-		// Submits the main command buffer
+		/// Processes the command queue and submits the command buffer
 		APOLLO_API void EndFrame();
 
 		[[nodiscard]] EPixelFormat GetSwapchainTextureFormat() const noexcept
@@ -114,8 +126,14 @@ namespace apollo::rdr {
 			return m_SwapchainFormat;
 		}
 
+		/**
+		 * \brief This sampler uses linear filtering to sample a texture.
+		 */
 		[[nodiscard]] SDL_GPUSampler* GetDefaultSampler() noexcept { return m_DefaultSampler; }
 
+		/**
+		 * \brief Returns the current render pass, or null if pass is in progress
+		 */
 		[[nodiscard]] RenderPass* GetCurrentRenderPass() noexcept { return m_RenderPass; }
 
 	private:

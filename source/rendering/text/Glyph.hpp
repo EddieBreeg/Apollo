@@ -15,6 +15,9 @@ namespace apollo::rdr::txt {
 		}
 	};
 
+	/**
+	 * \brief Stores information about a single glyph, used to render it
+	 */
 	struct Glyph
 	{
 		char32_t m_Char;

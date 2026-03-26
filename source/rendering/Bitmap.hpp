@@ -1,13 +1,16 @@
 #pragma once
 
+/** \file Bitmap.hpp */
+
 #include <PCH.hpp>
 
 #include "Pixel.hpp"
 
 namespace apollo::rdr {
 	/**
-	 * A utility class to represent a view over bitmap data. Useful for bitmap operations such as
-	 * copying, especially when dealing with subregions
+	 * \brief A utility class to represent a view over bitmap data.
+
+	 *Useful for bitmap operations such as copying, especially when dealing with subregions
 	 */
 	template <class Pixel>
 	class BitmapView
@@ -19,27 +22,21 @@ namespace apollo::rdr {
 
 		static constexpr uint32 Channels = PixelTraits::Channels;
 
-		constexpr BitmapView() = default;
-		constexpr ~BitmapView() = default;
-		constexpr BitmapView(const BitmapView&) = default;
-
-		/**
-		 * \param data: The bitmapt's pixel data
-		 * \param width: The width of the view. Can be small that of the bitmap it's referencing
-		 * \param height: The height of the view. Can be small that of the bitmap it's referencing
-		 * \param stride: The number of **pixels** from a pixel row to the next in the original. If
-		 * 0, width will be used instead buffer
-		 */
-		constexpr BitmapView(Pixel* data, uint32 width, uint32 height, uint32 stride = 0) noexcept;
-		/**
+		/** \name Constructors
+		 * \brief Creates a new view object
 		 * \param data: The bitmapt's pixel data
 		 * \param x: x-coordinate where the view region starts
 		 * \param y: y-coordinate where the view region starts
 		 * \param width: The width of the view. Can be small that of the bitmap it's referencing
 		 * \param height: The height of the view. Can be small that of the bitmap it's referencing
-		 * \param stride: The number of **pixels** from a pixel row to the next in the original. If
-		 * 0, width will be used instead buffer
-		 * \note: Equivalent to BitmapView(data + stride * y + x, width, height, stride)
+		 * \param stride: The offset to jump from one row to the next, in pixels. This can be 0, in
+		 * which case \p width will be used instead.
+		 * @{ */
+
+		constexpr BitmapView() = default;
+		constexpr BitmapView(Pixel* data, uint32 width, uint32 height, uint32 stride = 0) noexcept;
+		/**
+		 * \note Equivalent to BitmapView(data + stride * y + x, width, height, stride)
 		 */
 		constexpr BitmapView(
 			Pixel* data,
@@ -49,6 +46,11 @@ namespace apollo::rdr {
 			uint32 height,
 			uint32 stride = 0) noexcept;
 
+		/** @} */
+
+		constexpr ~BitmapView() = default;
+
+		constexpr BitmapView(const BitmapView&) = default;
 		constexpr BitmapView& operator=(const BitmapView&) = default;
 
 		constexpr void Swap(BitmapView& other) noexcept
@@ -98,12 +100,12 @@ namespace apollo::rdr {
 		}
 
 		/**
-		 * Copies the pixel data from this region to another.
+		 * \brief Copies the pixel data from this region to another.
 		 * \param other: Destination bitmap region. Might point to another region of the same
 		 * bitmap, or to another bitmap altogether
-		 * \remark This function assumes that the destination region has at least the same number of
+		 * \note This function assumes that the destination region has at least the same number of
 		 * pixels as the source. In general, it should be used to copy data from regions of same
-		 * size, and could otherwise produce unexpected results
+		 * size, behaviour is undefined if this condition is not satisfied
 		 */
 		constexpr void CopyTo(BitmapView& other) const;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+/** \file Device.hpp */
+
 #include <PCH.hpp>
 
 #include "HandleWrapper.hpp"
@@ -11,6 +13,11 @@ namespace apollo {
 }
 
 namespace apollo::rdr {
+	/**
+	 * \brief Specifies the GPU backend to use
+	 * \note Currently, only Vulkan is supported
+	 * \todo Add support for D3D12 (this is quite low priority at the moment)
+	 */
 	enum class EBackend : int8
 	{
 		Invalid = -1,
@@ -24,6 +31,7 @@ namespace apollo::rdr {
 #endif
 	};
 
+	/// GPU device abstraction
 	class APOLLO_API GPUDevice : public _internal::HandleWrapper<SDL_GPUDevice*>
 	{
 	public:

@@ -1,10 +1,13 @@
 #include "VertexLayout.hpp"
 #include <span>
 
+/** \file VertexTypes.hpp */
+
 struct SDL_GPUVertexAttribute;
 struct SDL_GPUVertexInputState;
 
 namespace apollo::rdr {
+	/// Stand vertex types
 	enum class EStandardVertexType : int8
 	{
 		Invalid = -1,
