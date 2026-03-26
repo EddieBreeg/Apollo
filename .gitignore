@@ -23,3 +23,4 @@ deps/freetype2/**/configure
 docs/*
 !docs/Doxyfile
 !docs/*.dox
+!docs/*.css
