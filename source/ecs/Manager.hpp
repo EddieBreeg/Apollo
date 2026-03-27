@@ -40,6 +40,8 @@ namespace apollo::ecs {
 		/**
 		 * \brief Adds a system to the manager. This system will automatically get updated every
 		 * frame.
+		 * \tparam S: The system type
+		 * \param args: The arguments to forward to the constructor
 		 */
 		template <System S, class... T>
 		S& AddSystem(T&&... args)

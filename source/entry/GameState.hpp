@@ -14,6 +14,7 @@ namespace apollo {
 
 	/**
 	 * \brief The state of our game, both initialization code and any data we may require
+	 * \details You should subclass this for the purposes of your specific game's state
 	 * \sa \ref entry
 	 * \sa apollo::EntryPoint
 	 */
@@ -27,6 +28,7 @@ namespace apollo {
 		 * \details This function should perform all specific initialization operations your game
 		 * requires, like registering components and systems, loading custom files like user
 		 * preferences etc
+		 * \retval EAppResult A result value indicating what the app should do next.
 		 */
 		virtual EAppResult OnInit(const EntryPoint&, App&) { return static_cast<EAppResult>(0); }
 		/**

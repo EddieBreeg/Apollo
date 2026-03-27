@@ -1,0 +1,9 @@
+/**
+ * \dir source/asset
+ * \brief Asset management library
+ * \sa \ref asset-management
+ */
+
+/**
+ * \page asset-management Asset Management
+ */

@@ -1,0 +1,99 @@
+/**
+ * \dir source/ecs
+ * \brief ECS library
+ * \sa \ref ecs
+ */
+
+/**
+* \page ecs Entity-Component-System (ECS)
+Apollo is heavily based on the Entity-Component-System (ECS for short) paradigm; this is the
+primary way you'll add custom behaviour to your games. In this chapter I'll try to give you an idea
+of what ECS is, why I chose it, and what it looks like in the context of the Apollo engine.
+
+## What it is
+
+ECS is a kind of data-oriented design. Data is stored inside \b components. These components are
+combined together to form \b entities. Custom \b systems (which we can think of as functions, for
+now) are invoked every frame to process the entities present in the world. A classical example would
+be a \tt{Transform} component we would attach to any entity that needs a position in 3D space. We
+would define a *Transform system* which would be in charge of specifically updating the transform
+component on every single entity which has one. Another obvious example could be some sort of
+rendering system which would process all \e drawable entities in your world. Of course in practice
+things might be more complicated but you get the idea.
+
+## Why use it?
+
+There are a few reasons why I chose to go for an ECS based design. The first one is performance:
+components are grouped by type and stored into contiguous containers in memory. Since systems
+typically need to access all entities with a given component, storing them this way has the
+advantage of making it trivial to iterate over them. Each entity also has a unique identifier in the
+form of an integer we can use to quickly lookup said entity in any component pool we want. This way
+of doing things ensures data accesses are very cache efficient, which is one of the most crucial
+aspects of CPU performance nowadays.
+
+Performance is only a small part of the story however. After all, this engine isn't designed to make
+AAA open world games - and if this is what you're after I'm sorry to disappoint, but you may want to
+start looking elsewhere. ECS also makes gameplay logic easier to reason about to some extent. Each
+system is only interested in a given - and ideally small - set of components and cares about nothing
+else. This makes it reasonably easy to add new behaviour to our game by storing the relevant data
+inside components and implementing a system to act on them. The more independence our systems have
+and the easier it gets to combine them to create complex behaviours. This allows us to achieve \b
+emergent behaviours, that is: behaviours that we not explicitly programmed by instead \e emerge from
+pre-existing systems.
+
+## The API
+
+Apollo uses the [EnTT](https://github.com/skypjack/entt) library as the base for its ECS
+infrastructure. While I could probably have rolled out my own simplistic solution, implementing a
+fully-featured ECS framework is no small task. This library is battle-tested, relatively simple to
+use and well documented. With this out the way, let's see how ECS actually works in the engine.
+
+### Systems
+
+Systems are implemented as classes, which must adhere to the apollo::ecs::System requirements. The
+TL;DR is this: your class must implement an \p Update function which takes in the entity world as an
+argument of type `entt::registry&`, as well as the global timer as a `const apollo::GameTime&`.
+Optionally you can also define a \p PostInit function, which takes no argument. If you do, this
+function will automatically be called at the end of the system initialization phase, right before
+the game loop starts. This can be very useful when your system has external dependencies that need
+resolving, but are not necessarily ready when the system gets constructed.
+
+Systems are all stored and managed by the \ref apollo::ecs::Manager "ECS manager", which also owns
+the entity world. Simply use the \ref apollo::ecs::Manager::AddSystem "AddSystem" function to
+register your system like so:
+ \include{lineno} docs/guide/AddSystemExample.cpp
+ You would typically write this code in the \ref apollo::IGameState::OnInit "OnInit" function of
+your game state class. Aaaaand... that's it! Your system is now registered and will get updated
+every frame.
+
+ \note Systems are updated in the order they were added to the manager. This can important if a
+system `S1` depends on the results produced by another system `S2`. If `S2` is initialized after
+`S1`, `S1` will only be able to observe these results on the next frame.
+
+ \sa The \ref apollo::inputs::System "input system" for a concrete example of what a system looks
+like.
+
+### Components
+
+Generally speaking, components don't need to be explicitly declared the same way systems do:
+component pools get automatically created when required. But some features do require a little more
+work. Specifically: component serialization/deserialization/inspection requires some level of
+runtime reflection, and so the engine needs to know about these component types ahead of time. This
+happens in two steps:
+1. First, a \ref apollo::ecs::ComponentReflection "reflection" object must be declared inside the
+component type itself. We'll cover that shortly.
+2. Then, the component type must be added to the \ref apollo::ecs::ComponentRegistry "component
+registry". This registry will generate a \ref apollo::ecs::ComponentInfo "runtime component
+information object" and store it internally in a map.
+
+A good example of how to declare a component reflection object is our good ol' \ref apollo::TransformComponent "transform component":
+ \snippet docs/guide/Transform.hpp transform
+ 
+ The component can then be added into the registry:
+ \snippet docs/guide/Transform.hpp registration
+
+Once this is done, our transform component can automatically be loaded from JSON scene files for example.
+
+ \sa EnTT's [ECS wiki](https://github.com/skypjack/entt/wiki/Entity-Component-System)
+ \sa The [full ECS API](@ref apollo::ecs)
+ */

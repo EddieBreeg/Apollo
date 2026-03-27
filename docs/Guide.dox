@@ -1,0 +1,20 @@
+/**
+ \page guide User Guide
+
+ While this documentation does \e try to provide a comprehensive reference for the various APIs in
+ the engine, this is not all there is to using Apollo. Arguably, this isn't even the most important
+ if you're looking to get started with it. This guide aims at giving you a general overview of how
+ the engine structured.
+
+ 1. \subpage entry
+ 2. \subpage ecs
+ 3. \subpage asset-management
+ 4. \subpage rendering
+
+### Going further
+
+Should you want to dive deeper still with more concrete example, it wouldn't hurt to take a look
+into the demo app in the example directory. This is the app I use as a sandbox to test various
+features of the engine, so don't expect the code in there to be especially documented, but it will
+give you an idea of how I use the engine's APIs in practice.
+*/

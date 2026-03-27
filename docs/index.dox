@@ -5,5 +5,5 @@
 ## Getting Started
 
 Had enough of reading and want to actually build something?
-You should probably start by checking out the engine's \subpage entry "Entry Point", as this is the part of the code responsible for starting the application.
+You should probably start by checking out the \ref guide to get started with your first game!
  */

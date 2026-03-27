@@ -1,0 +1,21 @@
+/**
+ * \page entry Entry point
+
+ * In Apollo, the entry point is a little special compare to what you might be used to in a normal
+ * C++ application. Instead of using the main function, the application entry point is defined using
+ * the \ref apollo::GetEntryPoint "GetEntryPoint" function. This function returns an \ref
+ * apollo::EntryPoint "EntryPoint" object which contains everything the app needs to start the game.
+ * Most notably, this object has a \p m_GameState member which points to the game state object you
+ initialized. This object must \b always be present.
+
+ * The reasoning behind this choice is that the engine initialization is sensitive and should
+ * be controlled by the engine itself, while still leaving ample room for customization on the
+ user's part. Namely, the engine controls exactly \e when user code runs, which prevents unfortunate
+ accidents like uninitialized singleton accesses and whatnot. Since a few lines of code are worth a
+ thousand words, here is a quick example of how you could initialize your game:
+ * \include{lineno} docs/guide/EntryExample.cpp
+
+ * \sa apollo::GetEntryPoint
+ * \sa apollo::EntryPoint
+ * \sa apollo::IGameState
+ */
