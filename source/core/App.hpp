@@ -55,6 +55,10 @@ namespace apollo {
 		[[nodiscard]] ImGuiContext* GetImGuiContext() noexcept { return m_ImGuiContext; }
 		[[nodiscard]] rdr::Context* GetRenderContext() noexcept { return m_RenderContext; }
 		[[nodiscard]] mt::ThreadPool& GetThreadPool() noexcept { return m_MainThreadPool; }
+		[[nodiscard]] IGameState& GetGameState() const noexcept
+		{
+			return *m_EntryPoint.m_GameState;
+		}
 
 		/**
 		 * \brief Main loop.

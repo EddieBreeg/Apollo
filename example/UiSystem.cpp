@@ -62,13 +62,6 @@ namespace {
 } // namespace
 
 namespace apollo::demo {
-	UiSystem::~UiSystem()
-	{
-		APOLLO_LOG_INFO("Cleaning UI system");
-		m_UiRenderer.Reset();
-		m_UiContext.Reset();
-	}
-
 	void UiSystem::PostInit()
 	{
 		m_UiRenderer.Init(m_RenderContext, m_Viewport.m_ColorTargetFormat);

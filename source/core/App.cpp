@@ -85,7 +85,7 @@ namespace apollo {
 		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
 #endif
 		auto& device = m_RenderContext->GetDevice();
-		APOLLO_ASSERT(initAssetManager, "No intialisation function provided for the asset manager");
+		APOLLO_ASSERT(initAssetManager, "No initialisation function provided for the asset manager");
 		m_AssetManager = &initAssetManager(entry.m_AssetRoot, device, m_MainThreadPool);
 
 		m_ImGuiContext = InitImGui(m_Window.GetHandle(), device.GetHandle());
@@ -93,8 +93,8 @@ namespace apollo {
 		m_ECSManager = &ecs::Manager::Init();
 		RegisterCoreSystems(*this, *m_ECSManager, *m_AssetManager);
 
-		if (m_EntryPoint.m_OnInit)
-			m_Result = m_EntryPoint.m_OnInit(m_EntryPoint, *this);
+		APOLLO_ASSERT(m_EntryPoint.m_GameState, "No game state was created. There is no game!");
+		m_EntryPoint.m_GameState->OnInit(m_EntryPoint, *this);
 
 		if (m_Result != EAppResult::Continue)
 			return;
@@ -150,6 +150,7 @@ namespace apollo {
 	App::~App()
 	{
 		APOLLO_LOG_INFO("Shutting down...");
+		m_EntryPoint.m_GameState->OnQuit(*this);
 		ShutdownImGui();
 		ecs::Manager::Shutdown();
 		IAssetManager::Shutdown();

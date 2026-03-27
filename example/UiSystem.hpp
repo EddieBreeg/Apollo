@@ -44,7 +44,7 @@ namespace apollo::demo {
 		void PostInit();
 		void Update(entt::registry&, const GameTime&);
 
-		~UiSystem();
+		~UiSystem() = default;
 
 	private:
 		void BuildLayout();
