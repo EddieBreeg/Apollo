@@ -11,9 +11,11 @@ struct ::fmt::formatter<apollo::ULID> : public fmt::formatter<fmt::basic_string_
 {
 	fmt::appender format(const apollo::ULID id, format_context& ctx) const
 	{
+#ifndef _DOXYGEN_
 		using Base = fmt::formatter<fmt::basic_string_view<char>>;
 		char str[26];
 		id.ToChars(str);
 		return Base::format(basic_string_view<char>{ str, 26 }, ctx);
+#endif
 	}
 };
