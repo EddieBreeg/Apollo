@@ -1,14 +1,17 @@
 #include <PCH.hpp>
 
-#include "SceneComponents.hpp"
+#include <entt/fwd.hpp>
 
 /** \file SceneLoadingSystem.hpp */
 
 namespace apollo {
 	class IAssetManager;
 	class GameTime;
+	class ULID;
 
-	/// This is the system in charge of processing scene switches
+	/** \brief This is the system in charge of processing scene switches
+	* \sa \ref SceneComponents.hpp
+	 */
 	class SceneLoadingSystem
 	{
 	public:

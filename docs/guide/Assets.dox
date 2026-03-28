@@ -6,4 +6,168 @@
 
 /**
  * \page asset-management Asset Management
+
+ In Apollo, you are not responsible for handling assets; the engine will take care of that for you.
+ That being said, it doesn't hurt to have some idea of what goes on behind the scenes, so that's
+ what this page is about. More to the point: most of this chapter discusses internal machinery you
+ likely won't have to use directly, because assets are automatically loaded along with the scene
+ which needs them. If all you care about is "how do get stuff into my game?" then you can skip
+ practically all of this and jump straight to the \ref scenes section.
+
+ \section what-asset What is an asset?
+
+ Fundamentally, assets are just the data used by the game. Textures, audio files, shaders etc... are
+ all assets. The list of asset supported asset types is represented by the apollo::EAssetType enum.
+ Custom asset types are currently not handled, but I do plan on adding some level support for that
+ in the future. In terms of code, each of these different types is represented by a different class,
+ which implements the \ref apollo::IAsset "IAsset" interface. More specifically, they all follow the
+ requirements specified by the \ref apollo::Asset "Asset" concept.
+
+ Each asset object internally stores three things:
+ - A apollo::ULID object which uniquely identifies the asset
+ - A state bit-field, made up of some combination of apollo::EAssetState flags
+ - A reference counter which tracks how many times this asset is being referenced across the game
+ right now
+
+ \note Both the state and reference count are atomic variables, we'll get back to that when tackling
+ the \ref loading-pipeline "loading pipeline".
+
+ \subsection metadata Metadata
+
+ Every asset in a project has associated metadata: its ID, type, name, location on disk etc. This
+ metadata is stored directly in a file in the project's root asset folder, although the format
+ depends on what environment we're in - game or editor. If it's the latter, metadata is stored in a
+ simple CSV file called \e metadata.csv directly at the root. The application will expect this file
+ to be present, and nothing will load properly if it isn't.
+
+ \section assetref Is all about AssetRef
+
+ You will rarely see raw apollo::IAsset object references in the code. Instead, asset pointers are
+ wrapped in \ref apollo::AssetRef "asset ref objects". At its core, an asset ref is just a special
+ \ref apollo::RetainPtr "RetainPtr": its job is to "keep the asset alive". The asset's ref count is
+ incremented when a new reference gets created, and decremented when the asset is destroyed. As long
+ as at least one reference exists to a particular asset, this asset will not be destroyed.
+
+ \note An apollo::AssetRef object is allowed to be null, and your code should not assume otherwise
+ unless you has good reasons to. And even then: just because an asset object exists doesn't mean the
+ asset is, in fact, loaded. You should call the \ref apollo::IAsset::IsLoaded "IsLoaded()" function
+ to check before using an asset.
+
+ \section asset-manager The asset manager
+
+ The \ref apollo::IAssetManager "asset manager" singleton is very much at the heart of the whole
+ asset management infrastructure. It not only retains ownership of the assets themselves, but also
+ stores all of their \ref apollo::AssetMetadata "metadata". It's responsible for creating and
+ destroying assets, as well as issuing load requests when necessary.
+
+ \subsection asset-cache The asset cache
+
+ Internally, the asset manager uses a simple caching system; when an asset object is created, it
+ gets added to the cache for future reference. If this same asset is retrieved again later and
+ assuming it hasn't been unloaded since, it is pulled directly from the cache. Conversely, when the
+ last reference to an asset goes away, the asset is removed from the cache and destroyed.
+
+ This simple design ensures an asset never needs to get loaded more than once at any given time.
+ This is especially important from switching between scenes: if an asset is both loaded in the
+ source and required in the destination, it will not get loaded again but will instead stay in the
+ cache ready to be re-used.
+
+ \section loading-pipeline The loading pipeline
+
+ \subsection metadata-loading Metadata loading
+
+ The asset metadata is loaded during the initialization phase of the engine, right when the
+ application starts. It gets loaded in its entirety and stored in a map inside the asset manager.
+
+ \subsection asset-retrieval Asset retrieval
+
+ When an asset is requested from the asset manager - typically by a call to one the \ref getasset
+ "GetAsset" APIs - either one of two things can happen: either the asset is present in the cache or
+ it isn't. If it is then things are easy: we just pull the asset straight from the cache, wrap it in
+ an `AssetRef` object and return it. Things get a little more interesting when the asset isn't in
+ the cache yet, in which case a few things need to happen:
+ 1. We allocate the actual asset object
+ 2. The asset pointer gets added to the cache
+ 3. A [load request](@ref apollo::AssetLoadRequest) is sent to the \ref apollo::AssetLoader "asset
+ loader"
+ 4. The asset is returned back to the user. At this point, it is \b not yet ready to be used
+ 5. At some point, the load request will get processed and \e hopefully the asset will finally be
+ loaded, although as we'll see things aren't always quite that simple
+
+ The asset loader stores request in a queue and processes them in batches. Every frame, the
+ \ref apollo::AssetLoader::ProcessRequests "ProcessRequests" function gets called. If no batch was
+ underway, the loader will submit a job to a \ref apollo::mt::ThreadPool "thread pool", and this job
+ will be picked up by another thread from this pool as soon as possible - this is why both an
+ asset's state and ref count are handled atomically. If however a batch is already in progress, no
+ additional work needs to be performed: the loader simply lets the thread pool do its thing.
+ As soon as the worker thread is done processing all requests (i.e. the queue is empty), the loader
+ gets notified and batch callbacks are invoked <b>from the working thread</b>. These callbacks must
+ be registered using the \ref apollo::AssetLoader::RegisterCallback "RegisterCallback" function
+ beforehand.
+
+ This is all well and good, but it conveniently sweeps a detail under the rug: asset dependencies.
+ Indeed, an asset \p a is perfectly allowed to *depend on* another asset \p b, meaning \p b must be
+ loaded before \p a has a chance to. The problem is that the asset loader has no knowledge of these
+ dependencies: all it sees is a queue with requests to get out the door. This is where **deferred
+ loading** comes in. Assets are loaded using \ref apollo::AssetLoadTask "task objects". These tasks
+ are coroutines, meaning they can suspend their execution and be resumed later. When a request needs
+ to wait on another asset to complete, the coroutine is suspended and
+ \ref apollo::EAssetLoadResult::TryAgain "TryAgain" is returned. The worker thread simply adds the
+ request back at the end of the queue. This works because by this point if a dependency was required
+ and not found in the cache, a load request would have been created and added to the queue. This
+ means that under normal circumstances, by the time we get back to our suspended request, these
+ dependencies should be taken care of already.
+
+ \subsection asset-unloading Asset unloading
+
+ When the last reference to an asset is destroyed, its reference count falls to 0. At this point, it
+ is marked with the \ref apollo::EAssetState::Unloading "Unloading" flag and an unload request is
+ added to yet another queue in the asset manager. These requests also get processed
+ every frame. If for whatever reason the asset is absent from the cache, or if its state has since
+ changed and the \ref apollo::EAssetState::Unloading "Unloading" flag isn't set anymore, the request
+ is ignored. Otherwise, the asset is remove from the cache and destroyed.
+
+ \section scenes Scenes
+
+ In this whole framework, \ref apollo::Scene "scenes" are a little special and deserve some more
+ attention. First and foremost: scenes are the main way you'll be interacting with the asset
+ framework. In fact, there is little reason for you to go to the asset manager directly, because
+ scenes already have references to everything they need to run. In other words: when you load a
+ scene, all of its dependencies will be loaded along with it, there's nothing special for you to do
+ there.
+
+ \subsection what-scene What even \e is a scene?
+
+ A scene is a collection of \ref apollo::GameObject "game objects", that's about the extent of it.
+ Each game object has a unique ID, a name and a list of components. These components can really be
+ anything, but more specifically one of the things they can do is point to assets using the same
+ \ref assetref "asset reference" mechanic we covered earlier. This is how the dependency graph of
+ the scene is defined: game objects can refer to assets, which themselves could - why not? - refer
+ to other assets and so on. In fact, game objects are even allowed to load subscenes using the
+ \ref apollo::SceneComponent "scene component"!
+
+ \subsection scene-system The scene loading system
+
+ The \ref apollo::SceneLoadingSystem "scene loading system" is one of the core ECS systems provided
+ by the engine, specifically the one dedicated to handling scene changes. The way one communicates
+ with this system is the same as with pretty much any ECS system: components. Here's roughly how it
+ goes:
+ 1. You create a scene switch request using the \ref apollo::SceneSwitchRequestComponent component
+ 2. The scene loading system picks up this request and fetches the scene from the asset manager,
+ after which the request entity is deleted
+ 3. The scene loads in the background, including all of its dependencies
+ 4. Once loading is complete, the scene loading system gets notified internally
+ 5. Next time it is updated, the system creates a new entity with a \ref apollo::SceneComponent
+ component attached
+ 6. It also creates another entity with the \ref apollo::SceneLoadFinishedEventComponent component
+ that other systems can detect. This entity only exists for one frame.
+
+ A few things are worth clarifying. If a scene was already loaded, it will
+ automatically get unloaded once the new one is fully loaded. If the current scene is also the one
+ we're switching to, all the game objects will get reloaded from disk. Put another way, normally all
+ you have to do is create the initial switch request and everything else will be handled for you.
+
+ \important The scene loading system is \b the way to manage scenes from a user's perspective.
+ You should \b not attempt to do so by hand through the asset manager/loader directly. And if you
+ decide to ignore this remark: expect the unexpected.
  */

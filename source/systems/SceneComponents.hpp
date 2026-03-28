@@ -30,6 +30,7 @@ namespace apollo {
 	/// Used to request a scene swap. This is the primary way scenes should be loaded
 	struct SceneSwitchRequestComponent
 	{
+		/// The scene ID
 		ULID m_Id;
 	};
 

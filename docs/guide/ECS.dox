@@ -10,7 +10,7 @@ Apollo is heavily based on the Entity-Component-System (ECS for short) paradigm;
 primary way you'll add custom behaviour to your games. In this chapter I'll try to give you an idea
 of what ECS is, why I chose it, and what it looks like in the context of the Apollo engine.
 
-## What it is
+ \section what-is-ecs What it is
 
 ECS is a kind of data-oriented design. Data is stored inside \b components. These components are
 combined together to form \b entities. Custom \b systems (which we can think of as functions, for
@@ -21,7 +21,7 @@ component on every single entity which has one. Another obvious example could be
 rendering system which would process all \e drawable entities in your world. Of course in practice
 things might be more complicated but you get the idea.
 
-## Why use it?
+ \section why-ecs Why use it?
 
 There are a few reasons why I chose to go for an ECS based design. The first one is performance:
 components are grouped by type and stored into contiguous containers in memory. Since systems
@@ -41,14 +41,14 @@ and the easier it gets to combine them to create complex behaviours. This allows
 emergent behaviours, that is: behaviours that we not explicitly programmed by instead \e emerge from
 pre-existing systems.
 
-## The API
+ \section ecs-api The API
 
 Apollo uses the [EnTT](https://github.com/skypjack/entt) library as the base for its ECS
 infrastructure. While I could probably have rolled out my own simplistic solution, implementing a
 fully-featured ECS framework is no small task. This library is battle-tested, relatively simple to
 use and well documented. With this out the way, let's see how ECS actually works in the engine.
 
-### Systems
+ \subsection ecs-systems Systems
 
 Systems are implemented as classes, which must adhere to the apollo::ecs::System requirements. The
 TL;DR is this: your class must implement an \p Update function which takes in the entity world as an
@@ -73,7 +73,7 @@ system `S1` depends on the results produced by another system `S2`. If `S2` is i
  \sa The \ref apollo::inputs::System "input system" for a concrete example of what a system looks
 like.
 
-### Components
+ \subsection ecs-components Components
 
 Generally speaking, components don't need to be explicitly declared the same way systems do:
 component pools get automatically created when required. But some features do require a little more

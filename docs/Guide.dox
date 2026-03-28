@@ -11,6 +11,10 @@
  3. \subpage asset-management
  4. \subpage rendering
 
+ \note This guide assumes you have some understanding of how a game is structured. It won't go into
+about things like the game loop, GPU programming etc. The goal here is to get you up and running
+quickly with Apollo specifically.
+
 ### Going further
 
 Should you want to dive deeper still with more concrete example, it wouldn't hurt to take a look

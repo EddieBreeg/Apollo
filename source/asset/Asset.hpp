@@ -66,20 +66,35 @@ namespace apollo {
 		virtual ~IAsset() = default;
 
 		[[nodiscard]] apollo::ULID GetId() const noexcept { return m_Id; }
+
+		/** \name Internal state
+		 * \brief These functions allow you to access the current state of the asset 
+		 * \sa EAssetState
+		 * @{ */
 		[[nodiscard]] EAssetState GetState() const noexcept { return m_State; }
 
+		/**
+		\returns \code{cpp} bool(m_State.load() & EAssetState::Loading) \endcode
+		 */
 		[[nodiscard]] bool IsLoading() const noexcept
 		{
 			return bool(m_State.load() & EAssetState::Loading);
 		}
+		/**
+		\returns \code{cpp} bool(m_State.load() & EAssetState::LoadingDeferred) \endcode
+		 */
 		[[nodiscard]] bool IsLoadingDeferred() const noexcept
 		{
 			return bool(m_State.load() & EAssetState::LoadingDeferred);
 		}
+		/**
+		\returns \code{cpp} bool(m_State.load() & EAssetState::Loaded) \endcode
+		 */
 		[[nodiscard]] bool IsLoaded() const noexcept
 		{
 			return bool(m_State.load() & EAssetState::Loaded);
 		}
+		/** @} */
 
 		[[nodiscard]] virtual APOLLO_API EAssetType GetType() const noexcept = 0;
 		[[nodiscard]] APOLLO_API std::string_view GetTypeName() const noexcept;
@@ -118,7 +133,7 @@ namespace apollo {
 	 * apollo::EAssetType "EAssetType"
 	 * - \b a.GetType() must return \p A::AssetType for any object \p a of type <tt>const A</tt>
 	 *
-	 * The easiest way to implement this interface is through the GET_ASSET_TYPE_IMPL macro.
+	 * The easiest way to implement this interface is through the \ref GET_ASSET_TYPE_IMPL macro.
 	 */
 	template <class A>
 	concept Asset = requires(A & lhs, A& rhs, const A& a, const ULID& id)

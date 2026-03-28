@@ -1,4 +1,5 @@
 #include "SceneLoadingSystem.hpp"
+#include "SceneComponents.hpp"
 #include <asset/AssetManager.hpp>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>

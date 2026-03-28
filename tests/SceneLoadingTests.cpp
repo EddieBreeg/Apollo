@@ -10,6 +10,7 @@
 #include <ecs/Manager.hpp>
 #include <rendering/Device.hpp>
 #include <semaphore>
+#include <systems/SceneComponents.hpp>
 #include <systems/SceneLoadingSystem.hpp>
 
 namespace apollo::scene_ut {
@@ -52,10 +53,10 @@ namespace apollo::scene_ut {
 	{
 		if (metadata.m_Id != g_AssetId1)
 			co_return true;
-		
+
 		// We artificially load a subscene within the one we're already loading
 		auto& tempWorld = SceneLoadingSystem::GetTempWorld();
-		auto subScene = co_await IAssetManager::GetInstance()->GetAsset<Scene>(g_AssetId2);
+		auto subScene = co_await IAssetManager::GetInstance() -> GetAsset<Scene>(g_AssetId2);
 		APOLLO_ASSERT(subScene, "Scene {} not found", g_AssetId2);
 		tempWorld.emplace<SceneComponent>(tempWorld.create(), std::move(subScene));
 		co_return true;

@@ -72,6 +72,7 @@ namespace apollo {
 
 		static void Shutdown() { s_Instance.reset(); }
 
+		/// \anchor getasset
 		/** \name GetAsset
 		 * \brief Retrieves an asset from its ULID
 		 * \tparam A: The destination type
