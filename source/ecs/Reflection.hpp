@@ -1,8 +1,8 @@
 #pragma once
 
 #include <PCH.hpp>
+#include <core/HashedString.hpp>
 #include <entt/entity/fwd.hpp>
-#include <string_view>
 
 /** \file Reflection.hpp */
 
@@ -16,13 +16,13 @@ namespace apollo::ecs {
 	template <auto... Ptr>
 	requires(std::is_member_object_pointer_v<decltype(Ptr)>&&...) struct ComponentReflection
 	{
-		const char* m_ComponentName = nullptr;
+		HashedString m_ComponentName;
 		/**
 		 * \brief The names of all relevant fields
 		 * \note You don't have to declare all your data members in there: just the ones required to
 		 * load/unload/display your component.
 		 */
-		const char* m_Fields[sizeof...(Ptr)];
+		HashedString m_Fields[sizeof...(Ptr)];
 	};
 
 	namespace _internal {

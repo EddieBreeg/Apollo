@@ -12,7 +12,7 @@ namespace apollo {
 
 	template <class>
 	struct Hash;
-	struct StringHash;
+	struct HashedString;
 
 	/**
 	 * \brief std::unordered_map specialization using apollo::Hash
@@ -26,5 +26,5 @@ namespace apollo {
 	using ULIDMap = HashMap<ULID, T>;
 
 	template <class T>
-	using StringHashMap = HashMap<StringHash, T>;
+	using HashedStringMap = HashMap<HashedString, T>;
 } // namespace apollo

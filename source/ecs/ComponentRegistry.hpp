@@ -3,11 +3,11 @@
 /** \file ComponentRegistry.hpp */
 
 #include <PCH.hpp>
+#include <core/HashedString.hpp>
 #include <core/Json.hpp>
 #include <core/Log.hpp>
 #include <core/Map.hpp>
 #include <core/Singleton.hpp>
-#include <core/StringHash.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "Reflection.hpp"
@@ -28,7 +28,7 @@ private:
 		const nlohmann::json& json)
 	{
 		uint32 index = 0;
-		return ((Visit(out_comp.*M, json, reflection.m_Fields[index++])) && ...);
+		return ((Visit(out_comp.*M, json, reflection.m_Fields[index++].GetString())) && ...);
 	}
 };
 
@@ -50,9 +50,7 @@ namespace apollo::ecs {
 		template <Component C>
 		const ComponentInfo& RegisterComponent()
 		{
-			const auto res = m_InfoMap.try_emplace(
-				StringHash{ C::Reflection.m_ComponentName },
-				CreateInfo<C>());
+			const auto res = m_InfoMap.try_emplace(C::Reflection.m_ComponentName, CreateInfo<C>());
 			if (!res.second)
 			{
 				APOLLO_LOG_ERROR(
@@ -65,13 +63,13 @@ namespace apollo::ecs {
 		template <Component C>
 		const ComponentInfo* GetInfo() const noexcept
 		{
-			const auto it = m_InfoMap.find(StringHash{ C::Reflection.m_ComponentName });
+			const auto it = m_InfoMap.find(C::Reflection.m_ComponentName);
 			return it == m_InfoMap.end() ? nullptr : &it->second;
 		}
 
-		const ComponentInfo* GetInfo(std::string_view name) const noexcept
+		const ComponentInfo* GetInfo(const HashedString& name) const noexcept
 		{
-			const auto it = m_InfoMap.find(StringHash{ name });
+			const auto it = m_InfoMap.find(name);
 			return it == m_InfoMap.end() ? nullptr : &it->second;
 		}
 
@@ -79,7 +77,7 @@ namespace apollo::ecs {
 		ComponentRegistry() = default;
 		friend class Singleton<ComponentRegistry>;
 
-		HashMap<StringHash, ComponentInfo> m_InfoMap;
+		HashedStringMap<ComponentInfo> m_InfoMap;
 
 		static inline std::unique_ptr<ComponentRegistry> s_Instance;
 
@@ -87,7 +85,7 @@ namespace apollo::ecs {
 		static constexpr ComponentInfo CreateInfo()
 		{
 			return ComponentInfo{
-				.m_Name = C::Reflection.m_ComponentName,
+				.m_Name = C::Reflection.m_ComponentName.GetString(),
 				.m_Deserialize =
 					[](entt::entity e, entt::registry& world, const void* data)
 				{

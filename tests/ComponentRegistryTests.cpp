@@ -49,7 +49,7 @@ namespace apollo::ecs::ut {
 	{
 		Helper helper;
 		const ComponentInfo& info = helper.m_Registry->RegisterComponent<C1>();
-		CHECK((info.m_Name == C1::Reflection.m_ComponentName));
+		CHECK((info.m_Name == C1::Reflection.m_ComponentName.GetString()));
 
 		const entt::entity e = helper.m_World.create();
 		const nlohmann::json j{

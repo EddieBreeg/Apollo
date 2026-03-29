@@ -1,8 +1,8 @@
 #include "Manager.hpp"
 #include "AssetHelper.hpp"
 #include <core/Errno.hpp>
+#include <core/HashedString.hpp>
 #include <core/Log.hpp>
-#include <core/StringHash.hpp>
 #include <core/ULIDFormatter.hpp>
 #include <fstream>
 
@@ -14,15 +14,15 @@
 #include <rendering/text/FontAtlas.hpp>
 
 namespace {
-	const apollo::StringHashMap<apollo::EAssetType> g_AssetTypeMap{
-		{ apollo::StringHash{ "texture2d" }, apollo::EAssetType::Texture2D },
-		{ apollo::StringHash{ "vertexShader" }, apollo::EAssetType::VertexShader },
-		{ apollo::StringHash{ "fragmentShader" }, apollo::EAssetType::FragmentShader },
-		{ apollo::StringHash{ "material" }, apollo::EAssetType::Material },
-		{ apollo::StringHash{ "materialInstance" }, apollo::EAssetType::MaterialInstance },
-		{ apollo::StringHash{ "mesh" }, apollo::EAssetType::Mesh },
-		{ apollo::StringHash{ "fontAtlas" }, apollo::EAssetType::FontAtlas },
-		{ apollo::StringHash{ "scene" }, apollo::EAssetType::Scene },
+	const apollo::HashedStringMap<apollo::EAssetType> g_AssetTypeMap{
+		{ "texture2d", apollo::EAssetType::Texture2D },
+		{ "vertexShader", apollo::EAssetType::VertexShader },
+		{ "fragmentShader", apollo::EAssetType::FragmentShader },
+		{ "material", apollo::EAssetType::Material },
+		{ "materialInstance", apollo::EAssetType::MaterialInstance },
+		{ "mesh", apollo::EAssetType::Mesh },
+		{ "fontAtlas", apollo::EAssetType::FontAtlas },
+		{ "scene", apollo::EAssetType::Scene },
 	};
 
 	struct Parser
@@ -96,7 +96,7 @@ namespace {
 			val = GetNext();
 			CHECK_VAL(val, "missing asset type");
 			{
-				const auto it = g_AssetTypeMap.find(apollo::StringHash{ val });
+				const auto it = g_AssetTypeMap.find(val);
 				if (it == g_AssetTypeMap.end())
 				{
 					APOLLO_LOG_ERROR("Failed to parse asset metadata: invalid type {}", val);

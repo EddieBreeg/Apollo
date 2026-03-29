@@ -1,11 +1,11 @@
 #include <catch2/catch_template_test_macros.hpp>
 #include <core/Hash.hpp>
-#include <core/StringHash.hpp>
+#include <core/HashedString.hpp>
 
 namespace apollo::hash::ut {
 	static_assert(apollo::Hasher<apollo::Hash<int>, int>);
-	static_assert(apollo::Hashable<apollo::StringHash>);
-	static_assert(apollo::Hasher<apollo::Hash<apollo::StringHash>, apollo::StringHash>);
+	static_assert(apollo::Hashable<apollo::HashedString>);
+	static_assert(apollo::Hasher<apollo::Hash<apollo::HashedString>, HashedString>);
 
 	template <std::integral Int>
 	consteval bool IntHashTest(Int x)
