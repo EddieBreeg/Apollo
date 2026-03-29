@@ -1,0 +1,64 @@
+/**
+ * \dir source/rendering
+ * \sa @ref rendering
+ */
+
+/**
+ * \page rendering Rendering
+ *
+ * How about we put something on our screen now? Apollo would be quite a poor engine indeed if it
+ * didn't provide with a way to do just that, but luckily it does. This chapter won't go in
+ * excruciating detail about the rendering APIs, nor will it give you an entire lecture about GPU
+ * graphics in general. It is just meant to give you enough to get started.
+
+ \section rdr-api The backend
+
+ Apollo is based SDL3's GPU API for all its rendering, for a few reasons. The first being that this
+ API is cross platform and natively supports multiple backends, like Vulkan, D3D12, Metal etc...
+ Currently, Vulkan is the only backend Apollo offers support for; shader compilation hasn't been
+ implemented for anything other than SPIRV just yet. Given I am just one guy developing an entire
+ engine on my own, maintaining an entire Vulkan abstraction by myself would be extremely time
+ consuming, not to mention overkill as I don't quite need most of what this API has to offer. SDL
+ serves as a perfect middle ground, as it neatly positions itself as a "thin" abstraction layer
+ between me and the bare metal API: I get both a decent amount of control *and* easy management of
+ things like resource descriptors, synchronisation etc.
+
+ \section rdr-ctx The context
+
+ The rendering APIs are centred around a \ref apollo::rdr::Context "context" singleton. This object
+ works as hub, which manages things like the device, the main command buffer, the current render
+ pass etc. This is the main way to send commands to the GPU in the engine. Here's rundown of how a
+ frame is structured:
+ 1. \ref apollo::rdr::Context::BeginFrame "BeginFrame()" is called, thus creating a command buffer
+ and acquiring the swapchain texture
+ 2. Commands are issued through the \ref rdr-derrefered-api "deferred APIs". Note that most of these
+ commands need to happen within an render pass, more on that later
+ 3. \ref apollo::rdr::Context::EndFrame "EndFrame()" is called. Commands are recorded to the
+ command buffer, which then gets submitted to the GPU for execution.
+
+ Both steps 1 and 3 are handled by the \ref apollo::App "app class" directly, which leaves step 2
+ entirely up to you.
+
+ \subsection render-pass Render passes
+
+ As mentioned, most commands must be used during a render pass.
+ A \ref apollo::rdr::RenderPass "render pass" defines what targets we are currently drawing to.
+ The API supports up to 8 colour targets, along with a depth/stencil target. If you look at the
+ afore-mentioned deferred commands, you'll notice there is a
+ \ref apollo::rdr::Context::BeginRenderPass "BeginRenderPass()" function, but no `EndRenderPass()`;
+ what gives? Well, the context takes care of that for you. When switching to a new render pass, the
+ old one is automatically shut down. The same thing happens when calling \ref
+ apollo::rdr::Context::EndFrame "EndFrame()". In fact, most of the time you don't need to worry
+ about what render pass is currently underway. For example, if you use a \ref
+ apollo::rdr::Context::BindMaterialInstance "BindMaterialInstance" command, you need only provide
+ the material instance itself. It will be bound to whatever is current render pass.
+
+ \section rdr-threading A note on threading
+
+ The rendering framework currently doesn't support rendering from a separate thread. Although the
+ deferred command architecture would technically be perfectly suitable, SDL imposes a pretty
+ significant restriction: the swapchain texture can \b only be acquired on the thread which created
+ the window, and most window functions can only be called from the main thread. This means we're
+ only allowed to use a second thread to render to a separate texture, which should then be copied to
+ the swapchain on the main thread, requiring additional synchronisation.
+ */

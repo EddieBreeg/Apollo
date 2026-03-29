@@ -366,9 +366,9 @@ html {
 		--warning-color-bg: #2e1917;
 		--warning-color-hl: #ad2617;
 		--warning-color-text: #f5b1aa;
-		--note-color-bg: #3b2e04;
-		--note-color-hl: #f1b602;
-		--note-color-text: #ceb670;
+		--note-color-bg: hsl(243, 75%, 12%);
+		--note-color-hl: hsl(243, 87%, 80%);
+		--note-color-text: hsl(243, 3%, 95%);;
 		--todo-color-bg: #163750;
 		--todo-color-hl: #1982D2;
 		--todo-color-text: #dcf0fa;
