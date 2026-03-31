@@ -30,6 +30,8 @@ add_subdirectory(entry)
 
 add_subdirectory(tools)
 
+target_link_libraries(${PROJECT_NAME}Runtime PRIVATE ${PROJECT_NAME}::ShaderCompiler)
+
 add_library(${PROJECT_NAME} INTERFACE)
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 target_link_libraries(${PROJECT_NAME} INTERFACE ${PROJECT_NAME}Runtime ${PROJECT_NAME}Entry)

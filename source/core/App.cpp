@@ -10,6 +10,7 @@
 #include <entry/Entry.hpp>
 #include <imgui.h>
 #include <rendering/Context.hpp>
+#include <tools/ShaderCompiler.hpp>
 
 namespace {
 	ImGuiContext* InitImGui(SDL_Window* window, SDL_GPUDevice* device, bool vsync = false)
@@ -40,6 +41,33 @@ namespace {
 		ImGui_ImplSDLGPU3_Shutdown();
 		ImGui::DestroyContext();
 	}
+
+	std::error_code InitShaderCompiler(
+		apollo::rdr::EBackend backend,
+		const char* assetPath = nullptr)
+	{
+		SlangCompileTarget target;
+		const char* profile = nullptr;
+		std::span includes = assetPath ? std::span<const char* const>{ &assetPath, 1 }
+									   : std::span<const char* const>{};
+		switch (backend)
+		{
+		case apollo::rdr::EBackend::Vulkan:
+			target = SlangCompileTarget::SLANG_SPIRV;
+			profile = "spirv_1_6";
+			break;
+
+		case apollo::rdr::EBackend::D3D12:
+			target = SlangCompileTarget::SLANG_DXIL;
+			profile = "sm_6_7";
+			break;
+		default:
+			APOLLO_LOG_CRITICAL("Using invalid rendering backend {}", apollo::ToUnderlying(backend));
+			DEBUG_BREAK();
+		}
+		return apollo::rdr::ShaderCompiler::s_Instance.Init(target, profile, {}, includes);
+	}
+
 } // namespace
 
 namespace apollo {
@@ -84,6 +112,12 @@ namespace apollo {
 #else
 		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
 #endif
+		if (const auto ec = InitShaderCompiler(rdr::EBackend::Default); ec)
+		{
+			APOLLO_LOG_CRITICAL("Failed to initialize shader compiler: {}", ec.message());
+			m_Result = EAppResult::Failure;
+			return;
+		}
 		auto& device = m_RenderContext->GetDevice();
 		APOLLO_ASSERT(initAssetManager, "No initialisation function provided for the asset manager");
 		m_AssetManager = &initAssetManager(entry.m_AssetRoot, device, m_MainThreadPool);
