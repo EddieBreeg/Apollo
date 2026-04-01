@@ -12,16 +12,17 @@
 namespace {
 	SDL_GPUGraphicsPipeline* CreatePipeline(
 		SDL_GPUDevice* device,
+		const apollo::ULID& id1,
+		const apollo::ULID& id2,
 		std::string_view vSource,
 		std::string_view fSource,
 		SDL_GPUTextureFormat fmt)
 	{
 		using namespace apollo::ulid_literal;
-		static constexpr apollo::ULID id = "01KM3KVNNASVP3KNJNRJV3AKX3"_ulid;
 
 		using namespace apollo::rdr;
-		const auto vShader = VertexShader::CompileFromSource(id, vSource);
-		const auto fShader = FragmentShader::CompileFromSource(id, fSource);
+		const auto vShader = VertexShader::CompileFromSource(id1, vSource);
+		const auto fShader = FragmentShader::CompileFromSource(id2, fSource);
 		APOLLO_ASSERT(vShader, "Failed to compile builtin vertex shader");
 		APOLLO_ASSERT(fShader, "Failed to compile builtin fragment shader");
 		const SDL_GPUColorTargetDescription targetDesc{
@@ -161,11 +162,15 @@ namespace apollo::rdr::ui {
 		m_RenderContext = &ctx;
 		m_RectPipeline = CreatePipeline(
 			ctx.GetDevice().GetHandle(),
+			"01KN520H22F7ZSD8YPTD6DRP96"_ulid,
+			"01KN520HPEJJK0ACQZJGVRXT86"_ulid,
 			data::shaders::g_UiRectVert,
 			data::shaders::g_UiRectFrag,
 			static_cast<SDL_GPUTextureFormat>(fmt));
 		m_BorderPipeline = CreatePipeline(
 			ctx.GetDevice().GetHandle(),
+			"01KN5217NBXDHQFMHKWATE31AV"_ulid,
+			"01KN52184ZGNTAF713D5SJXV68"_ulid,
 			data::shaders::g_UiBorderVert,
 			data::shaders::g_UiBorderFrag,
 			static_cast<SDL_GPUTextureFormat>(fmt));

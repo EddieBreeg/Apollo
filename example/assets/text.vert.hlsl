@@ -25,21 +25,21 @@ struct Fragment
 	float OutlineThickness;
 };
 
-const float2 g_PosOffsets[] = {
+static const float2 g_PosOffsets[] = {
 	float2(0, 0),
 	float2(1, 0),
 	float2(0, 1),
 	float2(1, 1),
 };
 
-const float2 g_UvOffsets[] = {
+static const float2 g_UvOffsets[] = {
 	float2(0, 1),
 	float2(1, 1),
 	float2(0, 0),
 	float2(1, 0),
 };
 
-Fragment main(uint instance: SV_INSTANCEID, uint index: SV_VERTEXID)
+Fragment main(uint instance: SV_VulkanInstanceID, uint index: SV_VulkanVertexID)
 {
 	Fragment frag;
 	float4 rect = g_Quads[instance].m_Rect;

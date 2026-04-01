@@ -31,7 +31,7 @@ struct Fragment
 
 StructuredBuffer<Border> g_Elems: register(t0, space0);
 
-Fragment main(uint id: SV_VERTEXID, uint instance: SV_INSTANCEID)
+Fragment main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
 {
 	Fragment f;
 	f.HalfSize = 0.5 * g_Elems[instance].Bounds.zw;

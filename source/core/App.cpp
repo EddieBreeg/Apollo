@@ -54,7 +54,7 @@ namespace {
 		{
 		case apollo::rdr::EBackend::Vulkan:
 			target = SlangCompileTarget::SLANG_SPIRV;
-			profile = "spirv_1_6";
+			profile = "spirv_1_3";
 			break;
 
 		case apollo::rdr::EBackend::D3D12:
@@ -65,7 +65,17 @@ namespace {
 			APOLLO_LOG_CRITICAL("Using invalid rendering backend {}", apollo::ToUnderlying(backend));
 			DEBUG_BREAK();
 		}
-		return apollo::rdr::ShaderCompiler::s_Instance.Init(target, profile, {}, includes);
+		const slang::CompilerOptionEntry options[]{
+			slang::CompilerOptionEntry{
+				.name = slang::CompilerOptionName::Language,
+				.value = { .intValue0 = SLANG_SOURCE_LANGUAGE_HLSL },
+			},
+		};
+		return apollo::rdr::ShaderCompiler::s_Instance.Init(
+			target,
+			profile,
+			std::span{ options },
+			includes);
 	}
 
 } // namespace
@@ -132,6 +142,11 @@ namespace apollo {
 
 		if (m_Result != EAppResult::Continue)
 			return;
+	}
+
+	rdr::ShaderCompiler& App::GetShaderCompiler()  noexcept
+	{
+		return rdr::ShaderCompiler::s_Instance;
 	}
 
 	EAppResult App::Run()

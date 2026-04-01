@@ -15,5 +15,5 @@ SOURCES
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
 DEFINITIONS PUBLIC APOLLO_EDITOR=1
-LINK PRIVATE ${PROJECT_NAME}Runtime stb_image SDL3::SDL3 freetype msdfgen::msdfgen-core assimp::assimp
+LINK PRIVATE ${PROJECT_NAME}Runtime stb_image SDL3::SDL3 freetype msdfgen::msdfgen-core assimp::assimp ShaderCompiler
 )

@@ -24,8 +24,8 @@ float4 main(Fragment frag): SV_TARGET
 	
 	float2 pos = frag.RelativePos - 0.5 * float2(frag.Width.x - frag.Width.y, frag.Width.z - frag.Width.w);
 	radius -= max(
-		frag.Width[pos.x > 0],
-		frag.Width[2 | (pos.y > 0)]
+		frag.Width[uint(pos.x > 0)],
+		frag.Width[(2 | uint(pos.y > 0))]
 	);
 	float2 halfSize = frag.HalfSize - 0.5 * float2(frag.Width.x + frag.Width.y, frag.Width.z + frag.Width.w);
 	d = Sdf(pos, halfSize, max(radius, 0.0));

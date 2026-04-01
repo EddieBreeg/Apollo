@@ -27,8 +27,22 @@ namespace apollo::rdr {
 			m_GlobalSession = nullptr;
 		}
 
-		[[nodiscard]] Slang::ComPtr<slang::IBlob> Compile(
-			const char* moduleName,
+		slang::IModule* LoadModule(const char* name, slang::IBlob** out_diagnostics)
+		{
+			return m_Session->loadModule(name, out_diagnostics);
+		}
+		slang::IModule* LoadModuleFromSource(
+			std::string_view source,
+			const char* name,
+			const char* path,
+			slang::IBlob** out_diagnostics)
+		{
+			Slang::ComPtr sourceBlob{ slang_createBlob(source.data(), source.size()) };
+			return m_Session->loadModuleFromSource(name, path, sourceBlob, out_diagnostics);
+		}
+
+		[[nodiscard]] Slang::ComPtr<slang::IBlob> GetTargetCode(
+			slang::IModule& module,
 			const char* entryPoint,
 			SlangStage stage = SLANG_STAGE_NONE,
 			slang::IBlob** diagnostics = nullptr);

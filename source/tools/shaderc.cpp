@@ -61,6 +61,56 @@ namespace argp {
 } // namespace argp
 
 #include "ArgParse.hpp"
+namespace {
+	struct PathInfo
+	{
+		const char* m_FileName = nullptr;
+		const char* m_Ext = nullptr;
+		const char* m_End = nullptr;
+	};
+
+	PathInfo GetPathInfo(const char* path)
+	{
+		PathInfo info{
+			.m_FileName = path,
+			.m_End = path,
+		};
+
+		while (const char c = *info.m_End)
+		{
+			switch (c)
+			{
+			case '.': info.m_Ext = info.m_End; break;
+			case '/':
+			case '\\':
+				info.m_FileName = info.m_End + 1;
+				info.m_Ext = nullptr;
+				break;
+			default: break;
+			}
+			++info.m_End;
+		}
+		return info;
+	}
+
+	std::vector<char> LoadFile(const char* path)
+	{
+		std::ifstream file{ path, std::ios::ate | std::ios::binary };
+		if (!file.is_open())
+		{
+			std::cerr << "Failed to open " << path << '\n';
+			return {};
+		}
+		std::vector<char> data(file.tellg());
+		file.seekg(0, std::ios::beg);
+		if (!file.read(data.data(), data.size()))
+		{
+			std::cerr << "Failed to read " << path << '\n';
+			return {};
+		}
+		return data;
+	}
+} // namespace
 
 int main(int argc, const char* const* argv)
 {
@@ -73,6 +123,16 @@ int main(int argc, const char* const* argv)
 
 	options.m_FileName = argv[argc - 1];
 	std::span args{ argv + 1, size_t(argc - 2) };
+
+	slang::CompilerOptionEntry compilerOptions[] = {
+		slang::CompilerOptionEntry{
+			.name = slang::CompilerOptionName::Language,
+			.value =
+				slang::CompilerOptionValue{
+					.intValue0 = SLANG_SOURCE_LANGUAGE_SLANG,
+				},
+		},
+	};
 
 	using argp::NamedArgument;
 
@@ -104,36 +164,64 @@ int main(int argc, const char* const* argv)
 		return 1;
 	}
 
-	auto path = std::filesystem::path(options.m_FileName).parent_path().string();
-	if (path.size())
-		options.m_IncludePath.emplace_back(path.c_str());
+	const PathInfo pathInfo = GetPathInfo(options.m_FileName);
+	if (pathInfo.m_Ext && !strcmp(pathInfo.m_Ext, ".hlsl"))
+	{
+		compilerOptions[0].value.intValue0 = SLANG_SOURCE_LANGUAGE_HLSL;
+	}
+
+	const std::string parentPath{ options.m_FileName, pathInfo.m_FileName };
+	if (parentPath.size())
+		options.m_IncludePath.emplace_back(parentPath.c_str());
 
 	const char* profile = nullptr;
-	const char* ext = nullptr;
 	switch (options.m_Target)
 	{
 	case SLANG_DXIL:
 		profile = "sm_6_7";
-		ext = "dxil";
+		if (!options.m_OutPath)
+			options.m_Target = SLANG_DXIL_ASM;
 		break;
 	case SLANG_SPIRV:
 	default:
-		profile = "spirv_6";
-		ext = "spv";
+		profile = "spirv_1_3";
+		if (!options.m_OutPath)
+			options.m_Target = SLANG_SPIRV_ASM;
 		break;
 	}
 
 	auto& compiler = apollo::rdr::ShaderCompiler::s_Instance;
 	std::span includePaths{ options.m_IncludePath.data(), options.m_IncludePath.size() };
-	if (const auto rc = compiler.Init(options.m_Target, profile, {}, includePaths); rc)
 	{
-		std::cerr << "Failed to initialize the compiler: " << rc.message() << '\n';
+		std::span opts{ compilerOptions };
+		const auto rc = compiler.Init(options.m_Target, profile, opts, includePaths);
+		if (rc)
+		{
+			std::cerr << "Failed to initialize the compiler: " << rc.message() << '\n';
+			return 1;
+		}
+	}
+
+	std::vector source = LoadFile(options.m_FileName);
+	if (source.empty())
+		return 1;
+
+	Slang::ComPtr<slang::IBlob> diagnostics;
+	slang::IModule* const module = compiler.LoadModuleFromSource(
+		{ source.data(), source.size() },
+		pathInfo.m_FileName,
+		nullptr, // full path
+		diagnostics.writeRef());
+	if (!module)
+	{
+		std::cerr.write(
+			static_cast<const char*>(diagnostics->getBufferPointer()),
+			diagnostics->getBufferSize());
 		return 1;
 	}
 
-	Slang::ComPtr<slang::IBlob> diagnostics;
-	auto code = compiler.Compile(
-		options.m_FileName,
+	auto code = compiler.GetTargetCode(
+		*module,
 		options.m_EntryPointName,
 		options.m_Stage,
 		diagnostics.writeRef());
@@ -146,16 +234,21 @@ int main(int argc, const char* const* argv)
 		return 1;
 	}
 
-	const std::string outPath{ options.m_OutPath ? options.m_OutPath
-												 : std::format("{}.{}", options.m_FileName, ext) };
-	std::ofstream out{ outPath };
-
-	if (!out.is_open())
+	if (options.m_OutPath)
 	{
-		std::cerr << "Failed to open file " << outPath << " for writing\n";
-		return 1;
+		std::ofstream out{ options.m_OutPath };
+
+		if (!out.is_open())
+		{
+			std::cerr << "Failed to open file " << options.m_OutPath << " for writing\n";
+			return 1;
+		}
+		out.write(static_cast<const char*>(code->getBufferPointer()), code->getBufferSize());
 	}
-	out.write(static_cast<const char*>(code->getBufferPointer()), code->getBufferSize());
+	else
+	{
+		std::cout.write(static_cast<const char*>(code->getBufferPointer()), code->getBufferSize());
+	}
 
 	return 0;
 }

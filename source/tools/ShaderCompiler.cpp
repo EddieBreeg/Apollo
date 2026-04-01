@@ -88,15 +88,17 @@ namespace apollo::rdr {
 		const slang::SessionDesc desc{
 			.targets = &targetDesc,
 			.targetCount = 1,
+			.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR,
 			.searchPaths = includePaths.data(),
 			.searchPathCount = static_cast<long long>(includePaths.size()),
+			.skipSPIRVValidation = false,
 		};
 		res = m_GlobalSession->createSession(desc, m_Session.writeRef());
 		return { res, std::system_category() };
 	}
 
-	Slang::ComPtr<slang::IBlob> ShaderCompiler::Compile(
-		const char* moduleName,
+	Slang::ComPtr<slang::IBlob> ShaderCompiler::GetTargetCode(
+		slang::IModule& module,
 		const char* entryPoint,
 		SlangStage stage,
 		slang::IBlob** diagnostics)
@@ -104,16 +106,12 @@ namespace apollo::rdr {
 		using Slang::ComPtr;
 
 		Slang::ComPtr<slang::IBlob> res;
-		slang::IModule* module = m_Session->loadModule(moduleName, diagnostics);
-		if (!module)
-			return res;
-
 		ComPtr ep = stage != SLANG_STAGE_NONE
-						? GetEntryPointFromNameAndStage(*module, entryPoint, stage, diagnostics)
-						: GetEntryPointFromName(*module, entryPoint, diagnostics);
+						? GetEntryPointFromNameAndStage(module, entryPoint, stage, diagnostics)
+						: GetEntryPointFromName(module, entryPoint, diagnostics);
 		if (!ep)
 			return res;
 
-		return GetModuleCode(*m_Session, *module, *ep, diagnostics);
+		return GetModuleCode(*m_Session, module, *ep, diagnostics);
 	}
 } // namespace apollo::rdr

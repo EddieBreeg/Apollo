@@ -5,11 +5,16 @@
 #include <core/Enum.hpp>
 #include <core/Log.hpp>
 #include <core/NumConv.hpp>
+#include <tools/ShaderCompiler.hpp>
 
 namespace {
-	constexpr SDL_GPUShaderStage g_Stages[] = {
+	constexpr SDL_GPUShaderStage g_SdlStages[] = {
 		SDL_GPU_SHADERSTAGE_VERTEX,
 		SDL_GPU_SHADERSTAGE_FRAGMENT,
+	};
+	constexpr SlangStage g_SlangStages[] = {
+		SLANG_STAGE_VERTEX,
+		SLANG_STAGE_FRAGMENT,
 	};
 
 #ifdef APOLLO_DEV
@@ -26,9 +31,6 @@ namespace {
 } // namespace
 
 #ifdef APOLLO_VULKAN
-#include <SPIRV/GlslangToSpv.h>
-#include <glslang/Public/ResourceLimits.h>
-#include <glslang/Public/ShaderLang.h>
 #include <spirv_reflect.h>
 
 namespace {
@@ -221,7 +223,7 @@ namespace apollo::rdr {
 #ifdef APOLLO_VULKAN
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
 #endif
-			.stage = g_Stages[int32(m_Info.m_Stage)],
+			.stage = g_SdlStages[int32(m_Info.m_Stage)],
 			.num_samplers = m_Info.m_NumSamplers,
 			.num_storage_textures = m_Info.m_NumStorageTextures,
 			.num_storage_buffers = m_Info.m_NumStorageBuffers,
@@ -242,61 +244,55 @@ namespace apollo::rdr {
 		const char* entryPoint)
 		: IAsset(id)
 	{
-#ifdef APOLLO_VULKAN
-		constexpr EShLanguage vkStages[] = {
-			EShLanguage::EShLangVertex,
-			EShLanguage::EShLangFragment,
-		};
-		const EShLanguage vkStage = vkStages[ToUnderlying(stage)];
-		glslang::TShader vkShader{ vkStage };
-		const char* tempPtr = hlsl.data();
-		const int32 tempLen = NumCast<int32>(hlsl.length());
-		vkShader.setStringsWithLengths(&tempPtr, &tempLen, 1);
-		vkShader.setEntryPoint(entryPoint);
-		vkShader.setEnvInput(glslang::EShSourceHlsl, vkStage, glslang::EShClientVulkan, 100);
-		vkShader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_1);
-		vkShader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_3);
-		if (!vkShader.parse(GetDefaultResources(), 100, true, EShMsgDefault))
+		APOLLO_ASSERT(
+			stage > EShaderStage::Invalid && stage < EShaderStage::NStages,
+			"Invalid shader stage {}",
+			ToUnderlying(stage));
+		char name[27] = {};
+		id.ToChars(name);
+		auto& compiler = ShaderCompiler::s_Instance;
+		Slang::ComPtr<slang::IBlob> diagnostics;
+		slang::IModule* const module = compiler.LoadModuleFromSource(
+			hlsl,
+			name,
+			nullptr,
+			diagnostics.writeRef());
+		if (!module)
 		{
-			APOLLO_LOG_ERROR("Shader compilation failed: {}", vkShader.getInfoLog());
+			std::string_view msg{
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize(),
+			};
+			APOLLO_LOG_ERROR("Compilation failed for shader {}:\n{}", name, msg);
 			return;
 		}
-		glslang::TProgram vkProg;
-		vkProg.addShader(&vkShader);
-		if (!vkProg.link(EShMsgDefault))
+		const auto code = compiler.GetTargetCode(
+			*module,
+			"main",
+			g_SlangStages[ToUnderlying(stage)],
+			diagnostics.writeRef());
+		if (!code)
 		{
-			APOLLO_LOG_ERROR("Shader linking failed: {}", vkProg.getInfoLog());
+			std::string_view msg{
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize(),
+			};
+			APOLLO_LOG_ERROR("Linking failed for shader {}:\n", name, msg);
 			return;
 		}
-		std::vector<uint32> code;
-		spv::SpvBuildLogger logger;
-		glslang::SpvOptions options{};
-#ifdef APOLLO_DEV
-		options.generateDebugInfo = true;
-#else
-		options.disableOptimizer = false;
-#endif
-		glslang::GlslangToSpv(*vkProg.getIntermediate(vkStage), code, &logger, &options);
-		std::string log = logger.getAllMessages();
-		if (log.size())
-		{
-			APOLLO_LOG_ERROR("SPIRV Generation failed: {}", log);
-			return;
-		}
-		const size_t codeLen = 4 * code.size();
-#endif
 		ReflectionContext ctx{};
-		if (!ctx.Init(code.data(), codeLen))
+
+		if (!ctx.Init(code->getBufferPointer(), code->getBufferSize()))
 			return;
 
 		ctx.GetInfo(m_Info);
 
 		SDL_GPUShaderCreateInfo createInfo{
-			.code_size = codeLen,
-			.code = (uint8*)code.data(),
+			.code_size = code->getBufferSize(),
+			.code = static_cast<const uint8*>(code->getBufferPointer()),
 			.entrypoint = entryPoint,
 			.format = SDL_GPU_SHADERFORMAT_SPIRV,
-			.stage = g_Stages[ToUnderlying(stage)],
+			.stage = g_SdlStages[ToUnderlying(stage)],
 			.num_samplers = m_Info.m_NumSamplers,
 			.num_storage_textures = m_Info.m_NumStorageTextures,
 			.num_storage_buffers = m_Info.m_NumStorageBuffers,

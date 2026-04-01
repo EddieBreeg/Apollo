@@ -23,7 +23,8 @@ namespace apollo {
 
 	namespace rdr {
 		class Context;
-	}
+		class ShaderCompiler;
+	} // namespace rdr
 
 	enum class EAppResult : int8;
 
@@ -59,6 +60,7 @@ namespace apollo {
 		{
 			return *m_EntryPoint.m_GameState;
 		}
+		[[nodiscard]] static APOLLO_API rdr::ShaderCompiler& GetShaderCompiler() noexcept;
 
 		/**
 		 * \brief Main loop.
@@ -73,6 +75,7 @@ namespace apollo {
 		 * loop will still complete.
 		 */
 		APOLLO_API void RequestAppQuit(bool success = true) noexcept;
+
 
 	private:
 		APOLLO_API EAppResult Update();

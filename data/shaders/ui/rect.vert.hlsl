@@ -26,7 +26,7 @@ struct Fragment
 	Element Elem;
 };
 
-Fragment main(uint id: SV_VERTEXID, uint instance: SV_INSTANCEID)
+Fragment main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
 {
 	float2 offset = g_Elems[instance].Bounds.zw * g_Offset[id];
 	float2 halfSize = 0.5 * g_Elems[instance].Bounds.zw;
