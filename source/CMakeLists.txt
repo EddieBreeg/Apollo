@@ -9,12 +9,19 @@ AddLibrary(${PROJECT_NAME}Runtime
 		APOLLO_VERSION_PATCH=${PROJECT_VERSION_PATCH}
 		GLM_FORCE_DEPTH_ZERO_TO_ONE=1
 		OPTIMIZE_OFF=${OPTIMIZE_OFF_MACRO}
+		APOLLO_RUNTIME=1
 	PRIVATE
 		APOLLO_CORE=1
 	INCLUDES PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
 	LINK PUBLIC spdlog::spdlog imgui glm::glm EnTT::EnTT nlohmann_json::nlohmann_json Clay::Clay
 	PRIVATE SDL3::SDL3 freetype msdfgen::msdfgen-core
 )
+
+add_library(${PROJECT_NAME}Includes INTERFACE)
+target_compile_features(${PROJECT_NAME}Includes INTERFACE cxx_std_20)
+target_compile_options(${PROJECT_NAME}Includes INTERFACE ${COMPILER_ARGS})
+target_compile_definitions(${PROJECT_NAME}Includes INTERFACE $<$<NOT:$<CONFIG:Release>>:APOLLO_DEV=1>)
+target_include_directories(${PROJECT_NAME}Includes INTERFACE .)
 
 target_precompile_headers(${PROJECT_NAME}Runtime PRIVATE PCH.hpp)
 
@@ -43,6 +50,8 @@ target_link_libraries(${PROJECT_NAME}Editor INTERFACE
 	${PROJECT_NAME}EditorRuntime
 	${PROJECT_NAME}EditorEntry
 )
+
+add_library(${PROJECT_NAME}::Includes ALIAS ${PROJECT_NAME}Includes)
 
 add_library(${PROJECT_NAME}::Runtime ALIAS ${PROJECT_NAME}Runtime)
 add_library(${PROJECT_NAME}::Entry ALIAS ${PROJECT_NAME}Entry)

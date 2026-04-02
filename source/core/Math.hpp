@@ -2,10 +2,12 @@
 
 /** \file Math.hpp */
 
+#if APOLLO_RUNTIME
 #include <cstdint>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#endif
 
 using int8 = int8_t;
 using int16 = int16_t;
@@ -16,9 +18,11 @@ using uint16 = uint16_t;
 using uint32 = uint32_t;
 using uint64 = uint64_t;
 
+#if APOLLO_RUNTIME
 using float2 = glm::vec<2, float>;
 using float3 = glm::vec<3, float>;
 using float4 = glm::vec<4, float>;
+#endif
 
 namespace apollo {
 	[[nodiscard]] constexpr auto Min(auto&& a, auto&& b) noexcept(noexcept(a < b))

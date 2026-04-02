@@ -4,7 +4,11 @@
  Global pre-compiled header
  */
 
+#if APOLLO_RUNTIME
 #include <ApolloRuntimeExport.h>
+#else
+#define APOLLO_API
+#endif
 
 #include "core/Rectangle.hpp"
 #include <concepts>
