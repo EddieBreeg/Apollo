@@ -2,8 +2,8 @@
 
 /** \file Math.hpp */
 
-#if APOLLO_RUNTIME
 #include <cstdint>
+#if APOLLO_RUNTIME
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>

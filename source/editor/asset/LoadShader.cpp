@@ -20,7 +20,7 @@ namespace {
 #endif
 
 	Slang::ComPtr<slang::IBlob> BuildShader(
-		std::string_view source,
+		slang::IBlob* source,
 		const char* name,
 		SlangStage stage,
 		apollo::rdr::ShaderCompiler& compiler)
@@ -92,9 +92,11 @@ namespace {
 				metadata.m_FilePath.string());
 			return false;
 		}
+		using Blob = rdr::ShaderCompiler::Blob;
+		Slang::ComPtr data{ Blob::Allocate(inFile.tellg()) };
 		inFile.seekg(0, std::ios::beg);
-		std::unique_ptr data = std::make_unique<char[]>(len);
-		if (inFile.read(data.get(), len).fail())
+
+		if (inFile.read(data->GetPtrAs<char>(), len).fail())
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to load shader {}({}) from {}: {}",
@@ -114,9 +116,8 @@ namespace {
 		}
 		else
 		{
-			std::string_view src{ data.get(), len };
 			const Slang::ComPtr<slang::IBlob> code = BuildShader(
-				src,
+				data,
 				metadata.m_Name.c_str(),
 				ShaderStageT<ShaderType>::Value,
 				compiler);

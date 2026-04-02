@@ -240,7 +240,7 @@ namespace apollo::rdr {
 	GraphicsShader::GraphicsShader(
 		const ULID& id,
 		EShaderStage stage,
-		std::string_view hlsl,
+		ISlangBlob* hlsl,
 		const char* entryPoint)
 		: IAsset(id)
 	{

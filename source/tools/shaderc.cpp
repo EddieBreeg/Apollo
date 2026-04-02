@@ -1,6 +1,5 @@
 #include "ShaderCompiler.hpp"
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
 
@@ -93,7 +92,9 @@ namespace {
 		return info;
 	}
 
-	std::vector<char> LoadFile(const char* path)
+	using Blob = apollo::rdr::ShaderCompiler::Blob;
+
+	Slang::ComPtr<Blob> LoadFile(const char* path)
 	{
 		std::ifstream file{ path, std::ios::ate | std::ios::binary };
 		if (!file.is_open())
@@ -101,14 +102,14 @@ namespace {
 			std::cerr << "Failed to open " << path << '\n';
 			return {};
 		}
-		std::vector<char> data(file.tellg());
+		Blob* data = Blob::Allocate(file.tellg());
 		file.seekg(0, std::ios::beg);
-		if (!file.read(data.data(), data.size()))
+		if (!file.read(data->GetPtrAs<char>(), data->GetSize()))
 		{
 			std::cerr << "Failed to read " << path << '\n';
 			return {};
 		}
-		return data;
+		return Slang::ComPtr{ data };
 	}
 } // namespace
 
@@ -202,13 +203,13 @@ int main(int argc, const char* const* argv)
 		}
 	}
 
-	std::vector source = LoadFile(options.m_FileName);
-	if (source.empty())
+	Slang::ComPtr source = LoadFile(options.m_FileName);
+	if (!source->GetSize())
 		return 1;
 
 	Slang::ComPtr<slang::IBlob> diagnostics;
 	slang::IModule* const module = compiler.LoadModuleFromSource(
-		{ source.data(), source.size() },
+		source,
 		pathInfo.m_FileName,
 		nullptr, // full path
 		diagnostics.writeRef());

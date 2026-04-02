@@ -6,6 +6,7 @@ SOURCES
 	AssetLoaderTests.cpp
 	AssetLoadTaskTests.cpp
 	BitmapTests.cpp
+	BlobTests.cpp
 	CoroutineTests.cpp
 	ComponentRegistryTests.cpp
 	EnumTests.cpp
@@ -35,6 +36,7 @@ OPTIONS PRIVATE ${COMPILER_ARGS}
 AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
 AddTest("AssetLoadTask Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_load_task]")
 AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
+AddTest("Blob Tests" "${PROJECT_NAME}Tests" FILTERS "[blob]")
 AddTest("Coroutine Tests" "${PROJECT_NAME}Tests" FILTERS "[coroutine]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
 AddTest("Hash Tests" "${PROJECT_NAME}Tests" FILTERS "[hash]")

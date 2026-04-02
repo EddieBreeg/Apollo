@@ -8,6 +8,7 @@
 #include <rendering/Context.hpp>
 #include <rendering/RenderPass.hpp>
 #include <rendering/Shader.hpp>
+#include <tools/ShaderCompiler.hpp>
 
 namespace {
 	SDL_GPUGraphicsPipeline* CreatePipeline(
@@ -21,8 +22,13 @@ namespace {
 		using namespace apollo::ulid_literal;
 
 		using namespace apollo::rdr;
-		const auto vShader = VertexShader::CompileFromSource(id1, vSource);
-		const auto fShader = FragmentShader::CompileFromSource(id2, fSource);
+		using Blob = apollo::rdr::ShaderCompiler::Blob;
+		const auto vShader = VertexShader::CompileFromSource(
+			id1,
+			Blob::Allocate(vSource.size(), vSource.data()));
+		const auto fShader = FragmentShader::CompileFromSource(
+			id2,
+			Blob::Allocate(fSource.size(), fSource.data()));
 		APOLLO_ASSERT(vShader, "Failed to compile builtin vertex shader");
 		APOLLO_ASSERT(fShader, "Failed to compile builtin fragment shader");
 		const SDL_GPUColorTargetDescription targetDesc{

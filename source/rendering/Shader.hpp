@@ -11,6 +11,8 @@
 
 struct SDL_GPUShader;
 
+class ISlangBlob;
+
 namespace apollo::rdr {
 	enum class EShaderStage : int8;
 
@@ -61,7 +63,7 @@ namespace apollo::rdr {
 		APOLLO_API GraphicsShader(
 			const ULID& id,
 			EShaderStage stage,
-			std::string_view source,
+			ISlangBlob* source,
 			const char* entryPoint = "main");
 
 		ShaderInfo m_Info;
@@ -81,7 +83,7 @@ namespace apollo::rdr {
 
 		[[nodiscard]] static VertexShader CompileFromSource(
 			const ULID& id,
-			std::string_view hlsl,
+			ISlangBlob* hlsl,
 			const char* entryPoint = "main")
 		{
 			return VertexShader{ id, EShaderStage::Vertex, hlsl, entryPoint };
@@ -104,7 +106,7 @@ namespace apollo::rdr {
 
 		[[nodiscard]] static FragmentShader CompileFromSource(
 			const ULID& id,
-			std::string_view hlsl,
+			ISlangBlob* hlsl,
 			const char* entryPoint = "main")
 		{
 			return FragmentShader{ id, EShaderStage::Fragment, hlsl, entryPoint };

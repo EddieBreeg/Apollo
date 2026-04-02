@@ -20,7 +20,7 @@ SOURCES
 	ShaderCompiler.hpp
 
 OPTIONS PRIVATE ${COMPILER_ARGS}
-LINK PUBLIC slang::slang PRIVATE spdlog::spdlog
+LINK PUBLIC slang::slang ApolloIncludes PRIVATE spdlog::spdlog
 PROPERTIES ${COMMON_PROPERTIES}
 DEFINITIONS PRIVATE
 	$<$<NOT:$<CONFIG:Release>>:APOLLO_DEV=1>
