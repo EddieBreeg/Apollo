@@ -42,9 +42,7 @@ namespace {
 		ImGui::DestroyContext();
 	}
 
-	std::error_code InitShaderCompiler(
-		apollo::rdr::EBackend backend,
-		const char* assetPath = nullptr)
+	SlangResult InitShaderCompiler(apollo::rdr::EBackend backend, const char* assetPath = nullptr)
 	{
 		SlangCompileTarget target;
 		const char* profile = nullptr;
@@ -124,7 +122,7 @@ namespace apollo {
 #endif
 		if (const auto ec = InitShaderCompiler(rdr::EBackend::Default); ec)
 		{
-			APOLLO_LOG_CRITICAL("Failed to initialize shader compiler: {}", ec.message());
+			APOLLO_LOG_CRITICAL("Failed to initialize shader compiler: [0x{:08x}]", ec);
 			m_Result = EAppResult::Failure;
 			return;
 		}
@@ -144,7 +142,7 @@ namespace apollo {
 			return;
 	}
 
-	rdr::ShaderCompiler& App::GetShaderCompiler()  noexcept
+	rdr::ShaderCompiler& App::GetShaderCompiler() noexcept
 	{
 		return rdr::ShaderCompiler::s_Instance;
 	}

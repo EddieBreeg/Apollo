@@ -61,7 +61,7 @@ namespace {
 } // namespace
 
 namespace apollo::rdr {
-	std::error_code ShaderCompiler::Init(
+	SlangResult ShaderCompiler::Init(
 		SlangCompileTarget targetFormat,
 		const char* profile,
 		std::span<const slang::CompilerOptionEntry> compileOptions,
@@ -71,11 +71,11 @@ namespace apollo::rdr {
 		{
 			LOG(spdlog::level::warn,
 				"Called ShaderCompiler::Init() but compiler is already initialized");
-			return std::error_code{};
+			return SLANG_OK;
 		}
 		auto res = slang::createGlobalSession(m_GlobalSession.writeRef());
 		if (SLANG_FAILED(res)) [[unlikely]]
-			return { res, std::system_category() };
+			return res;
 
 		const slang::TargetDesc targetDesc{
 			.format = targetFormat,
@@ -94,7 +94,7 @@ namespace apollo::rdr {
 			.skipSPIRVValidation = false,
 		};
 		res = m_GlobalSession->createSession(desc, m_Session.writeRef());
-		return { res, std::system_category() };
+		return res;
 	}
 
 	Slang::ComPtr<slang::IBlob> ShaderCompiler::GetTargetCode(

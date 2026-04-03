@@ -1,5 +1,6 @@
 #include "ShaderCompiler.hpp"
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 
@@ -196,9 +197,9 @@ int main(int argc, const char* const* argv)
 	{
 		std::span opts{ compilerOptions };
 		const auto rc = compiler.Init(options.m_Target, profile, opts, includePaths);
-		if (rc)
+		if (SLANG_FAILED(rc))
 		{
-			std::cerr << "Failed to initialize the compiler: " << rc.message() << '\n';
+			std::cerr << std::format("[0x{:08x}] Failed to initialize the compiler\n", rc);
 			return 1;
 		}
 	}
