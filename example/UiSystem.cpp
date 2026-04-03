@@ -64,7 +64,7 @@ namespace {
 namespace apollo::demo {
 	void UiSystem::PostInit()
 	{
-		m_UiRenderer.Init(m_RenderContext, m_Viewport.m_ColorTargetFormat);
+		m_UiRenderer.Init(m_RenderContext, m_Compiler, m_Viewport.m_ColorTargetFormat);
 		m_UiContext.Init(m_UiRenderer, 0, 0);
 	}
 

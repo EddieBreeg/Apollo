@@ -12,6 +12,7 @@ struct Clay_RenderCommand;
 
 namespace apollo::rdr {
 	class Context;
+	class ShaderCompiler;
 
 	struct RenderPassSettings;
 } // namespace apollo::rdr
@@ -64,7 +65,10 @@ namespace apollo::rdr::ui {
 
 		APOLLO_API bool SetTargetSize(float2 size) noexcept;
 
-		APOLLO_API void Init(rdr::Context& ctx, rdr::EPixelFormat targetFormat);
+		APOLLO_API void Init(
+			rdr::Context& ctx,
+			rdr::ShaderCompiler& compiler,
+			rdr::EPixelFormat targetFormat);
 		APOLLO_API void Reset();
 
 	private:

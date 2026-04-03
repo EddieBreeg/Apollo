@@ -3,8 +3,9 @@
 #include "DemoPCH.hpp"
 
 namespace apollo::rdr {
+	class ShaderCompiler;
 	enum class EPixelFormat : int8;
-}
+} // namespace apollo::rdr
 
 namespace apollo::rdr::ui {
 	class Renderer;
@@ -24,10 +25,12 @@ namespace apollo::demo {
 			rdr::Context& renderContext,
 			ui::Context& uiContext,
 			rdr::ui::Renderer& uiRenderer,
+			rdr::ShaderCompiler& compiler,
 			const Viewport& vp)
 			: m_RenderContext(renderContext)
 			, m_UiContext(uiContext)
 			, m_UiRenderer(uiRenderer)
+			, m_Compiler(compiler)
 			, m_RenderPass(
 				  rdr::RenderPassSettings{
 					  .m_NumColorTargets = 1,
@@ -52,6 +55,7 @@ namespace apollo::demo {
 		rdr::Context& m_RenderContext;
 		ui::Context& m_UiContext;
 		rdr::ui::Renderer& m_UiRenderer;
+		rdr::ShaderCompiler& m_Compiler;
 		rdr::RenderPass m_RenderPass;
 		const Viewport& m_Viewport;
 	};

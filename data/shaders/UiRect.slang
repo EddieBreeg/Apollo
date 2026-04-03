@@ -1,3 +1,5 @@
+import "Apollo.Core";
+
 static const float2 g_Offset[] = {
 	float2(0, 0),
 	float2(0, 1),
@@ -26,7 +28,8 @@ struct Fragment
 	Element Elem;
 };
 
-Fragment main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
+[[shader("vertex")]]
+Fragment vs_main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
 {
 	float2 offset = g_Elems[instance].Bounds.zw * g_Offset[id];
 	float2 halfSize = 0.5 * g_Elems[instance].Bounds.zw;
@@ -37,4 +40,18 @@ Fragment main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
 	f.Elem = g_Elems[instance];
 	
 	return f;
+}
+
+[[shader("fragment")]]
+float4 fs_main(Fragment frag): SV_TARGET
+{
+	uint quadrant = uint(frag.RelativePos.x > 0.0) + (uint(frag.RelativePos.y > 0) << 1);
+	float corner = frag.Elem.CornerRadius[quadrant];
+
+	float2 halfSize = 0.5 * frag.Elem.Bounds.zw;
+	float d = BoxSdf(frag.RelativePos, halfSize, corner);
+	float dw = 1.5 * fwidth(d);
+	float alpha = 1.0 - smoothstep(-dw, 0.0, d);
+
+	return float4(frag.Elem.BgColor.rgb, frag.Elem.BgColor.a * alpha);
 }

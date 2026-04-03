@@ -27,7 +27,7 @@ static const float2 g_Uv[] = {
 	float2(0, 0),
 	float2(1, 0),
 };
-
+[[shader("vertex")]]
 Fragment main(uint vertex: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
 {
 	Fragment frag;

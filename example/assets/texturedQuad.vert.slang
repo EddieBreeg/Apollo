@@ -15,7 +15,7 @@ cbuffer CamData: register(b0, space1)
 	float4x4 ViewProjMatrix;
 	float4x4 ModelMatrix;
 };
-
+[[shader("vertex")]]
 Fragment main(Vertex v)
 {
 	Fragment res;

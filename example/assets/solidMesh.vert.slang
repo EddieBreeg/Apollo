@@ -20,6 +20,7 @@ cbuffer Transform: register(b1, space1)
 	float4x4 ModelMatrix;
 };
 
+[[shader("vertex")]]
 Fragment main(Vertex3d v)
 {
 	Fragment frag;

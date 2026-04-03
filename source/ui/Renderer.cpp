@@ -1,6 +1,5 @@
 #include "Renderer.hpp"
 #include <SDL3/SDL_gpu.h>
-#include <UiShaders.hpp>
 #include <clay.h>
 #include <core/Assert.hpp>
 #include <core/Log.hpp>
@@ -10,27 +9,72 @@
 #include <rendering/Shader.hpp>
 #include <tools/ShaderCompiler.hpp>
 
+#include <ui/SlangUiBorder.hpp>
+#include <ui/SlangUiRect.hpp>
+
 namespace {
+	template <class V>
+	struct VertexTypeStage;
+	template <>
+	struct VertexTypeStage<apollo::rdr::VertexShader>
+	{
+		static constexpr SlangStage Value = SLANG_STAGE_VERTEX;
+		static constexpr const char Name[] = "vertex";
+	};
+	template <>
+	struct VertexTypeStage<apollo::rdr::FragmentShader>
+	{
+		static constexpr SlangStage Value = SLANG_STAGE_FRAGMENT;
+		static constexpr const char Name[] = "fragment";
+	};
+
+	template <class V>
+	V CreateShaderFromSlangModule(
+		const apollo::ULID& id,
+		slang::IModule& module,
+		const char* entryPoint,
+		apollo::rdr::ShaderCompiler& compiler)
+	{
+		Slang::ComPtr<slang::IBlob> diagnostics;
+		Slang::ComPtr code = compiler.GetTargetCode(
+			module,
+			entryPoint,
+			VertexTypeStage<V>::Value,
+			diagnostics.writeRef());
+		DEBUG_CHECK(code)
+		{
+			APOLLO_LOG_CRITICAL(
+				"Failed to link built-in {} shader: {:.{}}",
+				VertexTypeStage<V>::Name,
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize());
+			DEBUG_BREAK();
+		}
+		return V{ id, code->getBufferPointer(), code->getBufferSize() };
+	}
+
 	SDL_GPUGraphicsPipeline* CreatePipeline(
 		SDL_GPUDevice* device,
 		const apollo::ULID& id1,
 		const apollo::ULID& id2,
-		std::string_view vSource,
-		std::string_view fSource,
-		SDL_GPUTextureFormat fmt)
+		slang::IModule& module,
+		SDL_GPUTextureFormat fmt,
+		apollo::rdr::ShaderCompiler& compiler)
 	{
 		using namespace apollo::ulid_literal;
 
 		using namespace apollo::rdr;
-		using Blob = apollo::rdr::ShaderCompiler::Blob;
-		const auto vShader = VertexShader::CompileFromSource(
+
+		const auto vShader = CreateShaderFromSlangModule<VertexShader>(
 			id1,
-			Blob::Allocate(vSource.size(), vSource.data()));
-		const auto fShader = FragmentShader::CompileFromSource(
+			module,
+			"vs_main",
+			compiler);
+		const auto fShader = CreateShaderFromSlangModule<FragmentShader>(
 			id2,
-			Blob::Allocate(fSource.size(), fSource.data()));
-		APOLLO_ASSERT(vShader, "Failed to compile builtin vertex shader");
-		APOLLO_ASSERT(fShader, "Failed to compile builtin fragment shader");
+			module,
+			"fs_main",
+			compiler);
 		const SDL_GPUColorTargetDescription targetDesc{
 			.format = fmt,
 			.blend_state =
@@ -154,10 +198,20 @@ namespace {
 	};
 } // namespace
 
+#define CHECK_MODULE(var, name)                                                                    \
+	DEBUG_CHECK(var)                                                                               \
+	{                                                                                              \
+		APOLLO_LOG_CRITICAL(                                                                       \
+			"Failed to compile built-in " name " module: {:.{}}",                                  \
+			static_cast<const char*>(diagnostics->getBufferPointer()),                             \
+			diagnostics->getBufferSize());                                                         \
+		DEBUG_BREAK();                                                                             \
+	}
+
 namespace apollo::rdr::ui {
 	Renderer Renderer::s_Instance;
 
-	void Renderer::Init(Context& ctx, EPixelFormat fmt)
+	void Renderer::Init(Context& ctx, rdr::ShaderCompiler& compiler, EPixelFormat fmt)
 	{
 		if (m_RectPipeline)
 		{
@@ -165,21 +219,35 @@ namespace apollo::rdr::ui {
 			return;
 		}
 
+		Slang::ComPtr<slang::IBlob> diagnostics;
+		auto* rectModule = compiler.LoadModuleFromSource(
+			&data::shaders::g_UiRectSource,
+			"UiRect",
+			nullptr,
+			diagnostics.writeRef());
+		CHECK_MODULE(rectModule, "UiRect");
+		auto* borderModule = compiler.LoadModuleFromSource(
+			&data::shaders::g_UiBorderSource,
+			"UiBorder",
+			nullptr,
+			diagnostics.writeRef());
+		CHECK_MODULE(rectModule, "UiBorder");
+
 		m_RenderContext = &ctx;
 		m_RectPipeline = CreatePipeline(
 			ctx.GetDevice().GetHandle(),
 			"01KN520H22F7ZSD8YPTD6DRP96"_ulid,
 			"01KN520HPEJJK0ACQZJGVRXT86"_ulid,
-			data::shaders::g_UiRectVert,
-			data::shaders::g_UiRectFrag,
-			static_cast<SDL_GPUTextureFormat>(fmt));
+			*rectModule,
+			static_cast<SDL_GPUTextureFormat>(fmt),
+			compiler);
 		m_BorderPipeline = CreatePipeline(
 			ctx.GetDevice().GetHandle(),
 			"01KN5217NBXDHQFMHKWATE31AV"_ulid,
 			"01KN52184ZGNTAF713D5SJXV68"_ulid,
-			data::shaders::g_UiBorderVert,
-			data::shaders::g_UiBorderFrag,
-			static_cast<SDL_GPUTextureFormat>(fmt));
+			*borderModule,
+			static_cast<SDL_GPUTextureFormat>(fmt),
+			compiler);
 		m_Rectangles = Batch<UiRect>{ 16 };
 		m_Borders = Batch<Border>{ 16 };
 	}

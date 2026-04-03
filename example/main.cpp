@@ -40,6 +40,7 @@ namespace apollo::demo {
 				renderer,
 				*m_UiContext,
 				*m_UiRenderer,
+				App::GetShaderCompiler(),
 				visualSystem.GetTargetViewport());
 
 			return EAppResult::Continue;

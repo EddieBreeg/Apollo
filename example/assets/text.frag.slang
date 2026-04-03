@@ -20,7 +20,7 @@ float Outline(float d, float w, float inner, float outer)
 {
 	return smoothstep(outer - w, outer + w, d) - smoothstep(inner - w, inner + w, d);
 }
-
+[[shader("fragment")]]
 float4 main(Fragment frag): SV_TARGET
 {
 	float4 px = g_Tex.Sample(g_Sampler, frag.Uv);

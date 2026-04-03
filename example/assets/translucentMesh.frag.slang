@@ -12,6 +12,7 @@ cbuffer Params: register(b0, space3)
 	float4 Color;
 };
 
+[[shader("fragment")]]
 float4 main(Fragment frag): SV_TARGET
 {
 	float4 c = g_Color.Sample(g_Sampler0, frag.UV);

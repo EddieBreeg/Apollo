@@ -38,7 +38,7 @@ static const float2 g_UvOffsets[] = {
 	float2(0, 0),
 	float2(1, 0),
 };
-
+[[shader("vertex")]]
 Fragment main(uint instance: SV_VulkanInstanceID, uint index: SV_VulkanVertexID)
 {
 	Fragment frag;

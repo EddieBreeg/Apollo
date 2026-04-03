@@ -6,6 +6,7 @@
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlgpu3.h>
 #include <core/Log.hpp>
+#include <core/SlangCore.hpp>
 #include <ecs/Manager.hpp>
 #include <entry/Entry.hpp>
 #include <imgui.h>
@@ -66,14 +67,34 @@ namespace {
 		const slang::CompilerOptionEntry options[]{
 			slang::CompilerOptionEntry{
 				.name = slang::CompilerOptionName::Language,
-				.value = { .intValue0 = SLANG_SOURCE_LANGUAGE_HLSL },
-			},
+				.value = { .intValue0 = SLANG_SOURCE_LANGUAGE_SLANG },
+			}
 		};
 		return apollo::rdr::ShaderCompiler::s_Instance.Init(
 			target,
 			profile,
 			std::span{ options },
 			includes);
+	}
+
+	void CompileCoreModule(apollo::rdr::ShaderCompiler& compiler)
+	{
+		APOLLO_LOG_INFO("Compiling Core shader module...");
+		Slang::ComPtr<slang::IBlob> diagnostics;
+		auto* module = compiler.LoadModuleFromSource(
+			&apollo::data::shaders::g_CoreSource,
+			"Apollo.Core",
+			nullptr,
+			diagnostics.writeRef());
+
+		DEBUG_CHECK(module)
+		{
+			APOLLO_LOG_CRITICAL(
+				"Failed to compile Core Slang module: {1:.{0}}",
+				diagnostics->getBufferSize(),
+				static_cast<const char*>(diagnostics->getBufferPointer()));
+			DEBUG_BREAK();
+		}
 	}
 
 } // namespace
@@ -126,6 +147,7 @@ namespace apollo {
 			m_Result = EAppResult::Failure;
 			return;
 		}
+		CompileCoreModule(rdr::ShaderCompiler::s_Instance);
 		auto& device = m_RenderContext->GetDevice();
 		APOLLO_ASSERT(initAssetManager, "No initialisation function provided for the asset manager");
 		m_AssetManager = &initAssetManager(entry.m_AssetRoot, device, m_MainThreadPool);
