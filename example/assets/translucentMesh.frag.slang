@@ -4,8 +4,8 @@ struct Fragment
 	float2 UV: TEXCOORD;
 };
 
-Texture2D g_Color: register(t0, space2);
-SamplerState g_Sampler0: register(s0, space2);
+[[vk::binding(0, 2)]]
+Sampler2D g_Color;
 
 cbuffer Params: register(b0, space3)
 {
@@ -15,6 +15,6 @@ cbuffer Params: register(b0, space3)
 [[shader("fragment")]]
 float4 main(Fragment frag): SV_TARGET
 {
-	float4 c = g_Color.Sample(g_Sampler0, frag.UV);
+	float4 c = g_Color.Sample(frag.UV);
 	return c * Color;
 }

@@ -125,6 +125,8 @@ namespace {
 							out_info.m_Blocks[out_info.m_NumUniformBuffers++]);
 					}
 					break;
+
+				case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
 				case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER: ++out_info.m_NumSamplers; break;
 				case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
 					++out_info.m_NumStorageTextures;
