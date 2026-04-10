@@ -8,6 +8,10 @@
 namespace apollo::demo {
 	struct Demo : public IGameState
 	{
+		Demo(std::span<const char*> args)
+			: m_Args{ args }
+		{}
+
 		EAppResult OnInit(const apollo::EntryPoint&, apollo::App& app) override
 		{
 			spdlog::set_level(spdlog::level::trace);
@@ -29,9 +33,10 @@ namespace apollo::demo {
 			visualSystem.m_Inspector.m_AssetManager = static_cast<editor::AssetManager*>(
 				IAssetManager::GetInstance());
 			auto& world = manager.GetEntityWorld();
-			world.emplace<SceneSwitchRequestComponent>(
-				world.create(),
-				"01KMAX1C7SPE9BNEW848XEZT4D"_ulid);
+
+			const ULID sceneId = m_Args.size() > 2 ? ULID::FromString(m_Args[2])
+												   : "01KMAX1C7SPE9BNEW848XEZT4D"_ulid;
+			world.emplace<SceneSwitchRequestComponent>(world.create(), sceneId);
 
 			m_UiContext = &ui::Context::s_Instance;
 			m_UiRenderer = &rdr::ui::Renderer::s_Instance;
@@ -53,15 +58,16 @@ namespace apollo::demo {
 			m_UiContext->Reset();
 		}
 
+		std::span<const char*> m_Args;
 		rdr::ui::Renderer* m_UiRenderer = nullptr;
 		ui::Context* m_UiContext = nullptr;
 	};
 } // namespace apollo::demo
 
-apollo::EntryPoint apollo::GetEntryPoint(std::span<const char*>)
+apollo::EntryPoint apollo::GetEntryPoint(std::span<const char*> args)
 {
 	return apollo::EntryPoint{
 		.m_AppName = "Apollo Example",
-		.m_GameState = std::make_unique<apollo::demo::Demo>(),
+		.m_GameState = std::make_unique<apollo::demo::Demo>(args),
 	};
 }
