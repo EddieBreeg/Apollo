@@ -1,4 +1,5 @@
 #include "CameraSystem.hpp"
+#include "DemoScenes.hpp"
 #include "UiSystem.hpp"
 #include "VisualSystem.hpp"
 #include <editor/asset/Manager.hpp>
@@ -34,9 +35,7 @@ namespace apollo::demo {
 				IAssetManager::GetInstance());
 			auto& world = manager.GetEntityWorld();
 
-			const ULID sceneId = m_Args.size() > 2 ? ULID::FromString(m_Args[2])
-												   : "01KMAX1C7SPE9BNEW848XEZT4D"_ulid;
-			world.emplace<SceneSwitchRequestComponent>(world.create(), sceneId);
+			world.emplace<SceneSwitchRequestComponent>(world.create(), g_DemoSceneIDs[0]);
 
 			m_UiContext = &ui::Context::s_Instance;
 			m_UiRenderer = &rdr::ui::Renderer::s_Instance;

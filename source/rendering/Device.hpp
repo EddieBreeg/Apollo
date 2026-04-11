@@ -28,6 +28,8 @@ namespace apollo::rdr {
 		Default = Vulkan
 #elif defined(APOLLO_D3D12)
 		Default = D3D12
+#else
+#error "No rendering backend enabled"
 #endif
 	};
 

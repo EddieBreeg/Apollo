@@ -13,6 +13,20 @@ add_subdirectory(assimp)
 
 add_subdirectory(msdfgen)
 
+if(${PROJECT_NAME}_ENABLE_VULKAN)
+	include(FetchContent)
+	FetchContent_Declare(
+		vulkan_headers
+		GIT_REPOSITORY git@github.com:KhronosGroup/Vulkan-Headers.git
+		GIT_TAG v1.4.349
+		SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/Vulkan-Headers
+	)
+	if(NOT IS_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Vulkan-Headers)
+		message("-- Downloading Vulkan headers...")
+	endif()
+	FetchContent_MakeAvailable(vulkan_headers)
+endif()
+
 file(GLOB IMGUI_HEADERS "imgui/*.h")
 
 AddLibrary(imgui TYPE STATIC SOURCES

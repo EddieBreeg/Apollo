@@ -34,7 +34,7 @@ struct Fragment
 StructuredBuffer<Border> g_Elems: register(t0, space0);
 
 [[shader("vertex")]]
-Fragment vs_main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
+Fragment vs_main(uint id: SV_VertexID, uint instance: SV_InstanceID)
 {
 	Fragment f;
 	f.HalfSize = 0.5 * g_Elems[instance].Bounds.zw;
@@ -54,7 +54,7 @@ float4 fs_main(Fragment frag): SV_TARGET
 {
 	uint quadrant = (frag.RelativePos.x > 0) + ((frag.RelativePos.y > 0) << 1);
 	float radius = frag.CornerRadius[quadrant];
-	float d = BoxSdf(frag.RelativePos, frag.HalfSize, radius);
+	float d = apollo.BoxSdf(frag.RelativePos, frag.HalfSize, radius);
 	float dw = 1.5 * fwidth(d);
 	float outer = 1 - smoothstep(-dw, 0.0, d);
 	
@@ -64,7 +64,7 @@ float4 fs_main(Fragment frag): SV_TARGET
 		frag.Width[(2 | uint(pos.y > 0))]
 	);
 	float2 halfSize = frag.HalfSize - 0.5 * float2(frag.Width.x + frag.Width.y, frag.Width.z + frag.Width.w);
-	d = BoxSdf(pos, halfSize, max(radius, 0.0));
+	d = apollo.BoxSdf(pos, halfSize, max(radius, 0.0));
 	dw = 1.5 * fwidth(d);
 	float inner = 1 - smoothstep(-dw, 0.0, d);
 

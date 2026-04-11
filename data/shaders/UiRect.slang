@@ -29,7 +29,7 @@ struct Fragment
 };
 
 [[shader("vertex")]]
-Fragment vs_main(uint id: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
+Fragment vs_main(uint id: SV_VertexID, uint instance: SV_InstanceID)
 {
 	float2 offset = g_Elems[instance].Bounds.zw * g_Offset[id];
 	float2 halfSize = 0.5 * g_Elems[instance].Bounds.zw;
@@ -49,7 +49,7 @@ float4 fs_main(Fragment frag): SV_TARGET
 	float corner = frag.Elem.CornerRadius[quadrant];
 
 	float2 halfSize = 0.5 * frag.Elem.Bounds.zw;
-	float d = BoxSdf(frag.RelativePos, halfSize, corner);
+	float d = apollo.BoxSdf(frag.RelativePos, halfSize, corner);
 	float dw = 1.5 * fwidth(d);
 	float alpha = 1.0 - smoothstep(-dw, 0.0, d);
 

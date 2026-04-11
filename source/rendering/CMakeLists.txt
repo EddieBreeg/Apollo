@@ -18,13 +18,18 @@ target_sources(${PROJECT_NAME}Runtime PRIVATE
 	${RENDERING_HEADERS}
 )
 
-if(${PROJECT_NAME}_BACKEND STREQUAL "D3D12")
-	set(BACKEND_MACRO_NAME APOLLO_D3D12)
-elseif(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
-	set(BACKEND_MACRO_NAME APOLLO_VULKAN)
-	target_link_libraries(${PROJECT_NAME}Runtime PRIVATE spirv-reflect-static)
-else()
-	message(FATAL_ERROR "Unsupported rendering backend")
-endif(${PROJECT_NAME}_BACKEND STREQUAL "D3D12")
+set(SupportedBackends)
 
-target_compile_definitions(${PROJECT_NAME}Runtime PUBLIC ${BACKEND_MACRO_NAME}=1)
+if(${PROJECT_NAME}_ENABLE_D3D12)
+	list(APPEND SupportedBackends APOLLO_D3D12=1)
+endif()
+if(${PROJECT_NAME}_ENABLE_VULKAN)
+	list(APPEND SupportedBackends APOLLO_VULKAN=1)
+	target_link_libraries(${PROJECT_NAME}Runtime PRIVATE Vulkan::Headers)
+endif()
+
+if(NOT SupportedBackends)
+	message(FATAL_ERROR "Unsupported rendering backend")
+endif()
+
+target_compile_definitions(${PROJECT_NAME}Runtime PUBLIC ${SupportedBackends})

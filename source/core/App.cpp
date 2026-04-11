@@ -141,11 +141,11 @@ namespace apollo {
 		}
 
 #ifdef APOLLO_DEV
-		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, true);
+		m_RenderContext = &rdr::Context::Init(entry.m_RenderBackend, m_Window, true);
 #else
-		m_RenderContext = &rdr::Context::Init(rdr::EBackend::Default, m_Window, false);
+		m_RenderContext = &rdr::Context::Init(entry.m_RenderBackend, m_Window, false);
 #endif
-		if (const auto ec = InitShaderCompiler(rdr::EBackend::Default); ec)
+		if (const auto ec = InitShaderCompiler(entry.m_RenderBackend); ec)
 		{
 			APOLLO_LOG_CRITICAL("Failed to initialize shader compiler: [0x{:08x}]", ec);
 			m_Result = EAppResult::Failure;

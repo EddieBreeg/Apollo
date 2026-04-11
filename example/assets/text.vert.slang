@@ -39,7 +39,7 @@ static const float2 g_UvOffsets[] = {
 	float2(1, 0),
 };
 [[shader("vertex")]]
-Fragment main(uint instance: SV_VulkanInstanceID, uint index: SV_VulkanVertexID)
+Fragment main(uint instance: SV_InstanceID, uint index: SV_VertexID)
 {
 	Fragment frag;
 	float4 rect = g_Quads[instance].m_Rect;

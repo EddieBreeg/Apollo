@@ -51,7 +51,8 @@ namespace apollo::demo {
 		VisualSystem(
 			apollo::Window& window,
 			apollo::rdr::Context& renderer,
-			CameraSystem& camSystem);
+			CameraSystem& camSystem,
+			uint32 startupScene = 0);
 
 		~VisualSystem() {}
 
@@ -69,6 +70,7 @@ namespace apollo::demo {
 		CameraSystem& m_CamSystem;
 		Viewport m_TargetViewport;
 		rdr::RenderPass m_RenderPass;
+		uint32 m_CurrentScene;
 
 		std::vector<VisualElement> m_VisualElements;
 	};

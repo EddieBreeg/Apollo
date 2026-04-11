@@ -9,8 +9,8 @@ option(${PROJECT_NAME}_BUILD_TESTS "Whether to build tests for the project" ON)
 option(${PROJECT_NAME}_INSTALL "Whether to enable install for ${PROJECT_NAME} targets" ${IS_ROOT_PROJECT})
 option(${PROJECT_NAME}_BUILD_DOCS "Whether to generate the doxygen documentation" OFF)
 
-set(${PROJECT_NAME}_BACKEND Vulkan CACHE STRING "The rendering backend used by the engine runtime")
-set_property(CACHE ${PROJECT_NAME}_BACKEND PROPERTY STRINGS "Vulkan;D3D12")
+option(${PROJECT_NAME}_ENABLE_VULKAN "Whether to enable Vulkan support" ON)
+option(${PROJECT_NAME}_ENABLE_D3D12 "Whether to enable Vulkan support" ON)
 
 if(${MSVC})
 	set(COMPILER_ARGS /W4 /wd4201 /wd4324)

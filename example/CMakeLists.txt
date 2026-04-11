@@ -1,14 +1,3 @@
-include(Shaders)
-
-AddShader(TextVertShader
-	vertex "assets/text.vert.hlsl" ".brk/_assetCache/text.vert"
-	DEBUG
-)
-AddShader(TextFragShader
-	fragment "assets/text.frag.hlsl" ".brk/_assetCache/text.frag"
-	DEBUG
-)
-
 AddExecutable(${PROJECT_NAME}Example SOURCES
 	main.cpp
 	CameraSystem.cpp

@@ -28,7 +28,7 @@ static const float2 g_Uv[] = {
 	float2(1, 0),
 };
 [[shader("vertex")]]
-Fragment main(uint vertex: SV_VulkanVertexID, uint instance: SV_VulkanInstanceID)
+Fragment main(uint vertex: SV_VertexID, uint instance: SV_InstanceID)
 {
 	Fragment frag;
 	float scale = 2.0 / GridWidth;

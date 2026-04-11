@@ -12,6 +12,8 @@
 #include <memory>
 #include <span>
 
+#include <rendering/Device.hpp>
+
 #include "GameState.hpp"
 
 namespace apollo::mt {
@@ -61,6 +63,7 @@ namespace apollo {
 		 * file for the project. Ignored if empty.
 		 */
 		std::filesystem::path m_AssetRoot;
+		rdr::EBackend m_RenderBackend = rdr::EBackend::Default;
 	};
 
 	/// %Asset manager initialization function, used internally by the app during initialization.

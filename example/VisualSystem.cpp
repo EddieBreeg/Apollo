@@ -1,7 +1,10 @@
-#include "CameraSystem.hpp"
-#include "Inspector.hpp"
 #include "VisualSystem.hpp"
+#include "CameraSystem.hpp"
+#include "DemoScenes.hpp"
+#include "Inspector.hpp"
 #include <editor/asset/Manager.hpp>
+#include <systems/InputEventComponents.hpp>
+#include <systems/SceneComponents.hpp>
 #include <ui/Context.hpp>
 #include <ui/Renderer.hpp>
 
@@ -130,7 +133,8 @@ namespace apollo::demo {
 	VisualSystem::VisualSystem(
 		apollo::Window& window,
 		apollo::rdr::Context& renderer,
-		CameraSystem& camSystem)
+		CameraSystem& camSystem,
+		uint32 startupSceneIndex)
 		: m_Window(window)
 		, m_RenderContext(renderer)
 		, m_CamSystem(camSystem)
@@ -146,6 +150,7 @@ namespace apollo::demo {
 						  .m_Texture = &m_TargetViewport.m_DepthStencilTarget,
 					  },
 			  })
+		, m_CurrentScene(startupSceneIndex)
 	{
 		m_TargetViewport.m_ColorTargetFormat = rdr::EPixelFormat::RGBA8_UNorm;
 	}
@@ -218,6 +223,27 @@ namespace apollo::demo {
 	{
 		if (!m_Window) [[unlikely]]
 			return;
+
+		bool switchScene = false;
+		if (const auto view = world.view<const inputs::KeyDownEventComponent>())
+		{
+			for (const auto e : view)
+			{
+				const auto& comp = view->get(e);
+				if (!comp.m_Repeat && comp.m_Key == inputs::EKey::F9)
+				{
+					switchScene = true;
+					break;
+				}
+			}
+		}
+		if (switchScene)
+		{
+			m_CurrentScene = (m_CurrentScene + 1) % STATIC_ARRAY_SIZE(g_DemoSceneIDs);
+			world.emplace<SceneSwitchRequestComponent>(
+				world.create(),
+				g_DemoSceneIDs[m_CurrentScene]);
+		}
 
 		if (const auto view = world.view<const SceneLoadFinishedEventComponent>(); view.size())
 		{
