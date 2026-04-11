@@ -14,8 +14,9 @@ struct SDL_GPUShader;
 class ISlangBlob;
 
 namespace slang {
+	struct IEntryPoint;
 	struct IModule;
-}
+} // namespace slang
 
 namespace apollo::rdr {
 	enum class EShaderStage : int8;
@@ -63,6 +64,11 @@ namespace apollo::rdr {
 			EShaderStage stage,
 			slang::IModule& module,
 			const char* entryPoint = "main");
+		APOLLO_API GraphicsShader(
+			const ULID& id,
+			EShaderStage stage,
+			slang::IModule& module,
+			slang::IEntryPoint& entryPoint);
 
 		APOLLO_API GraphicsShader(
 			const ULID& id,
@@ -82,6 +88,9 @@ namespace apollo::rdr {
 			: GraphicsShader(id)
 		{}
 		VertexShader(const ULID& id, slang::IModule& module, const char* entryPoint = "main")
+			: GraphicsShader(id, EShaderStage::Vertex, module, entryPoint)
+		{}
+		VertexShader(const ULID& id, slang::IModule& module, slang::IEntryPoint& entryPoint)
 			: GraphicsShader(id, EShaderStage::Vertex, module, entryPoint)
 		{}
 
@@ -105,6 +114,9 @@ namespace apollo::rdr {
 			: GraphicsShader(id)
 		{}
 		FragmentShader(const ULID& id, slang::IModule& module, const char* entryPoint = "main")
+			: GraphicsShader(id, EShaderStage::Fragment, module, entryPoint)
+		{}
+		FragmentShader(const ULID& id, slang::IModule& module, slang::IEntryPoint& entryPoint)
 			: GraphicsShader(id, EShaderStage::Fragment, module, entryPoint)
 		{}
 

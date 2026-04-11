@@ -199,6 +199,11 @@ namespace apollo::demo {
 		{
 			MaterialWidget(*meshComp->m_Material, m_AssetManager);
 		}
+		else if (GridComponent* gridComp = world.try_get<GridComponent>(selection->m_Entity);
+				 gridComp && gridComp->m_Mat)
+		{
+			MaterialWidget(*gridComp->m_Mat, m_AssetManager);
+		}
 
 		ImGui::End();
 	}

@@ -16,6 +16,46 @@ namespace {
 	}
 
 	template <class ShaderType>
+	struct ShaderStageT;
+	template <>
+	struct ShaderStageT<apollo::rdr::VertexShader>
+	{
+		static constexpr const char Name[] = "vertex";
+	};
+	template <>
+	struct ShaderStageT<apollo::rdr::FragmentShader>
+	{
+		static constexpr const char Name[] = "fragment";
+	};
+
+	template <size_t N>
+	Slang::ComPtr<slang::IEntryPoint> DeduceEntryPoint(
+		slang::IModule& module,
+		const char (&stageName)[N],
+		apollo::rdr::ShaderCompiler& compiler)
+	{
+		Slang::ComPtr<slang::IEntryPoint> main;
+
+		for (int32 i = 0; i < module.getDefinedEntryPointCount(); ++i)
+		{
+			Slang::ComPtr<slang::IEntryPoint> ep;
+			module.getDefinedEntryPoint(i, ep.writeRef());
+			if (module.getName() == std::string_view{ "main" })
+			{
+				main = ep;
+			}
+			auto* attr = compiler.FindAttributeByName(*ep->getFunctionReflection(), "shader");
+			if (!attr)
+				continue;
+
+			size_t len = 0;
+			if (std::string_view{ attr->getArgumentValueString(0, &len), len } == stageName)
+				return ep;
+		}
+		return main;
+	}
+
+	template <class ShaderType>
 	bool LoadShader(
 		ShaderType& out_shader,
 		const apollo::AssetMetadata& metadata,
@@ -26,13 +66,15 @@ namespace {
 			metadata.m_FilePath,
 			std::ios::binary | std::ios::ate,
 		};
+		auto pathString = metadata.m_FilePath.string();
+
 		if (!inFile.is_open())
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to load shader {}({}) from {}: {}",
 				metadata.m_Name,
 				metadata.m_Id,
-				metadata.m_FilePath.string(),
+				pathString,
 				GetErrnoMessage(errno));
 			return false;
 		}
@@ -43,7 +85,7 @@ namespace {
 				"Failed to load shader {}({}) from {}: empty file",
 				metadata.m_Name,
 				metadata.m_Id,
-				metadata.m_FilePath.string());
+				pathString);
 			return false;
 		}
 		using Blob = rdr::ShaderCompiler::Blob;
@@ -56,35 +98,48 @@ namespace {
 				"Failed to load shader {}({}) from {}: {}",
 				metadata.m_Name,
 				metadata.m_Id,
-				metadata.m_FilePath.string(),
+				pathString,
 				GetErrnoMessage(errno));
 			return false;
 		}
 
 		const bool isByteCode = IsSlangByteCode(data->GetPtrAs<const char>(), len);
+		slang::IModule* module = nullptr;
+		Slang::ComPtr<slang::IBlob> diagnostics;
+
 		if (isByteCode)
 		{
-			Slang::ComPtr<slang::IBlob> diagnostics;
-			auto* module = compiler.LoadFromIntermediate(
+			module = compiler.LoadFromIntermediate(
 				metadata.m_Name.c_str(),
 				data,
-				nullptr,
+				pathString.c_str(),
 				diagnostics.writeRef());
-			if (!module)
-			{
-				APOLLO_LOG_ERROR(
-					"Failed to load shader {} from byte code\n{:.{}}",
-					metadata.m_Name,
-					static_cast<const char*>(diagnostics->getBufferPointer()),
-					diagnostics->getBufferSize());
-				return false;
-			}
-			out_shader = ShaderType{ metadata.m_Id, *module };
 		}
 		else
 		{
-			out_shader =  ShaderType::CompileFromSource(metadata.m_Id, data);
+			module = compiler.LoadModuleFromSource(
+				data,
+				metadata.m_Name.c_str(),
+				pathString.c_str(),
+				diagnostics.writeRef());
 		}
+
+		if (!module)
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to load shader {}\n{:.{}}",
+				metadata.m_Name,
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize());
+			return false;
+		}
+		auto ep = DeduceEntryPoint(*module, ShaderStageT<ShaderType>::Name, compiler);
+		if (!ep)
+		{
+			APOLLO_LOG_ERROR("Failed to deduce entry point for shader {}", metadata.m_Name);
+			return false;
+		}
+		out_shader = ShaderType{ metadata.m_Id, *module, *ep };
 		return out_shader;
 	}
 } // namespace

@@ -86,7 +86,7 @@ namespace apollo::rdr {
 		 * occurs
 		 * \returns A pointer to the pre-compiled module, or `nullptr` on error
 		 */
-		slang::IModule* LoadModule(const char* name, slang::IBlob** out_diagnostics)
+		slang::IModule* LoadModule(const char* name, slang::IBlob** out_diagnostics = nullptr)
 		{
 			return m_Session->loadModule(name, out_diagnostics);
 		}
@@ -111,23 +111,37 @@ namespace apollo::rdr {
 		}
 
 		/**
+		 * \name ComposeAndLink()
 		 * \brief Creates a linked program from a module
+		 * \param module: The module to link
 		 * \param entryPoint: The entry point to use for linking
 		 * \param stage: The shader stage: vertex/fragment/compute or none
 		 * \param out_diagnostics: If not `nullptr`, will be used to store a message if an error
 		 * \details This function resolves all external dependencies, performs specialization for
 		 * the provided entry point and returns the final binary, or `nullptr` if linking failed, in
 		 * which case the diagnostics pointer will contain a message with more information (if
-		 * provided). The \p stage parameter may be `SLANG_STAGE_NONE`, in which case the shader
+		 * provided).
+		 * @{
+		 */
+
+		/**
+		 * The \p stage parameter may be `SLANG_STAGE_NONE`, in which case the shader
 		 * stage will not be checked and the entry point \b must be marked with the [[shader(...)]]
 		 * attribute. If another value is used, marking the entry point is not necessary (although
-		 * encouraged) and the shader stage will be validated.
+		 * encouraged) and the shader stage will be validated
 		 */
 		[[nodiscard]] Slang::ComPtr<slang::IComponentType> ComposeAndLink(
 			slang::IModule& module,
 			const char* entryPoint,
 			SlangStage stage = SLANG_STAGE_NONE,
-			slang::IBlob** diagnostics = nullptr);
+			slang::IBlob** out_diagnostics = nullptr);
+
+		[[nodiscard]] Slang::ComPtr<slang::IComponentType> ComposeAndLink(
+			slang::IModule& module,
+			slang::IEntryPoint& entryPoint,
+			slang::IBlob** out_diagnostics = nullptr);
+
+		/** @} */
 
 		/**
 		 * \brief Links a module and returns the final binary
@@ -147,16 +161,39 @@ namespace apollo::rdr {
 			slang::IModule& module,
 			const char* entryPoint,
 			SlangStage stage = SLANG_STAGE_NONE,
-			slang::IBlob** diagnostics = nullptr);
+			slang::IBlob** out_diagnostics = nullptr);
 
 		/// \brief Loads a module from SLang's intermediate byte-code representation
 		[[nodiscard]] slang::IModule* LoadFromIntermediate(
 			const char* name,
 			slang::IBlob* code,
 			const char* path = nullptr,
-			slang::IBlob** diagnostics = nullptr)
+			slang::IBlob** out_diagnostics = nullptr)
 		{
-			return m_Session->loadModuleFromIRBlob(name, path, code, diagnostics);
+			return m_Session->loadModuleFromIRBlob(name, path, code, out_diagnostics);
+		}
+
+		[[nodiscard]] slang::Attribute* FindAttributeByName(
+			slang::VariableReflection& var,
+			const char* name,
+			bool isUserDefined = false)
+		{
+			if (isUserDefined)
+			{
+				return var.findUserAttributeByName(m_GlobalSession, name);
+			}
+			return var.findAttributeByName(m_GlobalSession, name);
+		}
+		[[nodiscard]] slang::Attribute* FindAttributeByName(
+			slang::FunctionReflection& func,
+			const char* name,
+			bool isUserDefined = false)
+		{
+			if (isUserDefined)
+			{
+				return func.findUserAttributeByName(m_GlobalSession, name);
+			}
+			return func.findAttributeByName(m_GlobalSession, name);
 		}
 
 		static ShaderCompiler s_Instance;

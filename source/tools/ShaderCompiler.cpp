@@ -92,8 +92,6 @@ namespace apollo::rdr {
 		SlangStage stage,
 		slang::IBlob** diagnostics)
 	{
-		Slang::ComPtr<slang::IComponentType> linked, composite;
-
 		Slang::ComPtr ep = stage != SLANG_STAGE_NONE
 							   ? GetEntryPointFromNameAndStage(
 									 module,
@@ -101,16 +99,27 @@ namespace apollo::rdr {
 									 stage,
 									 diagnostics)
 							   : GetEntryPointFromName(module, entryPoint, diagnostics);
-		if (!ep)
-			return linked;
+		return ep ? ComposeAndLink(module, *ep, diagnostics) : nullptr;
+	}
+
+	Slang::ComPtr<slang::IComponentType> ShaderCompiler::ComposeAndLink(
+		slang::IModule& module,
+		slang::IEntryPoint& entryPoint,
+		slang::IBlob** out_diagnostics)
+	{
+		Slang::ComPtr<slang::IComponentType> linked, composite;
 		slang::IComponentType* const components[] = {
 			&module,
-			ep,
+			&entryPoint,
 		};
-		m_Session->createCompositeComponentType(components, 2, composite.writeRef(), diagnostics);
+		m_Session->createCompositeComponentType(
+			components,
+			2,
+			composite.writeRef(),
+			out_diagnostics);
 		if (!composite)
 			return linked;
-		composite->link(linked.writeRef(), diagnostics);
+		composite->link(linked.writeRef(), out_diagnostics);
 		return linked;
 	}
 
