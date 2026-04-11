@@ -149,6 +149,16 @@ namespace apollo::rdr {
 			SlangStage stage = SLANG_STAGE_NONE,
 			slang::IBlob** diagnostics = nullptr);
 
+		/// \brief Loads a module from SLang's intermediate byte-code representation
+		[[nodiscard]] slang::IModule* LoadFromIntermediate(
+			const char* name,
+			slang::IBlob* code,
+			const char* path = nullptr,
+			slang::IBlob** diagnostics = nullptr)
+		{
+			return m_Session->loadModuleFromIRBlob(name, path, code, diagnostics);
+		}
+
 		static ShaderCompiler s_Instance;
 
 	private:

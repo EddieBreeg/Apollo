@@ -52,6 +52,20 @@ namespace apollo::rdr {
 		if (SLANG_FAILED(res)) [[unlikely]]
 			return res;
 
+		if (targetFormat == SLANG_TARGET_NONE)
+		{
+			const slang::SessionDesc desc{
+				.targets = nullptr,
+				.targetCount = 0,
+				.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR,
+				.searchPaths = includePaths.data(),
+				.searchPathCount = static_cast<long long>(includePaths.size()),
+				.skipSPIRVValidation = false,
+			};
+			res = m_GlobalSession->createSession(desc, m_Session.writeRef());
+			return res;
+		}
+
 		const slang::TargetDesc targetDesc{
 			.format = targetFormat,
 			.profile = m_GlobalSession->findProfile(profile),

@@ -272,7 +272,7 @@ namespace apollo::rdr {
 		EShaderStage stage,
 		slang::IMetadata* metadata)
 	{
-		ShaderInfo info;
+		ShaderInfo info{ .m_Stage = stage };
 		ReflectionContext ctx{ info, mod, stage, metadata };
 		return info;
 	}

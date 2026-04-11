@@ -13,68 +13,19 @@
 #include <ui/SlangUiRect.hpp>
 
 namespace {
-	template <class V>
-	struct VertexTypeStage;
-	template <>
-	struct VertexTypeStage<apollo::rdr::VertexShader>
-	{
-		static constexpr SlangStage Value = SLANG_STAGE_VERTEX;
-		static constexpr const char Name[] = "vertex";
-	};
-	template <>
-	struct VertexTypeStage<apollo::rdr::FragmentShader>
-	{
-		static constexpr SlangStage Value = SLANG_STAGE_FRAGMENT;
-		static constexpr const char Name[] = "fragment";
-	};
-
-	template <class V>
-	V CreateShaderFromSlangModule(
-		const apollo::ULID& id,
-		slang::IModule& module,
-		const char* entryPoint,
-		apollo::rdr::ShaderCompiler& compiler)
-	{
-		Slang::ComPtr<slang::IBlob> diagnostics;
-		Slang::ComPtr code = compiler.GetTargetCode(
-			module,
-			entryPoint,
-			VertexTypeStage<V>::Value,
-			diagnostics.writeRef());
-		DEBUG_CHECK(code)
-		{
-			APOLLO_LOG_CRITICAL(
-				"Failed to link built-in {} shader: {:.{}}",
-				VertexTypeStage<V>::Name,
-				static_cast<const char*>(diagnostics->getBufferPointer()),
-				diagnostics->getBufferSize());
-			DEBUG_BREAK();
-		}
-		return V{ id, code->getBufferPointer(), code->getBufferSize() };
-	}
-
 	SDL_GPUGraphicsPipeline* CreatePipeline(
 		SDL_GPUDevice* device,
 		const apollo::ULID& id1,
 		const apollo::ULID& id2,
 		slang::IModule& module,
-		SDL_GPUTextureFormat fmt,
-		apollo::rdr::ShaderCompiler& compiler)
+		SDL_GPUTextureFormat fmt)
 	{
 		using namespace apollo::ulid_literal;
 
 		using namespace apollo::rdr;
 
-		const auto vShader = CreateShaderFromSlangModule<VertexShader>(
-			id1,
-			module,
-			"vs_main",
-			compiler);
-		const auto fShader = CreateShaderFromSlangModule<FragmentShader>(
-			id2,
-			module,
-			"fs_main",
-			compiler);
+		const auto vShader = VertexShader{ id1, module, "vs_main" };
+		const auto fShader = FragmentShader{ id2, module, "fs_main" };
 		const SDL_GPUColorTargetDescription targetDesc{
 			.format = fmt,
 			.blend_state =
@@ -239,15 +190,13 @@ namespace apollo::rdr::ui {
 			"01KN520H22F7ZSD8YPTD6DRP96"_ulid,
 			"01KN520HPEJJK0ACQZJGVRXT86"_ulid,
 			*rectModule,
-			static_cast<SDL_GPUTextureFormat>(fmt),
-			compiler);
+			static_cast<SDL_GPUTextureFormat>(fmt));
 		m_BorderPipeline = CreatePipeline(
 			ctx.GetDevice().GetHandle(),
 			"01KN5217NBXDHQFMHKWATE31AV"_ulid,
 			"01KN52184ZGNTAF713D5SJXV68"_ulid,
 			*borderModule,
-			static_cast<SDL_GPUTextureFormat>(fmt),
-			compiler);
+			static_cast<SDL_GPUTextureFormat>(fmt));
 		m_Rectangles = Batch<UiRect>{ 16 };
 		m_Borders = Batch<Border>{ 16 };
 	}

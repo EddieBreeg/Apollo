@@ -16,18 +16,6 @@ namespace {
 		SLANG_STAGE_VERTEX,
 		SLANG_STAGE_FRAGMENT,
 	};
-
-#ifdef APOLLO_DEV
-	const char* GetStageName(apollo::rdr::EShaderStage stage)
-	{
-		switch (stage)
-		{
-		case apollo::rdr::EShaderStage::Fragment: return "Fragment";
-		case apollo::rdr::EShaderStage::Vertex: return "Vertex";
-		default: return "Invalid";
-		};
-	}
-#endif
 } // namespace
 
 #ifdef APOLLO_VULKAN
@@ -192,6 +180,62 @@ namespace {
 } // namespace
 #endif
 
+namespace {
+	SDL_GPUShader* CreateShader(
+		slang::IModule& module,
+		const char (&name)[27],
+		apollo::rdr::ShaderInfo& out_info,
+		apollo::rdr::EShaderStage stage,
+		const char* entryPoint,
+		apollo::rdr::ShaderCompiler& compiler,
+		SDL_GPUDevice& device)
+	{
+		Slang::ComPtr<slang::IBlob> diagnostics;
+		auto const program = compiler.ComposeAndLink(
+			module,
+			entryPoint,
+			g_SlangStages[apollo::ToUnderlying(stage)],
+			diagnostics.writeRef());
+		if (!program)
+		{
+			std::string_view msg{
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize(),
+			};
+			APOLLO_LOG_ERROR("Linking failed for shader {}:\n{}", name, msg);
+			return nullptr;
+		}
+		Slang::ComPtr<slang::IBlob> code;
+		program->getTargetCode(0, code.writeRef());
+
+		Slang::ComPtr<slang::IMetadata> metadata;
+		program->getEntryPointMetadata(0, 0, metadata.writeRef(), diagnostics.writeRef());
+		if (!metadata) [[unlikely]]
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to get metadata for shader {}:\n{:.{}}",
+				name,
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize());
+			return nullptr;
+		}
+		out_info = apollo::rdr::ShaderInfo::FromSlangModule(*program, stage, metadata);
+
+		SDL_GPUShaderCreateInfo createInfo{
+			.code_size = code->getBufferSize(),
+			.code = static_cast<const uint8*>(code->getBufferPointer()),
+			.entrypoint = entryPoint,
+			.format = SDL_GPU_SHADERFORMAT_SPIRV,
+			.stage = g_SdlStages[apollo::ToUnderlying(stage)],
+			.num_samplers = out_info.m_NumSamplers,
+			.num_storage_textures = out_info.m_NumStorageTextures,
+			.num_storage_buffers = out_info.m_NumStorageBuffers,
+			.num_uniform_buffers = out_info.m_NumUniformBuffers,
+		};
+		return SDL_CreateGPUShader(&device, &createInfo);
+	}
+} // namespace
+
 namespace apollo::rdr {
 	GraphicsShader::~GraphicsShader()
 	{
@@ -202,37 +246,21 @@ namespace apollo::rdr {
 	GraphicsShader::GraphicsShader(
 		const ULID& id,
 		EShaderStage stage,
-		const void* code,
-		size_t codeLen)
+		slang::IModule& module,
+		const char* entryPoint)
 		: IAsset(id)
 	{
-		ReflectionContext ctx;
-		if (!ctx.Init(code, codeLen))
-			return;
-		ctx.GetInfo(m_Info);
-		if (m_Info.m_Stage != stage)
-		{
-			APOLLO_LOG_ERROR(
-				"Failed to create shader from byte code: expected stage {}, got {}",
-				GetStageName(stage),
-				GetStageName(m_Info.m_Stage));
-		}
-
-		const SDL_GPUShaderCreateInfo createInfo{
-			.code_size = codeLen,
-			.code = static_cast<const uint8*>(code),
-			.entrypoint = ctx.m_Module.entry_point_name,
-#ifdef APOLLO_VULKAN
-			.format = SDL_GPU_SHADERFORMAT_SPIRV,
-#endif
-			.stage = g_SdlStages[int32(m_Info.m_Stage)],
-			.num_samplers = m_Info.m_NumSamplers,
-			.num_storage_textures = m_Info.m_NumStorageTextures,
-			.num_storage_buffers = m_Info.m_NumStorageBuffers,
-			.num_uniform_buffers = m_Info.m_NumUniformBuffers,
-		};
 		GPUDevice& device = Context::GetInstance()->GetDevice();
-		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
+		char name[27] = {};
+		id.ToChars(name);
+		m_Handle = CreateShader(
+			module,
+			name,
+			m_Info,
+			stage,
+			entryPoint,
+			apollo::rdr::ShaderCompiler::s_Instance,
+			*device.GetHandle());
 		if (!m_Handle) [[unlikely]]
 		{
 			APOLLO_LOG_ERROR("Failed to create shader: {}", SDL_GetError());
@@ -246,10 +274,6 @@ namespace apollo::rdr {
 		const char* entryPoint)
 		: IAsset(id)
 	{
-		APOLLO_ASSERT(
-			stage > EShaderStage::Invalid && stage < EShaderStage::NStages,
-			"Invalid shader stage {}",
-			ToUnderlying(stage));
 		char name[27] = {};
 		id.ToChars(name);
 		auto& compiler = ShaderCompiler::s_Instance;
@@ -268,49 +292,15 @@ namespace apollo::rdr {
 			APOLLO_LOG_ERROR("Compilation failed for shader {}:\n{}", name, msg);
 			return;
 		}
-		const auto program = compiler.ComposeAndLink(
-			*module,
-			"main",
-			g_SlangStages[ToUnderlying(stage)],
-			diagnostics.writeRef());
-		if (!program)
-		{
-			std::string_view msg{
-				static_cast<const char*>(diagnostics->getBufferPointer()),
-				diagnostics->getBufferSize(),
-			};
-			APOLLO_LOG_ERROR("Linking failed for shader {}:\n{}", name, msg);
-			return;
-		}
-		Slang::ComPtr<slang::IBlob> code;
-		program->getTargetCode(0, code.writeRef());
-
-		Slang::ComPtr<slang::IMetadata> metadata;
-		program->getEntryPointMetadata(0, 0, metadata.writeRef(), diagnostics.writeRef());
-		if (!metadata) [[unlikely]]
-		{
-			APOLLO_LOG_ERROR(
-				"Failed to get metadata for shader {}:\n{:.{}}",
-				name,
-				static_cast<const char*>(diagnostics->getBufferPointer()),
-				diagnostics->getBufferSize());
-			return;
-		}
-		m_Info = ShaderInfo::FromSlangModule(*program, stage, metadata);
-
-		SDL_GPUShaderCreateInfo createInfo{
-			.code_size = code->getBufferSize(),
-			.code = static_cast<const uint8*>(code->getBufferPointer()),
-			.entrypoint = entryPoint,
-			.format = SDL_GPU_SHADERFORMAT_SPIRV,
-			.stage = g_SdlStages[ToUnderlying(stage)],
-			.num_samplers = m_Info.m_NumSamplers,
-			.num_storage_textures = m_Info.m_NumStorageTextures,
-			.num_storage_buffers = m_Info.m_NumStorageBuffers,
-			.num_uniform_buffers = m_Info.m_NumUniformBuffers,
-		};
 		GPUDevice& device = Context::GetInstance()->GetDevice();
-		m_Handle = SDL_CreateGPUShader(device.GetHandle(), &createInfo);
+		m_Handle = CreateShader(
+			*module,
+			name,
+			m_Info,
+			stage,
+			entryPoint,
+			rdr::ShaderCompiler::s_Instance,
+			*device.GetHandle());
 		if (!m_Handle) [[unlikely]]
 		{
 			APOLLO_LOG_ERROR("Failed to create shader: {}", SDL_GetError());

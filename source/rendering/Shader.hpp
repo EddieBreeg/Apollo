@@ -13,6 +13,10 @@ struct SDL_GPUShader;
 
 class ISlangBlob;
 
+namespace slang {
+	struct IModule;
+}
+
 namespace apollo::rdr {
 	enum class EShaderStage : int8;
 
@@ -57,8 +61,8 @@ namespace apollo::rdr {
 		APOLLO_API GraphicsShader(
 			const ULID& id,
 			EShaderStage stage,
-			const void* code,
-			size_t codeLen);
+			slang::IModule& module,
+			const char* entryPoint = "main");
 
 		APOLLO_API GraphicsShader(
 			const ULID& id,
@@ -77,16 +81,16 @@ namespace apollo::rdr {
 		VertexShader(const ULID& id)
 			: GraphicsShader(id)
 		{}
-		VertexShader(const ULID& id, const void* byteCode, size_t codeLen)
-			: GraphicsShader(id, EShaderStage::Vertex, byteCode, codeLen)
+		VertexShader(const ULID& id, slang::IModule& module, const char* entryPoint = "main")
+			: GraphicsShader(id, EShaderStage::Vertex, module, entryPoint)
 		{}
 
 		[[nodiscard]] static VertexShader CompileFromSource(
 			const ULID& id,
-			ISlangBlob* hlsl,
+			ISlangBlob* source,
 			const char* entryPoint = "main")
 		{
-			return VertexShader{ id, EShaderStage::Vertex, hlsl, entryPoint };
+			return VertexShader{ id, EShaderStage::Vertex, source, entryPoint };
 		}
 
 		GET_ASSET_TYPE_IMPL(EAssetType::VertexShader);
@@ -100,16 +104,16 @@ namespace apollo::rdr {
 		FragmentShader(const ULID& id)
 			: GraphicsShader(id)
 		{}
-		FragmentShader(const ULID& id, const void* byteCode, size_t codeLen)
-			: GraphicsShader(id, EShaderStage::Fragment, byteCode, codeLen)
+		FragmentShader(const ULID& id, slang::IModule& module, const char* entryPoint = "main")
+			: GraphicsShader(id, EShaderStage::Fragment, module, entryPoint)
 		{}
 
 		[[nodiscard]] static FragmentShader CompileFromSource(
 			const ULID& id,
-			ISlangBlob* hlsl,
+			ISlangBlob* source,
 			const char* entryPoint = "main")
 		{
-			return FragmentShader{ id, EShaderStage::Fragment, hlsl, entryPoint };
+			return FragmentShader{ id, EShaderStage::Fragment, source, entryPoint };
 		}
 
 		GET_ASSET_TYPE_IMPL(EAssetType::FragmentShader);

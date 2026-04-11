@@ -8,7 +8,7 @@ struct Options
 {
 	const char* m_FileName = nullptr;
 	bool m_ShowHelp = false;
-	SlangCompileTarget m_Target = SlangCompileTarget::SLANG_SPIRV;
+	SlangCompileTarget m_Target = SlangCompileTarget::SLANG_TARGET_NONE;
 	SlangStage m_Stage = SLANG_STAGE_NONE;
 	std::vector<const char*> m_IncludePath = { "." };
 	const char* m_EntryPointName = "main";
@@ -25,6 +25,10 @@ namespace argp {
 		else if (str == "d3d12")
 		{
 			out_val = SLANG_DXIL;
+		}
+		else if (str == "ir")
+		{
+			out_val = SLANG_TARGET_NONE;
 		}
 		else
 		{
@@ -220,6 +224,11 @@ int main(int argc, const char* const* argv)
 			static_cast<const char*>(diagnostics->getBufferPointer()),
 			diagnostics->getBufferSize());
 		return 1;
+	}
+	if (options.m_Stage == SLANG_STAGE_NONE)
+	{
+		module->writeToFile(options.m_OutPath);
+		return 0;
 	}
 
 	auto code = compiler.GetTargetCode(

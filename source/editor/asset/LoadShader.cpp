@@ -8,58 +8,12 @@
 #include <tools/ShaderCompiler.hpp>
 
 namespace {
-#ifdef APOLLO_VULKAN
-	bool IsSpirvByteCode(const void* data, size_t len)
+	bool IsSlangByteCode(const char* data, size_t len)
 	{
-		if (len % 4)
+		if (len < 4)
 			return false;
-		uint32 w = *static_cast<const uint32_t*>(data);
-		// compare to SPIRV magic number in both little and big endian
-		return (w == 0x07230203) || (w == 0x03022307);
+		return std::string_view{ data, 4 } == "RIFF";
 	}
-#endif
-
-	Slang::ComPtr<slang::IBlob> BuildShader(
-		slang::IBlob* source,
-		const char* name,
-		SlangStage stage,
-		apollo::rdr::ShaderCompiler& compiler)
-	{
-		Slang::ComPtr<slang::IBlob> res, diagnostics;
-		auto* module = compiler.LoadModuleFromSource(source, name, nullptr, diagnostics.writeRef());
-		if (!module)
-		{
-			std::string_view msg{
-				static_cast<const char*>(diagnostics->getBufferPointer()),
-				diagnostics->getBufferSize(),
-			};
-			APOLLO_LOG_ERROR("Failed to compile shader '{}':\n{}", name, msg);
-			return res;
-		}
-		res = compiler.GetTargetCode(*module, "main", stage, diagnostics.writeRef());
-		if (!res)
-		{
-			std::string_view msg{
-				static_cast<const char*>(diagnostics->getBufferPointer()),
-				diagnostics->getBufferSize(),
-			};
-			APOLLO_LOG_ERROR("Failed to link shader '{}':\n{}", name, msg);
-		}
-		return res;
-	}
-
-	template <class S>
-	struct ShaderStageT;
-	template <>
-	struct ShaderStageT<apollo::rdr::VertexShader>
-	{
-		static constexpr SlangStage Value = SLANG_STAGE_VERTEX;
-	};
-	template <>
-	struct ShaderStageT<apollo::rdr::FragmentShader>
-	{
-		static constexpr SlangStage Value = SLANG_STAGE_FRAGMENT;
-	};
 
 	template <class ShaderType>
 	bool LoadShader(
@@ -107,28 +61,29 @@ namespace {
 			return false;
 		}
 
-#ifdef APOLLO_VULKAN
-		const bool isByteCode = IsSpirvByteCode(data.get(), len);
-#endif
+		const bool isByteCode = IsSlangByteCode(data->GetPtrAs<const char>(), len);
 		if (isByteCode)
 		{
-			out_shader = ShaderType{ metadata.m_Id, data.get(), len };
+			Slang::ComPtr<slang::IBlob> diagnostics;
+			auto* module = compiler.LoadFromIntermediate(
+				metadata.m_Name.c_str(),
+				data,
+				nullptr,
+				diagnostics.writeRef());
+			if (!module)
+			{
+				APOLLO_LOG_ERROR(
+					"Failed to load shader {} from byte code\n{:.{}}",
+					metadata.m_Name,
+					static_cast<const char*>(diagnostics->getBufferPointer()),
+					diagnostics->getBufferSize());
+				return false;
+			}
+			out_shader = ShaderType{ metadata.m_Id, *module };
 		}
 		else
 		{
-			const Slang::ComPtr<slang::IBlob> code = BuildShader(
-				data,
-				metadata.m_Name.c_str(),
-				ShaderStageT<ShaderType>::Value,
-				compiler);
-			if (code)
-			{
-				out_shader = ShaderType{
-					metadata.m_Id,
-					code->getBufferPointer(),
-					code->getBufferSize(),
-				};
-			}
+			out_shader =  ShaderType::CompileFromSource(metadata.m_Id, data);
 		}
 		return out_shader;
 	}

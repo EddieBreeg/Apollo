@@ -68,7 +68,11 @@ namespace {
 			slang::CompilerOptionEntry{
 				.name = slang::CompilerOptionName::Language,
 				.value = { .intValue0 = SLANG_SOURCE_LANGUAGE_SLANG },
-			}
+			},
+			slang::CompilerOptionEntry{
+				.name = slang::CompilerOptionName::VulkanUseEntryPointName,
+				.value = { .intValue0 = 1 },
+			},
 		};
 		return apollo::rdr::ShaderCompiler::s_Instance.Init(
 			target,
