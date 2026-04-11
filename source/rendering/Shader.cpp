@@ -268,26 +268,35 @@ namespace apollo::rdr {
 			APOLLO_LOG_ERROR("Compilation failed for shader {}:\n{}", name, msg);
 			return;
 		}
-		const auto code = compiler.GetTargetCode(
+		const auto program = compiler.ComposeAndLink(
 			*module,
 			"main",
 			g_SlangStages[ToUnderlying(stage)],
 			diagnostics.writeRef());
-		if (!code)
+		if (!program)
 		{
 			std::string_view msg{
 				static_cast<const char*>(diagnostics->getBufferPointer()),
 				diagnostics->getBufferSize(),
 			};
-			APOLLO_LOG_ERROR("Linking failed for shader {}:\n", name, msg);
+			APOLLO_LOG_ERROR("Linking failed for shader {}:\n{}", name, msg);
 			return;
 		}
-		ReflectionContext ctx{};
+		Slang::ComPtr<slang::IBlob> code;
+		program->getTargetCode(0, code.writeRef());
 
-		if (!ctx.Init(code->getBufferPointer(), code->getBufferSize()))
+		Slang::ComPtr<slang::IMetadata> metadata;
+		program->getEntryPointMetadata(0, 0, metadata.writeRef(), diagnostics.writeRef());
+		if (!metadata) [[unlikely]]
+		{
+			APOLLO_LOG_ERROR(
+				"Failed to get metadata for shader {}:\n{:.{}}",
+				name,
+				static_cast<const char*>(diagnostics->getBufferPointer()),
+				diagnostics->getBufferSize());
 			return;
-
-		ctx.GetInfo(m_Info);
+		}
+		m_Info = ShaderInfo::FromSlangModule(*program, stage, metadata);
 
 		SDL_GPUShaderCreateInfo createInfo{
 			.code_size = code->getBufferSize(),

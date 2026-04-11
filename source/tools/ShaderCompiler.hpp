@@ -111,6 +111,25 @@ namespace apollo::rdr {
 		}
 
 		/**
+		 * \brief Creates a linked program from a module
+		 * \param entryPoint: The entry point to use for linking
+		 * \param stage: The shader stage: vertex/fragment/compute or none
+		 * \param out_diagnostics: If not `nullptr`, will be used to store a message if an error
+		 * \details This function resolves all external dependencies, performs specialization for
+		 * the provided entry point and returns the final binary, or `nullptr` if linking failed, in
+		 * which case the diagnostics pointer will contain a message with more information (if
+		 * provided). The \p stage parameter may be `SLANG_STAGE_NONE`, in which case the shader
+		 * stage will not be checked and the entry point \b must be marked with the [[shader(...)]]
+		 * attribute. If another value is used, marking the entry point is not necessary (although
+		 * encouraged) and the shader stage will be validated.
+		 */
+		[[nodiscard]] Slang::ComPtr<slang::IComponentType> ComposeAndLink(
+			slang::IModule& module,
+			const char* entryPoint,
+			SlangStage stage = SLANG_STAGE_NONE,
+			slang::IBlob** diagnostics = nullptr);
+
+		/**
 		 * \brief Links a module and returns the final binary
 		 * \param module: The module to link
 		 * \param entryPoint: The entry point to use for linking

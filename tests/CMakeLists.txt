@@ -1,5 +1,7 @@
 set(CMAKE_FOLDER "tests")
 
+find_package(slang REQUIRED)
+
 AddExecutable(${PROJECT_NAME}Tests
 SOURCES
 	main.cpp
@@ -21,6 +23,7 @@ SOURCES
 	RectTests.cpp
 	TypeInfoTests.cpp
 	SceneLoadingTests.cpp
+	SlangTests.cpp
 	SystemTests.cpp
 	ThreadPoolTests.cpp
 	TypeInfoTests.cpp
@@ -28,9 +31,10 @@ SOURCES
 	UniqueFunctionTests.cpp
 	UtilTests.cpp
 	VertexTests.cpp
-LINK PRIVATE Apollo::Runtime Catch2::Catch2 SDL3::SDL3
+LINK PRIVATE Apollo::Runtime Catch2::Catch2 SDL3::SDL3 slang::slang
 PROPERTIES ${COMMON_PROPERTIES}
 OPTIONS PRIVATE ${COMPILER_ARGS}
+DEFINITIONS PRIVATE TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
@@ -48,6 +52,7 @@ AddTest("RetainPtr Tests" "${PROJECT_NAME}Tests" FILTERS "[retain_ptr]")
 AddTest("ECS Tests" "${PROJECT_NAME}Tests" FILTERS "[ecs]")
 AddTest("RTTI Tests" "${PROJECT_NAME}Tests" FILTERS "[rtti]")
 AddTest("Multi-Threading Tests" "${PROJECT_NAME}Tests" FILTERS "[mt]")
+AddTest("Shader Tests" "${PROJECT_NAME}Tests" FILTERS "[shaders]")
 AddTest("ULID Tests" "${PROJECT_NAME}Tests" FILTERS "[ulid]")
 AddTest("Util Tests" "${PROJECT_NAME}Tests" FILTERS "[util]")
 AddTest("Math Tests" "${PROJECT_NAME}Tests" FILTERS "[math]")

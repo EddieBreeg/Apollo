@@ -10,6 +10,11 @@
 #include <span>
 #include <string>
 
+namespace slang {
+	struct IComponentType;
+	struct IMetadata;
+} // namespace slang
+
 namespace apollo::rdr {
 	enum class EShaderStage : int8
 	{
@@ -216,5 +221,10 @@ namespace apollo::rdr {
 			apollo::Swap(m_Stage, other.m_Stage);
 			apollo::Swap(m_Blocks, other.m_Blocks);
 		}
+
+		APOLLO_API static ShaderInfo FromSlangModule(
+			slang::IComponentType& mod,
+			EShaderStage stage,
+			slang::IMetadata* metadata = nullptr);
 	};
 } // namespace apollo::rdr

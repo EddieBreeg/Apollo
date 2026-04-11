@@ -8,6 +8,7 @@ target_sources(${PROJECT_NAME}Runtime PRIVATE
 	Material.cpp
 	Pipeline.cpp
 	RenderPass.cpp
+	ShaderInfo.cpp
 	Texture.cpp
 	text/AtlasGenerator.cpp
 	text/FontAtlas.cpp

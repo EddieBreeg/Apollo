@@ -33,31 +33,6 @@ namespace {
 		module.findAndCheckEntryPoint(name, stage, ep.writeRef(), diagnostics);
 		return ep;
 	}
-
-	Slang::ComPtr<slang::IBlob> GetModuleCode(
-		slang::ISession& session,
-		slang::IModule& module,
-		slang::IEntryPoint& entryPoint,
-		slang::IBlob** diagnostics)
-	{
-		using Slang::ComPtr;
-		Slang::ComPtr<slang::IBlob> code;
-
-		slang::IComponentType* const comp[]{ &module, &entryPoint };
-		ComPtr<slang::IComponentType> composed;
-		session.createCompositeComponentType(comp, 2, composed.writeRef(), diagnostics);
-		if (!composed)
-			return code;
-
-		ComPtr<slang::IComponentType> program;
-
-		composed->link(program.writeRef(), diagnostics);
-		if (!program)
-			return code;
-
-		program->getTargetCode(0, code.writeRef(), diagnostics);
-		return code;
-	}
 } // namespace
 
 namespace apollo::rdr {
@@ -97,21 +72,46 @@ namespace apollo::rdr {
 		return res;
 	}
 
+	Slang::ComPtr<slang::IComponentType> ShaderCompiler::ComposeAndLink(
+		slang::IModule& module,
+		const char* entryPoint,
+		SlangStage stage,
+		slang::IBlob** diagnostics)
+	{
+		Slang::ComPtr<slang::IComponentType> linked, composite;
+
+		Slang::ComPtr ep = stage != SLANG_STAGE_NONE
+							   ? GetEntryPointFromNameAndStage(
+									 module,
+									 entryPoint,
+									 stage,
+									 diagnostics)
+							   : GetEntryPointFromName(module, entryPoint, diagnostics);
+		if (!ep)
+			return linked;
+		slang::IComponentType* const components[] = {
+			&module,
+			ep,
+		};
+		m_Session->createCompositeComponentType(components, 2, composite.writeRef(), diagnostics);
+		if (!composite)
+			return linked;
+		composite->link(linked.writeRef(), diagnostics);
+		return linked;
+	}
+
 	Slang::ComPtr<slang::IBlob> ShaderCompiler::GetTargetCode(
 		slang::IModule& module,
 		const char* entryPoint,
 		SlangStage stage,
 		slang::IBlob** diagnostics)
 	{
-		using Slang::ComPtr;
-
-		Slang::ComPtr<slang::IBlob> res;
-		ComPtr ep = stage != SLANG_STAGE_NONE
-						? GetEntryPointFromNameAndStage(module, entryPoint, stage, diagnostics)
-						: GetEntryPointFromName(module, entryPoint, diagnostics);
-		if (!ep)
-			return res;
-
-		return GetModuleCode(*m_Session, module, *ep, diagnostics);
+		auto const prog = ComposeAndLink(module, entryPoint, stage, diagnostics);
+		Slang::ComPtr<slang::IBlob> code;
+		if (prog)
+		{
+			prog->getTargetCode(0, code.writeRef(), diagnostics);
+		}
+		return code;
 	}
 } // namespace apollo::rdr

@@ -96,6 +96,20 @@ namespace apollo {
 		{
 			return a = a & b;
 		}
+
+		template <class E, std::integral I>
+		constexpr E operator+(E val, I d) noexcept
+			requires(std::is_enum_v<E>)
+		{
+			return static_cast<E>(ToUnderlying(val) + d);
+		}
+
+		template <class E, std::integral I>
+		constexpr E operator-(E val, I d) noexcept
+			requires(std::is_enum_v<E>)
+		{
+			return static_cast<E>(ToUnderlying(val) - d);
+		}
 	} // namespace enum_operators
 
 	using namespace enum_operators;
@@ -159,7 +173,7 @@ namespace apollo {
 			m_Value |= value ? mask : 0;
 		}
 		/**
-		 * \brief Clears the 1-bits in `mask` to 0 
+		 * \brief Clears the 1-bits in `mask` to 0
 		 */
 		constexpr void Clear(E mask) noexcept { m_Value &= ~mask; }
 		/**
