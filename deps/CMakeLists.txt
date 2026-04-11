@@ -13,11 +13,6 @@ add_subdirectory(assimp)
 
 add_subdirectory(msdfgen)
 
-if(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
-	include(SPIRV)
-	FetchSpirvRepos()
-endif(${PROJECT_NAME}_BACKEND STREQUAL "Vulkan")
-
 file(GLOB IMGUI_HEADERS "imgui/*.h")
 
 AddLibrary(imgui TYPE STATIC SOURCES
