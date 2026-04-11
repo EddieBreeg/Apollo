@@ -222,6 +222,19 @@ namespace apollo::rdr {
 			apollo::Swap(m_Blocks, other.m_Blocks);
 		}
 
+		/**
+		 * \brief Performs reflection on a compiled SLang module
+		 * \details This function is mainly here to enumerate the various descriptors used in a
+		 * shader, so that they're properly declared in the pipeline layout later one. It also
+		 * (partially) lists shader constants, which makes things like UI widgets possible
+		 * \param mod: The module to inspect
+		 * \param stage: The shader stage to inspect.
+		 * \note The function checks where descriptors are declared. In the event where a descriptor
+		 * was declared in the wrong set, this descriptor will be discarded and an error message
+		 * will be printed. See
+		 * [SDL3's shader documentation](https://wiki.libsdl.org/SDL3/SDL_CreateGPUShader) to learn
+		 * about these restrictions.
+		 */
 		APOLLO_API static ShaderInfo FromSlangModule(
 			slang::IComponentType& mod,
 			EShaderStage stage,

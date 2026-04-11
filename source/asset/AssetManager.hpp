@@ -82,7 +82,7 @@ namespace apollo {
 		 * asset is already loaded, the callback is invoked immediately
 		 * \details This function first looks up the ULID in the internal cache. If the asset is
 		 * found and has the correct type, it is returned immediately. Otherwise, the asset is
-		 * created and added to the cache; then a load request is submitted to the \ref AssetLoad
+		 * created and added to the cache; then a load request is submitted to the \ref AssetLoader
 		 * "asset loader"
 		 * \retval AssetRef A reference to the specific asset if it exists, null otherwise
 		 * \note If an asset exists with the given ULID, type checking will be performed to ensure

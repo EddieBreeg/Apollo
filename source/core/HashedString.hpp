@@ -5,7 +5,7 @@
 #include <spdlog/fmt/bundled/base.h>
 #include <string_view>
 
-/** \file StringHash.hpp */
+/** \file HashedString.hpp */
 
 namespace apollo {
 	template <class T>
