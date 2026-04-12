@@ -8,6 +8,7 @@ SOURCES
 	AssetLoaderTests.cpp
 	AssetLoadTaskTests.cpp
 	BitmapTests.cpp
+	BitSpanTests.cpp
 	BlobTests.cpp
 	CoroutineTests.cpp
 	ComponentRegistryTests.cpp
@@ -37,9 +38,12 @@ OPTIONS PRIVATE ${COMPILER_ARGS}
 DEFINITIONS PRIVATE TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
+AddTest("All Tests" "${PROJECT_NAME}Tests")
+
 AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
 AddTest("AssetLoadTask Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_load_task]")
 AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
+AddTest("BitSpan Tests" "${PROJECT_NAME}Tests" FILTERS "[bitspan]")
 AddTest("Blob Tests" "${PROJECT_NAME}Tests" FILTERS "[blob]")
 AddTest("Coroutine Tests" "${PROJECT_NAME}Tests" FILTERS "[coroutine]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")
