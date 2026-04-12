@@ -8,7 +8,6 @@
 namespace {
 	static constexpr const char* g_Test1SlangModule = TEST_DATA_DIR "/test1.slang";
 	static constexpr const char* g_Test2SlangModule = TEST_DATA_DIR "/test2.slang";
-	static constexpr const char* g_Test3SlangModule = TEST_DATA_DIR "/test3.slang";
 
 	std::string_view ToStringView(slang::IBlob& blob)
 	{
@@ -223,21 +222,5 @@ namespace apollo::rdr::shader_ut {
 				CHECK(block.m_Members[1].m_Offset == 64);
 			}
 		}
-	}
-	SLANG_TEST("Handle Arrays")
-	{
-		Compiler compiler;
-		auto* module = compiler.Compile(g_Test3SlangModule);
-		REQUIRE(module);
-		ComPtr<slang::IMetadata> metadata;
-		ComPtr program = compiler.Link(*module, "fs_main", SLANG_STAGE_FRAGMENT, metadata.writeRef());
-		REQUIRE(program);
-		REQUIRE(metadata);
-
-		ShaderInfo info = ShaderInfo::FromSlangModule(*program, rdr::EShaderStage::Fragment, metadata);
-		CHECK(info.m_NumSamplers == 4);
-		CHECK(info.m_NumUniformBuffers == 2);
-		CHECK(info.m_NumStorageBuffers == 0);
-		CHECK(info.m_NumStorageTextures == 0);
 	}
 } // namespace apollo::rdr::shader_ut

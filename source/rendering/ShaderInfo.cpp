@@ -171,7 +171,18 @@ namespace {
 				{
 					const Binding binding = baseBinding.GetDescriptorBinding(*field);
 					HandleResource(field->getName(), type->getResourceShape(), binding);
+					break;
 				}
+				case TypeKind::SamplerState:
+				{
+					const Binding binding = baseBinding.GetDescriptorBinding(*field);
+					if (CheckDescriptorAccess(field->getName(), binding, m_SetIndex) ==
+						EResourceUsage::Ok)
+					{
+						++m_Info.m_NumSamplers;
+					}
+				}
+				break;
 
 				default: break;
 				}
