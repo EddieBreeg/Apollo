@@ -19,7 +19,7 @@ Fragment vs_main(float3 pos: Position, float2 uv, uint instance: SV_InstanceID)
 
 struct Textures {
 	Sampler2D Tex1;
-	Sampler2D Tex2;
+	SamplerState Sampler;
 };
 
 [[vk::binding(0, 2)]]
