@@ -4,6 +4,7 @@
 #include <core/HashedString.hpp>
 #include <core/Log.hpp>
 #include <core/ULIDFormatter.hpp>
+#include <filesystem>
 #include <fstream>
 
 #include <asset/Scene.hpp>
@@ -111,7 +112,7 @@ namespace {
 
 			val = GetNext();
 			CHECK_VAL(val, "missing asset path");
-			out_metadata.m_FilePath = assetRoot / val;
+			out_metadata.m_FilePath = (assetRoot / std::filesystem::path(val)).string();
 
 			return true;
 		}
@@ -155,7 +156,7 @@ namespace {
 
 namespace apollo::editor {
 	AssetManager::AssetManager(
-		const std::filesystem::path& path,
+		const std::string& path,
 		rdr::GPUDevice& device,
 		mt::ThreadPool& threadPool)
 		: IAssetManager(path, device, threadPool)
@@ -170,8 +171,9 @@ namespace apollo::editor {
 			return false;
 		}
 
-		APOLLO_LOG_INFO("Loading project assets metadata from {}", m_AssetsPath.string());
-		const std::filesystem::path filePath = m_AssetsPath / "metadata.csv";
+		APOLLO_LOG_INFO("Loading project assets metadata from {}", m_AssetsPath);
+		const std::filesystem::path filePath = std::filesystem::path{ m_AssetsPath }.append(
+			"metadata.csv");
 
 		std::ifstream inFile{
 			filePath,

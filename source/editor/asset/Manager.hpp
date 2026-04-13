@@ -13,7 +13,7 @@ namespace apollo::editor {
 	{
 	public:
 		AssetManager(
-			const std::filesystem::path& path,
+			const std::string& path,
 			rdr::GPUDevice& device,
 			mt::ThreadPool& threadPool);
 

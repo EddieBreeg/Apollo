@@ -188,7 +188,9 @@ namespace {
 
 namespace apollo::editor {
 	template <>
-	AssetLoadTask AssetHelper<rdr::Material>::LoadAsync(IAsset& out_asset, const AssetMetadata& metadata)
+	AssetLoadTask AssetHelper<rdr::Material>::LoadAsync(
+		IAsset& out_asset,
+		const AssetMetadata& metadata)
 	{
 		auto& mat = dynamic_cast<rdr::Material&>(out_asset);
 
@@ -207,7 +209,7 @@ namespace apollo::editor {
 				"Failed to load material {}({}) from {}: {}",
 				metadata.m_Name,
 				metadata.m_Id,
-				metadata.m_FilePath.string(),
+				metadata.m_FilePath,
 				GetErrnoMessage(errno));
 			co_return false;
 		}
@@ -273,7 +275,7 @@ namespace apollo::editor {
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to load material instance from {}: {}",
-				metadata.m_FilePath.string(),
+				metadata.m_FilePath,
 				GetErrnoMessage(errno));
 			co_return false;
 		}
@@ -281,7 +283,7 @@ namespace apollo::editor {
 		nlohmann::json json = nlohmann::json::parse(inFile, nullptr, false);
 		if (json.is_discarded())
 		{
-			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
+			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath);
 			co_return false;
 		}
 

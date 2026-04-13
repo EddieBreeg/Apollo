@@ -62,13 +62,13 @@ namespace apollo {
 		 * If non-empty, this path should point to the root folder containing the asset metadata
 		 * file for the project. Ignored if empty.
 		 */
-		std::filesystem::path m_AssetRoot;
+		std::string m_AssetRoot;
 		rdr::EBackend m_RenderBackend = rdr::EBackend::Default;
 	};
 
 	/// %Asset manager initialization function, used internally by the app during initialization.
 	using AssetManagerInitFunc = IAssetManager&(
-		const std::filesystem::path& settings,
+		const std::string& settings,
 		rdr::GPUDevice& gpuDevice,
 		mt::ThreadPool& threadPool);
 

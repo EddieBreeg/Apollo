@@ -7,7 +7,6 @@
 #include <core/Errno.hpp>
 #include <core/Json.hpp>
 #include <core/Log.hpp>
-#include <filesystem>
 #include <freetype/freetype.h>
 #include <fstream>
 #include <msdfgen.h>
@@ -100,16 +99,13 @@ namespace apollo::editor {
 		std::ifstream jsonFile{ metadata.m_FilePath, std::ios::binary };
 		if (!jsonFile.is_open())
 		{
-			APOLLO_LOG_ERROR(
-				"Failed to open {}: {}",
-				metadata.m_FilePath.string(),
-				GetErrnoMessage(errno));
+			APOLLO_LOG_ERROR("Failed to open {}: {}", metadata.m_FilePath, GetErrnoMessage(errno));
 			co_return false;
 		}
 		const auto json = nlohmann::json::parse(jsonFile, nullptr, false);
 		if (json.is_discarded())
 		{
-			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
+			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath);
 			co_return false;
 		}
 
@@ -143,7 +139,7 @@ namespace apollo::editor {
 			co_return false;
 		}
 
-		std::string_view texPath;
+		std::string texPath;
 		if (json::Visit(texPath, json, "textureFile"))
 		{
 			atlas.m_Glyphs.reserve(atlas.m_Range.GetSize());
@@ -152,7 +148,7 @@ namespace apollo::editor {
 				atlas.m_Texture,
 				AssetMetadata{
 					.m_Id = ULID::Generate(),
-					.m_FilePath = texPath,
+					.m_FilePath = std::move(texPath),
 				});
 			if (loadRes && LoadGlyphs(json, atlas.m_Range, atlas.m_Glyphs, atlas.m_Indices))
 				co_return true;

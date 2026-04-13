@@ -61,7 +61,7 @@ namespace apollo {
 	}
 
 	IAssetManager::IAssetManager(
-		const std::filesystem::path& assetPath,
+		const std::string& assetPath,
 		rdr::GPUDevice& gpuDevice,
 		mt::ThreadPool& tp)
 		: m_AssetsPath(assetPath)

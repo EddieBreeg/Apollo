@@ -69,14 +69,14 @@ namespace apollo::editor {
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to load scene from {}: {}",
-				metadata.m_FilePath.string(),
+				metadata.m_FilePath,
 				GetErrnoMessage(errno));
 			co_return false;
 		}
 		const nlohmann::json j = nlohmann::json::parse(file, nullptr, false);
 		if (j.is_discarded())
 		{
-			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath.string());
+			APOLLO_LOG_ERROR("Failed to parse {} as JSON", metadata.m_FilePath);
 			co_return false;
 		}
 

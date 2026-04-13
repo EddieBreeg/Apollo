@@ -10,7 +10,6 @@
 #include "AssetRef.hpp"
 #include <core/ULID.hpp>
 
-#include <filesystem>
 #include <memory>
 #include <shared_mutex>
 #include <string>
@@ -37,7 +36,7 @@ namespace apollo {
 	{
 		ULID m_Id;
 		std::string m_Name;
-		std::filesystem::path m_FilePath;
+		std::string m_FilePath;
 		uint32 m_Offset = 0;
 		EAssetType m_Type = EAssetType::Invalid;
 	};
@@ -149,12 +148,12 @@ namespace apollo {
 		 * \brief Returns the project's root asset path. This is where all the asset data/metadata
 		 * lives.
 		 */
-		const std::filesystem::path& GetAssetPath() const noexcept { return m_AssetsPath; }
+		const std::string& GetAssetPath() const noexcept { return m_AssetsPath; }
 
 		[[nodiscard]] AssetLoader& GetAssetLoader() noexcept { return m_Loader; }
 
 		APOLLO_API IAssetManager(
-			const std::filesystem::path& assetsPath,
+			const std::string& assetsPath,
 			rdr::GPUDevice& gpuDevice,
 			mt::ThreadPool& threadPool);
 
@@ -185,7 +184,7 @@ namespace apollo {
 		std::shared_mutex m_Mutex;
 		ULIDMap<IAsset*> m_Cache;
 
-		std::filesystem::path m_AssetsPath;
+		std::string m_AssetsPath;
 		AssetLoader m_Loader;
 		Queue<IAsset*> m_UnloadQueue;
 

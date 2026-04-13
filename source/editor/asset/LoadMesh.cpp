@@ -22,8 +22,7 @@ namespace apollo::editor {
 		Assimp::Importer importer;
 		// I hate this, but Assimp takes in a C string, and stupid Windows uses wide strings so we
 		// need the conversion
-		const std::string pathStr = metadata.m_FilePath.string();
-		const aiScene* scene = importer.ReadFile(pathStr.c_str(), g_PostProcessFlags);
+		const aiScene* scene = importer.ReadFile(metadata.m_FilePath.c_str(), g_PostProcessFlags);
 		if (!scene)
 		{
 			APOLLO_LOG_ERROR("Failed to load mesh from: {}", importer.GetErrorString());

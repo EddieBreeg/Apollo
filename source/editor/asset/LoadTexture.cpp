@@ -21,13 +21,12 @@ namespace apollo::editor {
 		rdr::Texture2D& out_texture,
 		const AssetMetadata& metadata)
 	{
-		const auto pathStr = metadata.m_FilePath.string();
 		int32 width = 0, height = 0;
 		int32 numChannels = 0;
-		uint8* data = stbi_load(pathStr.c_str(), &width, &height, &numChannels, 0);
+		uint8* data = stbi_load(metadata.m_FilePath.c_str(), &width, &height, &numChannels, 0);
 		if (!data)
 		{
-			APOLLO_LOG_ERROR("Failed to load texture from {}: {}", pathStr, stbi_failure_reason());
+			APOLLO_LOG_ERROR("Failed to load texture from {}: {}", metadata.m_FilePath, stbi_failure_reason());
 			return false;
 		}
 

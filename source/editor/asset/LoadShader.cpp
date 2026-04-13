@@ -66,15 +66,13 @@ namespace {
 			metadata.m_FilePath,
 			std::ios::binary | std::ios::ate,
 		};
-		auto pathString = metadata.m_FilePath.string();
-
 		if (!inFile.is_open())
 		{
 			APOLLO_LOG_ERROR(
 				"Failed to load shader {}({}) from {}: {}",
 				metadata.m_Name,
 				metadata.m_Id,
-				pathString,
+				metadata.m_FilePath,
 				GetErrnoMessage(errno));
 			return false;
 		}
@@ -85,7 +83,7 @@ namespace {
 				"Failed to load shader {}({}) from {}: empty file",
 				metadata.m_Name,
 				metadata.m_Id,
-				pathString);
+				metadata.m_FilePath);
 			return false;
 		}
 		using Blob = rdr::ShaderCompiler::Blob;
@@ -98,7 +96,7 @@ namespace {
 				"Failed to load shader {}({}) from {}: {}",
 				metadata.m_Name,
 				metadata.m_Id,
-				pathString,
+				metadata.m_FilePath,
 				GetErrnoMessage(errno));
 			return false;
 		}
@@ -112,7 +110,7 @@ namespace {
 			module = compiler.LoadFromIntermediate(
 				metadata.m_Name.c_str(),
 				data,
-				pathString.c_str(),
+				metadata.m_FilePath.c_str(),
 				diagnostics.writeRef());
 		}
 		else
@@ -120,7 +118,7 @@ namespace {
 			module = compiler.LoadModuleFromSource(
 				data,
 				metadata.m_Name.c_str(),
-				pathString.c_str(),
+				metadata.m_FilePath.c_str(),
 				diagnostics.writeRef());
 		}
 
