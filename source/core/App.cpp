@@ -45,7 +45,7 @@ namespace {
 
 	SlangResult InitShaderCompiler(apollo::rdr::EBackend backend, const char* assetPath = nullptr)
 	{
-		SlangCompileTarget target;
+		SlangCompileTarget target = SLANG_TARGET_NONE;
 		const char* profile = nullptr;
 		std::span includes = assetPath ? std::span<const char* const>{ &assetPath, 1 }
 									   : std::span<const char* const>{};

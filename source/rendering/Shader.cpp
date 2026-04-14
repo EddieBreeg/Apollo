@@ -41,7 +41,7 @@ namespace {
 
 	SDL_GPUShader* CreateShader(
 		slang::IModule& module,
-		const apollo::ULID& id,
+		[[maybe_unused]] const apollo::ULID& id,
 		apollo::rdr::ShaderInfo& out_info,
 		apollo::rdr::EShaderStage stage,
 		const char* entryPoint,
@@ -159,7 +159,7 @@ namespace apollo::rdr {
 		}
 	}
 	GraphicsShader::GraphicsShader(
-		const ULID& id,
+		[[maybe_unused]] const ULID& id,
 		EShaderStage stage,
 		slang::IModule& module,
 		slang::IEntryPoint& entryPoint)

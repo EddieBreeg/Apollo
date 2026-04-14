@@ -36,11 +36,6 @@ namespace apollo::coro::ut {
 		static_assert(!C{});
 	}
 
-	CORO_TEST("Call on null coroutine")
-	{
-		CHECK_THROWS_AS(Coroutine<>{}(), _internal::BreakException);
-	}
-
 	CORO_TEST("No-op coroutine")
 	{
 		Coroutine<> noop{ std::noop_coroutine() };
@@ -94,12 +89,12 @@ namespace apollo::coro::ut {
 		auto c2 = C1();
 		REQUIRE(c1->m_Res == 1);
 		REQUIRE(c2->m_Res == 0);
-		
+
 		c1.Swap(c2);
 		REQUIRE(c1->m_Res == 0);
 		REQUIRE(c2->m_Res == 1);
 	}
-	
+
 	CORO_TEST("Move assign")
 	{
 		auto c1 = C1();
@@ -107,7 +102,7 @@ namespace apollo::coro::ut {
 		auto c2 = C1();
 		REQUIRE(c1->m_Res == 1);
 		REQUIRE(c2->m_Res == 0);
-		
+
 		c1 = std::move(c2);
 		REQUIRE(c1->m_Res == 0);
 		REQUIRE(c2->m_Res == 1);

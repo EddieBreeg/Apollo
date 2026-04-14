@@ -9,7 +9,7 @@ namespace {
 	static constexpr const char* g_Test1SlangModule = TEST_DATA_DIR "/test1.slang";
 	static constexpr const char* g_Test2SlangModule = TEST_DATA_DIR "/test2.slang";
 
-	std::string_view ToStringView(slang::IBlob& blob)
+	[[maybe_unused]] std::string_view ToStringView(slang::IBlob& blob)
 	{
 		return { static_cast<const char*>(blob.getBufferPointer()), blob.getBufferSize() };
 	}

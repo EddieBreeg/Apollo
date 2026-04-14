@@ -74,7 +74,7 @@ namespace apollo::ui {
 			});
 	}
 
-	void Context::OnError(Clay_ErrorType type, Clay_String message)
+	void Context::OnError(Clay_ErrorType type, [[maybe_unused]] Clay_String message)
 	{
 		(void)type;
 		APOLLO_LOG_ERROR("[clay error] {:.{}}", message.chars, message.length);

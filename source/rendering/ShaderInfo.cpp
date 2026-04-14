@@ -192,7 +192,10 @@ namespace {
 		 * Checks whether a desource descriptor is used and if yes, whether it is declared in the
 		 * correct set
 		 */
-		EResourceUsage CheckDescriptorAccess(const char* name, Binding binding, uint32_t expectedSet)
+		EResourceUsage CheckDescriptorAccess(
+			[[maybe_unused]] const char* name,
+			Binding binding,
+			uint32_t expectedSet)
 		{
 			if (binding.space == expectedSet)
 				return EResourceUsage::Ok;
