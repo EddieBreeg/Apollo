@@ -1,0 +1,19 @@
+html {
+	--important-color-bg: hsl(355, 89%, 15%);
+	--important-color-hl: #e42c3b;
+	--important-color-text: #f8d1cc;
+}
+
+dl.important {
+	background: var(--important-color-bg);
+	border-left: 8px solid var(--important-color-hl);
+	color: var(--important-color-text);
+}
+
+dl.important dt {
+	color: var(--important-color-hl);
+}
+
+dl.important tt {
+	background-color: hsl(from var(--important-color-bg) h s calc(l + var(--fragment-highlight-filter)));
+}

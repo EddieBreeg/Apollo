@@ -166,9 +166,9 @@ html {
 	--font-family-tooltip: Roboto, sans-serif;
 
 	/** special sections */
-	--warning-color-bg: #f8d1cc;
-	--warning-color-hl: #b61825;
-	--warning-color-text: #75070f;
+	--warning-color-bg: #352b03;
+	--warning-color-hl: #f3a600;
+	--warning-color-text: rgb(222, 199, 150);
 	--note-color-bg: #faf3d8;
 	--note-color-hl: #f3a600;
 	--note-color-text: #5f4204;
@@ -363,12 +363,12 @@ html {
 		--font-family-tooltip: Roboto, sans-serif;
 
 		/** special sections */
-		--warning-color-bg: #2e1917;
-		--warning-color-hl: #ad2617;
-		--warning-color-text: #f5b1aa;
+		--warning-color-bg: #352b03;
+		--warning-color-hl: #f3a600;
+		--warning-color-text: rgb(222, 199, 150);
 		--note-color-bg: hsl(243, 75%, 12%);
 		--note-color-hl: hsl(243, 87%, 80%);
-		--note-color-text: hsl(243, 3%, 95%);;
+		--note-color-text: hsl(243, 3%, 95%);
 		--todo-color-bg: #163750;
 		--todo-color-hl: #1982D2;
 		--todo-color-text: #dcf0fa;
@@ -860,7 +860,7 @@ pre.fragment {
 span.tt {
 	white-space: pre;
 	font-family: var(--font-family-monospace);
-	background-color: var(--fragment-background-color);
+	background-color: transparent !important;
 	font-weight: bold;
 	color: var(--memdef-template-color);
 }

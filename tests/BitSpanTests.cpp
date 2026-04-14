@@ -91,7 +91,7 @@ namespace apollo::bitspan_ut {
 		}
 		{
 			constexpr BitSpan span{ arr, 15 };
-			static_assert(span.GetSize() == 16);
+			static_assert(span.GetSize() == 15);
 		}
 	}
 

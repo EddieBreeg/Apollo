@@ -109,11 +109,11 @@ namespace apollo {
 		/// \param n: The span size, **in bits**
 		constexpr BitSpan(T* start, size_t n) noexcept
 			: m_Start(start)
-			, m_End(start + (n - 1) / (8 * sizeof(T)) + 1)
+			, m_Size(n)
 		{}
 		constexpr BitSpan(T* start, T* end) noexcept
 			: m_Start(start)
-			, m_End(end)
+			, m_Size((end - start) * 8 * sizeof(T))
 		{}
 
 		constexpr BitSpan(const BitSpan<T>& other) = default;
@@ -126,14 +126,18 @@ namespace apollo {
 		}
 		[[nodiscard]] constexpr BitIterator<T> end() const noexcept
 		{
-			return BitIterator<T>{ m_End };
+			constexpr size_t m = 8 * sizeof(T);
+			return BitIterator<T>{
+				m_Start + m_Size / m,
+				m_Size % m,
+			};
 		}
 
 		/// \brief The size of the span, in bits
 		/// \note The result is always a multiple of `8 * sizeof(T)`
 		[[nodiscard]] constexpr size_t GetSize() const noexcept
 		{
-			return 8 * sizeof(T) * (m_End - m_Start);
+			return m_Size;
 		}
 
 		constexpr BitIterator<T>::reference operator[](size_t n) const noexcept
@@ -155,6 +159,6 @@ namespace apollo {
 
 	private:
 		T* m_Start = nullptr;
-		T* m_End = nullptr;
+		size_t m_Size = 0;
 	};
 } // namespace apollo
