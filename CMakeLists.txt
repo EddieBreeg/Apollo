@@ -8,6 +8,7 @@ include(TestMacros)
 option(${PROJECT_NAME}_BUILD_TESTS "Whether to build tests for the project" ON)
 option(${PROJECT_NAME}_INSTALL "Whether to enable install for ${PROJECT_NAME} targets" ${IS_ROOT_PROJECT})
 option(${PROJECT_NAME}_BUILD_DOCS "Whether to generate the doxygen documentation" OFF)
+option(${PROJECT_NAME}_BUILD_BENCH "Whether to generate the benchmarks" OFF)
 
 option(${PROJECT_NAME}_ENABLE_VULKAN "Whether to enable Vulkan support" ON)
 option(${PROJECT_NAME}_ENABLE_D3D12 "Whether to enable Vulkan support" ON)
@@ -49,5 +50,9 @@ if(${PROJECT_NAME}_BUILD_DOCS)
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	)
 endif()
+
+if(${PROJECT_NAME}_BUILD_BENCH)
+	add_subdirectory(bench)
+endif(${PROJECT_NAME}_BUILD_BENCH)
 
 set(CMAKE_FOLDER ${PROJECT_NAME})

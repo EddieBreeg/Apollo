@@ -80,6 +80,12 @@
 			"name": "ninja_release",
 			"configuration": "Release",
 			"configurePreset": "Ninja"
+		},
+		{
+			"name": "ninja_bench",
+			"configuration": "Release",
+			"configurePreset": "Ninja",
+			"targets": ["ApolloBenchmarks"]
 		}
 	],
 	"workflowPresets": [

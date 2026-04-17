@@ -162,6 +162,18 @@ namespace apollo::mempool_ut {
 		CHECK(ptr[2] == 2);
 	}
 
+	MEMPOOL_TEST("Vector for ints")
+	{
+		static constexpr int32 n = 100;
+		AllocationTracker<> tracker{ *std::pmr::new_delete_resource() };
+		MemoryPool pool{ 4, 0, &tracker };
+		std::vector<int, PoolAllocator<int>> vec{ pool.GetAllocator<int>() };
+		for (int i = 0; i < n; ++i)
+		{
+			vec.emplace_back(i);
+		}
+	}
+
 	MEMPOOL_TEST("Allocate 3 integers")
 	{
 		alignas(8) uint32 buf[128] = {};

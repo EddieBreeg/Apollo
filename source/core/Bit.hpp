@@ -3,6 +3,7 @@
 /** \file Bit.hpp */
 
 #include <PCH.hpp>
+#include <bit>
 
 namespace apollo {
 	/// Iterator over bit spans
@@ -73,24 +74,26 @@ namespace apollo {
 
 		constexpr BitIterator& Set()
 		{
-			*m_Ptr |= (1u << m_Pos);
+			*m_Ptr |= T{ 1 } << m_Pos;
 			return *this;
 		}
 		constexpr BitIterator& Clear()
 		{
-			*m_Ptr &= ~(1u << m_Pos);
+			*m_Ptr &= ~(T{ 1 } << m_Pos);
 			return *this;
 		}
 		constexpr const BitIterator& Set() const
 		{
-			*m_Ptr |= (1u << m_Pos);
+			*m_Ptr |= (T{ 1 } << m_Pos);
 			return *this;
 		}
 		constexpr const BitIterator& Clear() const
 		{
-			*m_Ptr &= ~(1u << m_Pos);
+			*m_Ptr &= ~(T{ 1 } << m_Pos);
 			return *this;
 		}
+
+		[[nodiscard]] T* GetPtr() const noexcept { return m_Ptr; }
 
 	private:
 		T* m_Ptr = nullptr;
@@ -135,10 +138,7 @@ namespace apollo {
 
 		/// \brief The size of the span, in bits
 		/// \note The result is always a multiple of `8 * sizeof(T)`
-		[[nodiscard]] constexpr size_t GetSize() const noexcept
-		{
-			return m_Size;
-		}
+		[[nodiscard]] constexpr size_t GetSize() const noexcept { return m_Size; }
 
 		constexpr BitIterator<T>::reference operator[](size_t n) const noexcept
 			requires(!std::is_const_v<T>)

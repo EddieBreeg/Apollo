@@ -8,7 +8,7 @@ SOURCES
 	AssetLoaderTests.cpp
 	AssetLoadTaskTests.cpp
 	BitmapTests.cpp
-	BitSpanTests.cpp
+	BitTests.cpp
 	BlobTests.cpp
 	CoroutineTests.cpp
 	ComponentRegistryTests.cpp
@@ -44,7 +44,7 @@ AddTest("All Tests" "${PROJECT_NAME}Tests")
 AddTest("AssetLoader Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_loader][mt]")
 AddTest("AssetLoadTask Tests" "${PROJECT_NAME}Tests" FILTERS "[asset_load_task]")
 AddTest("Bitmap Tests" "${PROJECT_NAME}Tests" FILTERS "[bitmap]")
-AddTest("BitSpan Tests" "${PROJECT_NAME}Tests" FILTERS "[bitspan]")
+AddTest("Bit Tests" "${PROJECT_NAME}Tests" FILTERS "[bits]")
 AddTest("Blob Tests" "${PROJECT_NAME}Tests" FILTERS "[blob]")
 AddTest("Coroutine Tests" "${PROJECT_NAME}Tests" FILTERS "[coroutine]")
 AddTest("Enum Tests" "${PROJECT_NAME}Tests" FILTERS "[enums]")

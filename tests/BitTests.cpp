@@ -2,10 +2,10 @@
 #include <core/Bit.hpp>
 #include <format>
 
-#define BITSPAN_TEST(name) TEST_CASE(name, "[bitspan]")
+#define BIT_TEST(name) TEST_CASE(name, "[bits]")
 
 namespace apollo::bitspan_ut {
-	BITSPAN_TEST("Const Iterator dereference")
+	BIT_TEST("Const Iterator dereference")
 	{
 		static constexpr uint8 b[1] = { 1 };
 		{
@@ -18,7 +18,7 @@ namespace apollo::bitspan_ut {
 		}
 	}
 
-	BITSPAN_TEST("Iterator increment")
+	BIT_TEST("Iterator increment")
 	{
 		SECTION("Pre-increment")
 		{
@@ -36,7 +36,7 @@ namespace apollo::bitspan_ut {
 		}
 	}
 
-	BITSPAN_TEST("Bit reference")
+	BIT_TEST("Bit reference")
 	{
 		uint8 b = 0;
 		BitIterator it{ &b, 0 };
@@ -45,7 +45,7 @@ namespace apollo::bitspan_ut {
 		CHECK(*it == true);
 	}
 
-	BITSPAN_TEST("Bit iterator comparison")
+	BIT_TEST("Bit iterator comparison")
 	{
 		static constexpr uint8 b[2] = {};
 		constexpr BitIterator start{ b };
@@ -54,35 +54,35 @@ namespace apollo::bitspan_ut {
 		static_assert(start != end);
 	}
 
-	BITSPAN_TEST("BitIterator::Set")
+	BIT_TEST("BitIterator::Set")
 	{
 		static constexpr bool b = []()
 		{
 			uint8 byte = 0;
-			BitIterator<uint8> it{&byte};
+			BitIterator<uint8> it{ &byte };
 			it.Set();
 			return byte & 1;
 		}();
 		static_assert(b);
 	}
-	BITSPAN_TEST("BitIterator::Clear")
+	BIT_TEST("BitIterator::Clear")
 	{
 		static constexpr bool b = []()
 		{
 			uint8 byte = 1;
-			BitIterator<uint8> it{&byte};
+			BitIterator<uint8> it{ &byte };
 			it.Clear();
 			return byte & 1;
 		}();
 		static_assert(!b);
 	}
 
-	BITSPAN_TEST("Size of empty bitspan")
+	BIT_TEST("Size of empty bitspan")
 	{
 		constexpr BitSpan<const uint8> span;
 		static_assert(span.GetSize() == 0);
 	}
-	BITSPAN_TEST("Size of non-empty bitspan")
+	BIT_TEST("Size of non-empty bitspan")
 	{
 		static constexpr uint8 arr[] = { 1, 2 };
 		{
@@ -95,7 +95,7 @@ namespace apollo::bitspan_ut {
 		}
 	}
 
-	BITSPAN_TEST("Span iteration")
+	BIT_TEST("Span iteration")
 	{
 		static constexpr uint8 b = 0b10101010;
 		size_t i = 0;
@@ -111,7 +111,7 @@ namespace apollo::bitspan_ut {
 		}
 	}
 
-	BITSPAN_TEST("Const [] operator")
+	BIT_TEST("Const [] operator")
 	{
 		static constexpr uint8 b = 5;
 		constexpr BitSpan span{ &b, 8 };
@@ -120,7 +120,7 @@ namespace apollo::bitspan_ut {
 		static_assert(span[2]);
 	}
 
-	BITSPAN_TEST("Non-const [] operator")
+	BIT_TEST("Non-const [] operator")
 	{
 		uint8 b = 1 << 7;
 		const BitSpan span{ &b, 8 };

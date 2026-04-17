@@ -9,7 +9,8 @@ namespace apollo {
 	struct MemoryPool::Chunk
 	{
 		Chunk* m_Next = nullptr;
-		uint32 m_Count = 0;
+		uint32 m_Capacity = 0;
+		uint32 m_FirstAvailable = 0;
 		uint32 m_ByteSize = 0;
 
 		void* GetBuffer() noexcept { return this + 1; }
@@ -17,21 +18,22 @@ namespace apollo {
 
 		void* TryAllocateBlocks(uint32 n, uint32 blockSize)
 		{
-			if (n > m_Count)
+			if (n > (m_Capacity - m_FirstAvailable))
 				return nullptr;
 
-			BitSpan state{ GetBits(), m_Count };
-			std::byte* ptr = static_cast<std::byte*>(GetBuffer());
-			BitIterator pos = state.begin();
+			uint64* const state = GetBits();
+			BitIterator pos{ state + m_FirstAvailable / 64, m_FirstAvailable % 64 };
+			BitIterator end{ state + m_Capacity / 64, m_Capacity % 64 };
 			uint32 runLength = 0;
+			uint32 offset = m_FirstAvailable;
 
-			for (auto it = state.begin(); it != state.end(); ++it)
+			for (auto it = pos; it != end; ++it)
 			{
 				++runLength;
 				if (*it)
 				{
 					++(pos = it);
-					ptr += runLength * blockSize;
+					offset += runLength;
 					runLength = 0;
 					continue;
 				}
@@ -41,24 +43,29 @@ namespace apollo {
 			return nullptr;
 
 		DO_ALLOCATE:
+			if (offset == m_FirstAvailable)
+			{
+				m_FirstAvailable += n;
+			}
 			while (n--)
 			{
 				pos.Set()++;
 			}
-			return ptr;
+			return VOID_PTR_ADD(void, GetBuffer(), offset* blockSize);
 		}
 		bool TryDeallocate(void* ptr, uint32 n, uint32 blockSize)
 		{
-			if (n > m_Count)
+			if (n > m_Capacity)
 				return false;
 
-			const size_t offset = (static_cast<std::byte*>(ptr) -
+			const uint32 offset = (static_cast<std::byte*>(ptr) -
 								   static_cast<std::byte*>(GetBuffer())) /
 								  blockSize;
-			if (offset >= m_Count)
+			if (offset >= m_Capacity)
 				return false;
 
 			BitIterator it{ GetBits() + offset / 64, offset % 64 };
+			m_FirstAvailable = Min(offset, m_FirstAvailable);
 			while (n--)
 			{
 				APOLLO_ASSERT(*it, "Block at address {} was already free", ptr);
@@ -70,8 +77,9 @@ namespace apollo {
 
 		void Clear()
 		{
+			m_FirstAvailable = 0;
 			uint64* it = GetBits();
-			uint64* end = it + (m_Count - 1) / 64 + 1;
+			uint64* end = it + (m_Capacity - 1) / 64 + 1;
 			while (it != end)
 				*it++ = 0;
 		}
@@ -115,7 +123,7 @@ namespace apollo {
 				return p;
 			last = it;
 		}
-		const uint32 capacity = (3 * Max(n, last->m_Count) - 1) / 2 + 1;
+		const uint32 capacity = (3 * Max(n, last->m_Capacity) - 1) / 2 + 1;
 		Chunk* chunk = last->m_Next = AllocateChunk(capacity, n);
 		return chunk->GetBuffer();
 	}
@@ -142,7 +150,8 @@ namespace apollo {
 		void* ptr = m_UpstreamResource->allocate(allocSize, alignof(Chunk));
 
 		Chunk* chunk = new (ptr) Chunk{
-			.m_Count = n,
+			.m_Capacity = n,
+			.m_FirstAvailable = prealloc,
 			.m_ByteSize = chunkSize,
 		};
 		uint64* it = VOID_PTR_ADD(uint64, ptr, bitsetOffset);
@@ -167,7 +176,7 @@ namespace apollo {
 	MemoryPool::Chunk* MemoryPool::DeallocateChunk(Chunk* ptr)
 	{
 		Chunk* const next = ptr->m_Next;
-		const uint32 bitsetSize = (ptr->m_Count - 1) / 64 + 1;
+		const uint32 bitsetSize = (ptr->m_Capacity - 1) / 64 + 1;
 		m_UpstreamResource->deallocate(
 			ptr,
 			sizeof(Chunk) + ptr->m_ByteSize + 8 * bitsetSize,
