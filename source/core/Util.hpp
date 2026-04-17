@@ -56,4 +56,22 @@ namespace apollo {
 	template <class T>
 	concept NoThrowSwappable = noexcept(Swap(std::declval<T&>(), std::declval<T&>()));
 
+	struct PointerDiff
+	{
+		template <class T>
+		constexpr PointerDiff(T&& val) noexcept
+			: m_Value(static_cast<int64_t>(val))
+		{}
+		int64_t m_Value;
+		[[nodiscard]] constexpr operator int64_t() const noexcept { return m_Value; }
+	};
+
+	[[nodiscard]] inline void* operator+(void* p, PointerDiff diff) noexcept
+	{
+		return static_cast<std::byte*>(p) + diff.m_Value;
+	}
+	[[nodiscard]] inline void* operator-(void* p, PointerDiff diff) noexcept
+	{
+		return static_cast<std::byte*>(p) - diff.m_Value;
+	}
 } // namespace apollo

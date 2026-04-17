@@ -3,8 +3,6 @@
 #include <core/Bit.hpp>
 #include <memory_resource>
 
-#define VOID_PTR_ADD(T, ptr, n) reinterpret_cast<T*>(static_cast<std::byte*>(ptr) + (n))
-
 namespace apollo {
 	struct MemoryPool::Chunk
 	{
@@ -14,7 +12,11 @@ namespace apollo {
 		uint32 m_ByteSize = 0;
 
 		void* GetBuffer() noexcept { return this + 1; }
-		[[nodiscard]] uint64* GetBits() { return VOID_PTR_ADD(uint64, GetBuffer(), m_ByteSize); }
+		[[nodiscard]] uint64* GetBits(PointerDiff pos = 0)
+		{
+			pos.m_Value += m_ByteSize;
+			return static_cast<uint64*>(GetBuffer() + pos);
+		}
 
 		void* TryAllocateBlocks(uint32 n, uint32 blockSize)
 		{
@@ -51,7 +53,7 @@ namespace apollo {
 			{
 				pos.Set()++;
 			}
-			return VOID_PTR_ADD(void, GetBuffer(), offset* blockSize);
+			return GetBuffer() + PointerDiff{ offset * blockSize };
 		}
 		bool TryDeallocate(void* ptr, uint32 n, uint32 blockSize)
 		{
@@ -144,7 +146,7 @@ namespace apollo {
 		const uint32 chunkSize = Align(n * m_BlockSize, alignof(uint64));
 		n = chunkSize / m_BlockSize; // re-compute block count to account for padding
 
-		const uint32 bitsetOffset = sizeof(Chunk) + chunkSize;
+		const PointerDiff bitsetOffset = sizeof(Chunk) + chunkSize;
 		const uint32 allocSize = bitsetOffset + bitsetSize * 8;
 
 		void* ptr = m_UpstreamResource->allocate(allocSize, alignof(Chunk));
@@ -154,7 +156,7 @@ namespace apollo {
 			.m_FirstAvailable = prealloc,
 			.m_ByteSize = chunkSize,
 		};
-		uint64* it = VOID_PTR_ADD(uint64, ptr, bitsetOffset);
+		uint64* it = static_cast<uint64*>(ptr + bitsetOffset);
 		uint64* const end = it + bitsetSize;
 
 		while (prealloc >= 64)
